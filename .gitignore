@@ -1,0 +1,6 @@
+bin/
+obj/
+build/
+/compile_commands.json
+Vendor/*.make
+*.make
