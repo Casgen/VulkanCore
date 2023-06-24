@@ -4,14 +4,15 @@ project "GLFW"
 	language "C"
 	architecture "x86_64"
 
-	targetdir "../bin/%{cfg.buildcfg}"
-	objdir "../obj/%{cfg.buildcfg}"
+	targetdir "../bin"
+	objdir "../obj"
+
 	includedirs { "glfw/include/" }
 
 	files
 	{
---		"glfw/include/GLFW/glfw3.h",
---		"glfw/include/GLFW/glfw3native.h",
+        "glfw/include/GLFW/glfw3.h",
+        "glfw/include/GLFW/glfw3native.h",
 		"glfw/src/glfw_config.h",
 		"glfw/src/context.c",
 		"glfw/src/init.c",
@@ -25,7 +26,7 @@ project "GLFW"
 		"glfw/src/null_window.c",
 		"glfw/src/null_joystick.c"
 	}
-    
+
 	filter "system:linux"
 		pic "On"
 
@@ -50,7 +51,7 @@ project "GLFW"
 
 		defines
 		{
-			"_GLFW_X11"
+			"_GLFW_X11",
 		}
 
 	filter "system:windows"

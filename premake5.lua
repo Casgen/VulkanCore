@@ -1,5 +1,5 @@
 ---@diagnostic disable: undefined-global
-  project "VulkanCore"
+project "VulkanCore"
     kind "StaticLib"
 
     configurations {"Debug", "Release"}
@@ -16,30 +16,29 @@
 
 
     includedirs {
-      "Vendor/glfw/include/",
-      "Vendor/glm/",
-      "Vendor/stb_image",
-      "Vendor/vma/",
+        "Vendor/glfw/include/",
+        "Vendor/glm/",
+        "Vendor/stb_image",
+        "Vendor/vma/",
+        "/home/oem/Development/VulkanSDK/1.3.250.0/x86_64/include/"
     }
 
     files {
-      "Src/**.cpp",
-      "Src/**.h",
-      "Src/**.hpp",
+        "Src/**.cpp",
+        "Src/**.h",
+        "Src/**.hpp",
     }
 
     filter { "system:linux" }
-      links { "dl", "pthread", os.findlib("libvulkan-dev") }
-
-      defines { "_X11" }
+        defines { "_X11" }
 
     filter "configurations:Release"
-      defines { "NDEBUG" }
-      optimize "on"
+        defines { "NDEBUG" }
+        optimize "on"
 
     filter "configurations:Debug"
-      defines { "DEBUG" }
-      symbols "on"
+        defines { "DEBUG" }
+        symbols "on"
 
 include "Vendor/glfw.lua"
 include "Vendor/glm.lua"
