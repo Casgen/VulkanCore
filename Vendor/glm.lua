@@ -3,10 +3,14 @@ project "GLM"
 	kind "StaticLib"
 	language "C"
 
-	targetdir "../bin"
-	objdir "../obj"
+    architecture "x64"
 
-	includedirs { "glm/" }
+    local output_dir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+
+    targetdir("../../bin/" .. output_dir .. "/%{prj.name}")
+    objdir("../../obj/" .. output_dir .. "/%{prj.name}")
+
+	includedirs { "glm" }
 
 	files
 	{

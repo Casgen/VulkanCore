@@ -2,10 +2,12 @@
 project "GLFW"
 	kind "StaticLib"
 	language "C"
-	architecture "x86_64"
+	architecture "x64"
 
-	targetdir "../bin"
-	objdir "../obj"
+    local output_dir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+
+    targetdir("../../bin/" .. output_dir .. "/%{prj.name}")
+    objdir("../../obj/" .. output_dir .. "/%{prj.name}")
 
 	includedirs { "glfw/include/" }
 
