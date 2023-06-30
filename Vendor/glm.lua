@@ -3,7 +3,7 @@ project "GLM"
 	kind "StaticLib"
 	language "C"
 
-    architecture "x64"
+    architecture "x86_64"
 
     local output_dir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 

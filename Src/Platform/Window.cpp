@@ -1,20 +1,20 @@
 #include <iostream>
 #include <stdexcept>
+#include <vulkan/vulkan_core.h>
 
 #include "../Event/KeyEvent.h"
 #include "../Event/MouseEvent.h"
 #include "../Event/WindowEvent.h"
 #include "../Log/Log.h"
 
-#include "GLFW/glfw3.h"
+#include "../Vk/Utils.h"
 #include "Window.h"
-#include "vulkan/vulkan.hpp"
 
 using namespace Log;
 
 namespace VkCore
 {
-    Window::Window(const vk::Instance& vkInstance, const WindowProps &props) : m_Props(props)
+    Window::Window(vk::Instance& vkInstance, const WindowProps &props) : m_Props(props)
     {
         glfwSetErrorCallback(ErrorCallback);
 
@@ -34,17 +34,28 @@ namespace VkCore
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        m_Window = glfwCreateWindow(m_Props.m_Height, m_Props.m_Width, m_Props.m_Title.c_str(), nullptr, nullptr);
+        m_GlfwWindow = glfwCreateWindow(m_Props.m_Height, m_Props.m_Width, m_Props.m_Title.c_str(), nullptr, nullptr);
 
-        if (m_Window == nullptr)
+        if (m_GlfwWindow == nullptr)
         {
             LOG(ECategory::Window, ESeverity::Fatal, "Failed to create GLFW window! m_Window is nullptr!")
             throw std::runtime_error("Failed to create GLFW window! m_Window is nullptr!");
         }
 
-        glfwSetWindowUserPointer(m_Window, this);
+        std::vector<std::string> instanceExtensions = GetRequiredInstanceExtensions();
+        
+        vkInstance = VkCore::CreateInstance(props.m_Title,VK_API_VERSION_1_3,instanceExtensions,true);
 
-        glfwSetKeyCallback(m_Window, [](GLFWwindow *window, int key, int scancode, int action, int mods) -> void {
+        glfwSetWindowUserPointer(m_GlfwWindow, this);
+
+        vk::SurfaceKHR surface;
+
+        VkResult err = glfwCreateWindowSurface(static_cast<VkInstance>(vkInstance), m_GlfwWindow, nullptr,
+                                               reinterpret_cast<VkSurfaceKHR *>(&surface));
+
+        VkCore::CheckVkResult(err);
+
+        glfwSetKeyCallback(m_GlfwWindow, [](GLFWwindow *window, int key, int scancode, int action, int mods) -> void {
             const WindowProps &data = static_cast<Window *>(glfwGetWindowUserPointer(window))->m_Props;
 
             switch (action)
@@ -68,7 +79,7 @@ namespace VkCore
 
         LOG(ECategory::Window, ESeverity::Verbose, "KeyCallback set.")
 
-        glfwSetMouseButtonCallback(m_Window, [](GLFWwindow *window, int button, int action, int mods) -> void {
+        glfwSetMouseButtonCallback(m_GlfwWindow, [](GLFWwindow *window, int button, int action, int mods) -> void {
             Window *usrWindow = static_cast<Window *>(glfwGetWindowUserPointer(window));
 
             switch (action)
@@ -90,7 +101,7 @@ namespace VkCore
 
         LOG(ECategory::Window, ESeverity::Verbose, "MouseButton callback set.")
 
-        glfwSetWindowCloseCallback(m_Window, [](GLFWwindow *window) -> void {
+        glfwSetWindowCloseCallback(m_GlfwWindow, [](GLFWwindow *window) -> void {
             const WindowProps &data = static_cast<Window *>(glfwGetWindowUserPointer(window))->m_Props;
 
             WindowClosedEvent event;
@@ -99,7 +110,7 @@ namespace VkCore
 
         LOG(ECategory::Window, ESeverity::Verbose, "Close callback set.")
 
-        glfwSetScrollCallback(m_Window, [](GLFWwindow *window, double xoffset, double yoffset) -> void {
+        glfwSetScrollCallback(m_GlfwWindow, [](GLFWwindow *window, double xoffset, double yoffset) -> void {
             const WindowProps &data = static_cast<Window *>(glfwGetWindowUserPointer(window))->m_Props;
 
             MouseScrolledEvent event(xoffset, yoffset);
@@ -107,7 +118,7 @@ namespace VkCore
         });
 
         LOG(ECategory::Window, ESeverity::Verbose, "ScrollCallback callback set.")
-        glfwSetCursorPosCallback(m_Window, [](GLFWwindow *window, double xpos, double ypos) -> void {
+        glfwSetCursorPosCallback(m_GlfwWindow, [](GLFWwindow *window, double xpos, double ypos) -> void {
             const Window *usrWindow = static_cast<Window *>(glfwGetWindowUserPointer(window));
 
             MouseMovedEvent event(xpos, ypos);
@@ -115,7 +126,7 @@ namespace VkCore
         });
         LOG(ECategory::Window, ESeverity::Verbose, "CursorPos callback set.")
 
-        glfwSetWindowSizeCallback(m_Window, [](GLFWwindow *window, int width, int height) {
+        glfwSetWindowSizeCallback(m_GlfwWindow, [](GLFWwindow *window, int width, int height) {
             const Window *usrWindow = static_cast<Window *>(glfwGetWindowUserPointer(window));
 
             WindowResizedEvent event(width, height);
@@ -129,12 +140,32 @@ namespace VkCore
     {
         m_Props.m_Width = width;
         m_Props.m_Height = height;
-        glfwSetWindowSize(m_Window, width, height);
+        glfwSetWindowSize(m_GlfwWindow, width, height);
     }
 
     void Window::ErrorCallback(int error, const char *desc)
     {
         std::cout << "GLFW Error has occured! (" << (error) << ") Desc: " << desc << std::endl;
+    }
+
+    std::vector<std::string> GetRequiredInstanceExtensions()
+    {
+
+        uint32_t glfwExtensionsCount;
+        const char **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionsCount);
+
+        std::vector<std::string> instanceExtensions;
+
+        instanceExtensions.reserve(glfwExtensionsCount + 1);
+
+        for (uint32_t i = 0; i < glfwExtensionsCount; i++)
+        {
+            instanceExtensions.push_back(glfwExtensions[i]);
+        }
+ 
+        instanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+
+        return std::move(instanceExtensions);
     }
 
 } // namespace VkCore

@@ -1,10 +1,11 @@
 ﻿#pragma once
-#include <GLFW/glfw3.h>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <sys/types.h>
-#include <vulkan/vulkan.hpp>
+#include "vulkan/vulkan.hpp"
+#define GLFW_INCLUDE_VULKAN
+#include "GLFW/glfw3.h"
 
 #include "../Event/Event.h"
 #include "../Model/MouseState.h"
@@ -18,25 +19,23 @@ namespace VkCore
         std::function<void(Event &)> m_CbFunction;
 
         WindowProps(const std::string &title = "Hello, World", uint32_t width = 1280, uint32_t height = 720)
-            : m_Title(title), m_Width(width), m_Height(height)
-        {
-        }
+            : m_Title(title), m_Width(width), m_Height(height) {}
     };
 
     class Window
     {
       public:
-        Window(const vk::Instance& vkInstance, const WindowProps &props = WindowProps());
+        Window(vk::Instance& vkInstance, const WindowProps &props = WindowProps());
 
         ~Window()
         {
             glfwTerminate();
-            glfwDestroyWindow(m_Window);
+            glfwDestroyWindow(m_GlfwWindow);
         }
 
         [[nodiscard]] GLFWwindow *GetGLFWWindow() const
         {
-            return m_Window;
+            return m_GlfwWindow;
         }
 
         void SetEventCallback(const std::function<void(Event &)> &callback)
@@ -58,8 +57,10 @@ namespace VkCore
 
         static void ErrorCallback(int error, const char *desc);
 
+        static std::vector<std::string> GetRequiredInstanceExtensions();
+
       private:
-        GLFWwindow *m_Window;
+        GLFWwindow *m_GlfwWindow;
         WindowProps m_Props;
 
         MouseState m_MouseState;

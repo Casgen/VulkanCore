@@ -4,7 +4,7 @@ project "VulkanCore"
 
     configurations {"Debug", "Release"}
 
-    architecture "x64"
+    architecture "x86_64"
 
     language "C++"
     cppdialect "C++20"
@@ -14,9 +14,7 @@ project "VulkanCore"
     targetdir("../bin/" .. output_dir .. "/%{prj.name}")
     objdir("../obj/" .. output_dir .. "/%{prj.name}")
 
-
     links { "GLFW", "GLM" }
-
 
     includedirs {
         "Vendor/glfw/include/",
@@ -51,7 +49,7 @@ project "VulkanCore"
 
     filter { "system:windows" }
 
-        -- In case of using with VulkanSDK make sure that you have VULKAN_SDK environment variable set! (for ex. C:/VulkanSDK/1.3.250.0/x86_64)
+        -- make sure that you have VULKAN_SDK environment variable set! (for ex. C:/VulkanSDK/1.3.250.0/x86_64)
         includedirs {
             "$(VULKAN_SDK)/Include/"
         }
@@ -63,7 +61,6 @@ project "VulkanCore"
         links {
             "$(VULKAN_SDK)/Lib/vulkan-1.lib"
         }
-        
 
     filter "configurations:Release"
         defines { "NDEBUG" }
