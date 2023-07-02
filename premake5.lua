@@ -1,4 +1,7 @@
 ---@diagnostic disable: undefined-global
+include "Vendor/glfw.lua"
+include "Vendor/glm.lua"
+
 project "VulkanCore"
     kind "StaticLib"
 
@@ -17,8 +20,8 @@ project "VulkanCore"
     links { "GLFW", "GLM" }
 
     includedirs {
-        "Vendor/glfw/include/",
-        "Vendor/glm/",
+        "Vendor/glfw/include",
+        "Vendor/glm",
         "Vendor/stb_image",
         "Vendor/vma/",
     }
@@ -27,6 +30,10 @@ project "VulkanCore"
         "Src/**.cpp",
         "Src/**.h",
         "Src/**.hpp",
+        "Vendor/stb_image/**.cpp",
+        "Vendor/stb_image/**.h",
+        "Vendor/vma/**.h",
+        "Vendor/vma/**.cpp",
     }
 
     filter { "system:linux" }
@@ -42,25 +49,30 @@ project "VulkanCore"
         }
 
         -- On linux, make sure that you have installed libvulkan-dev through your package manager!
-        links { "vulkan" }
+        links { "vulkan", "pthread" }
 
 
-        defines {"_X11"}
+        defines {
+            "_X11",
+            "_GLFW_VULKAN_STATIC"
+        }
 
     filter { "system:windows" }
 
         -- make sure that you have VULKAN_SDK environment variable set! (for ex. C:/VulkanSDK/1.3.250.0/x86_64)
         includedirs {
-            "$(VULKAN_SDK)/Include/"
+            "$(VULKAN_SDK)/Include"
         }
 
         libdirs {
-            "$(VULKAN_SDK)/Lib/"
+            "$(VULKAN_SDK)/Lib"
         }
 
         links {
             "$(VULKAN_SDK)/Lib/vulkan-1.lib"
         }
+
+        defines { "_WIN32" }
 
     filter "configurations:Release"
         defines { "NDEBUG" }
@@ -77,5 +89,3 @@ project "VulkanCore"
     filter { "configurations:Release", "platforms:Windows-x64" }
         buildoptions { "/MD" }
 
-include "Vendor/glfw.lua"
-include "Vendor/glm.lua"

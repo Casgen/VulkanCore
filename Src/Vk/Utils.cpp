@@ -1,15 +1,17 @@
 #include "Utils.h"
 #include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_to_string.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
 
 namespace VkCore
 {
-    vk::Instance CreateInstance(const std::string &appName, const uint32_t vkApiVersion,
-                                const std::vector<std::string> instanceExtensions, const uint32_t appVersion,
-                                const std::string &engineName, const uint32_t engineVersion)
+        vk::Instance Utils::CreateInstance(const std::string &appName, const uint32_t vkApiVersion,
+                                    const std::vector<std::string> &instanceExtensions, const uint32_t appVersion,
+                                    const std::string &engineName, const uint32_t engineVersion)
     {
         vk::ApplicationInfo appInfo = {appName.c_str(), appVersion, engineName.c_str(), engineVersion, vkApiVersion};
 
@@ -47,7 +49,14 @@ namespace VkCore
         return instance;
     }
 
-    vk::DebugUtilsMessengerCreateInfoEXT PopulateDebugMessengerCreateInfo()
+    VKAPI_ATTR VkBool32 VKAPI_CALL Utils::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                 VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                 const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+                                                 void *pUserData) {
+        return false;
+    }
+
+    vk::DebugUtilsMessengerCreateInfoEXT Utils::PopulateDebugMessengerCreateInfo()
     {
 
         vk::DebugUtilsMessageSeverityFlagsEXT severityFlags;
@@ -64,7 +73,7 @@ namespace VkCore
         vk::DebugUtilsMessengerCreateInfoEXT createInfo;
 
         createInfo.setPNext(nullptr)
-            .setPfnUserCallback(&DebugCallback)
+            .setPfnUserCallback(&Utils::DebugCallback)
             .setFlags({})
             .setMessageType(messageTypes)
             .setMessageSeverity(severityFlags);
@@ -72,7 +81,7 @@ namespace VkCore
         return createInfo;
     }
 
-    void CheckVkResult(VkResult result)
+    void Utils::CheckVkResult(VkResult result)
     {
         if (result != 0)
         {
@@ -85,3 +94,25 @@ namespace VkCore
     }
 
 } // namespace VkCore
+
+VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instance,
+                                                              const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+                                                              const VkAllocationCallbacks *pAllocator,
+                                                              VkDebugUtilsMessengerEXT *pMessenger)
+{
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+
+    if (func != nullptr)
+        return func(instance, pCreateInfo, pAllocator, pMessenger);
+
+    return VK_ERROR_EXTENSION_NOT_PRESENT;
+}
+
+VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger,
+                                                           VkAllocationCallbacks const *pAllocator)
+{
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+
+    if (func != nullptr)
+        return func(instance, messenger, pAllocator);
+}

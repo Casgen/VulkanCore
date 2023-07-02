@@ -54,6 +54,7 @@ project "GLFW"
 		defines
 		{
 			"_GLFW_X11",
+            "_GLFW_VULKAN_STATIC"
 		}
 
 	filter "system:windows"
