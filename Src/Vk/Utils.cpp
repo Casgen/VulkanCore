@@ -3,56 +3,57 @@
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_to_string.hpp"
+#include "../Log/Log.h"
 #include <iostream>
 #include <string>
 #include <vector>
 
 namespace VkCore
 {
-        vk::Instance Utils::CreateInstance(const std::string &appName, const uint32_t vkApiVersion,
-                                    const std::vector<std::string> &instanceExtensions, const uint32_t appVersion,
-                                    const std::string &engineName, const uint32_t engineVersion)
+    vk::Instance Utils::CreateInstance(const std::string &appName, const uint32_t vkApiVersion,
+                                       const std::vector<const char*> &instanceExtensions, const uint32_t appVersion,
+                                       const std::string &engineName, const uint32_t engineVersion)
     {
         vk::ApplicationInfo appInfo = {appName.c_str(), appVersion, engineName.c_str(), engineVersion, vkApiVersion};
 
-        vk::InstanceCreateInfo InstanceCreateInfo({}, &appInfo);
+        vk::InstanceCreateInfo instanceCreateInfo({}, &appInfo);
 
-        if (!instanceExtensions.empty())
-        {
-
-            // Need to convert it to normal C-like strings.
-            std::vector<const char *> cExtensions;
-
-            for (const std::string &extension : instanceExtensions)
-            {
-                cExtensions.push_back(extension.c_str());
-            }
-
-            InstanceCreateInfo.enabledExtensionCount = instanceExtensions.size();
-            InstanceCreateInfo.ppEnabledExtensionNames = cExtensions.data();
-        }
+        instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
+        instanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
 
         vk::Instance instance;
 
         try
         {
-            instance = vk::createInstance(InstanceCreateInfo);
+            instance = vk::createInstance(instanceCreateInfo);
         }
         catch (const vk::SystemError &err)
         {
             std::string errMsg = std::string("Failed to create VkInstance!: ").append(errMsg);
 
             std::cerr << errMsg << std::endl;
-            std::runtime_error(errMsg.c_str());
+            exit(-1);
+        }
+        catch (std::exception &err)
+        {
+            std::cout << "std::exception: " << err.what() << std::endl;
+            LOG(Exception, Fatal, "Std::exception");
+            exit(-1);
+        }
+        catch (...)
+        {
+            std::cout << "unknown error\n";
+            exit(-1);
         }
 
         return instance;
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL Utils::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                                 VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                                 const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-                                                 void *pUserData) {
+                                                        VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
+                                                        void *pUserData)
+    {
         return false;
     }
 
@@ -100,7 +101,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instanc
                                                               const VkAllocationCallbacks *pAllocator,
                                                               VkDebugUtilsMessengerEXT *pMessenger)
 {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 
     if (func != nullptr)
         return func(instance, pCreateInfo, pAllocator, pMessenger);
@@ -111,7 +112,7 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instanc
 VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger,
                                                            VkAllocationCallbacks const *pAllocator)
 {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 
     if (func != nullptr)
         return func(instance, messenger, pAllocator);

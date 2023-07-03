@@ -21,6 +21,7 @@ namespace Log
         Application = 0x2,
         Event = 0x3,
         Rendering = 0x4,
+        Exception = 0x5,
     };
 
     class Logger
@@ -39,7 +40,7 @@ namespace Log
          * @param severity - the level of severity. e.g. if you define ESeverity Error it will show logs with Error or
          * more severe ones.
          */
-        void SetSeverityFilter(const ESeverity &severity);
+        static void SetSeverityFilter(const ESeverity &severity);
 
 
       private:
@@ -50,7 +51,7 @@ namespace Log
 
 
 #ifdef DEBUG
-#define LOG(Category, Severity, Message) Log::Logger::Log(Category, Severity, Message);
+#define LOG(Category, Severity, Message) Log::Logger::Log(Log::ECategory::Category, Log::ESeverity::Severity, Message);
 #else
 #define LOG(Category, Severity, Message)
 #endif

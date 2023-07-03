@@ -17,37 +17,38 @@ namespace Log
         switch (severity)
         {
         case ESeverity::Info:
-            severityString = "[INFO]";
+            severityString = "INFO"; break;
         case ESeverity::Verbose:
-            severityString = "[VERBOSE]";
+            severityString = "VERBOSE"; break;
         case ESeverity::Warning:
-            severityString = "[WARNING]";
+            severityString = "WARNING"; break;
         case ESeverity::Error:
-            severityString = "[ERROR]";
+            severityString = "ERROR"; break;
         default:
-            severityString = "[UNKNOWN]";
+            severityString = "UNKNOWN";
         }
 
         switch (category)
         {
         case ECategory::Window:
-            categoryString = "[WINDOW]";
+            categoryString = "WINDOW"; break;
         case ECategory::Vulkan:
-            categoryString = "[VULKAN]";
+            categoryString = "VULKAN"; break;
         case ECategory::Application:
-            categoryString = "[APP]";
+            categoryString = "APP"; break;
         case ECategory::Event:
-            categoryString = "[EVENT]";
+            categoryString = "EVENT"; break;
         case ECategory::Rendering:
-            categoryString = "[RENDERING]";
+            categoryString = "RENDERING"; break;
+        case ECategory::Exception:
+            categoryString = "EXCEPTION"; break;
         default:
-            categoryString = "[UNKNOWN]";
+            categoryString = "UNKNOWN";
         }
 
-        auto timeStamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        //auto timeStamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
-        printf("LOG - %s | %s | [Time: %s] - Description: %s", severityString.c_str(), categoryString.c_str(),
-               ctime(&timeStamp), message.c_str());
+        printf("Log: [%s | %s] Description: %s", severityString.c_str(), categoryString.c_str(), message.c_str());
     }
 
     void Logger::SetSeverityFilter(const ESeverity &severity)

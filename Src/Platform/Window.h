@@ -20,13 +20,15 @@ namespace VkCore
         std::function<void(Event &)> m_CbFunction;
 
         WindowProps(const std::string &title = "Hello, World", uint32_t width = 1280, uint32_t height = 720)
-            : m_Title(title), m_Width(width), m_Height(height) {}
+            : m_Title(title), m_Width(width), m_Height(height)
+        {
+        }
     };
 
     class Window
     {
       public:
-        Window(vk::Instance& vkInstance, const WindowProps &props = WindowProps());
+        Window(vk::Instance &vkInstance, const WindowProps &props = WindowProps());
 
         ~Window()
         {
@@ -54,13 +56,19 @@ namespace VkCore
             return m_Props;
         }
 
+        [[nodiscard]] bool ShouldClose() const
+        {
+            return glfwWindowShouldClose(m_GlfwWindow);
+        }
+
         void SetWindowSize(const int width, const int height);
 
         static void ErrorCallback(int error, const char *desc);
 
-        static std::vector<std::string> GetRequiredInstanceExtensions();
+        static std::vector<const char *> GetRequiredInstanceExtensions();
 
       private:
+        vk::SurfaceKHR m_Surface;
         GLFWwindow *m_GlfwWindow;
         WindowProps m_Props;
 

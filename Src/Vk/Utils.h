@@ -14,19 +14,19 @@ namespace VkCore
       public:
         /**
          * @brief Creates a new Vulkan Instance
-         * @param appName - arbitrary application name
-         * @param vkApiVersion - Defines the Vulkan API version which will be used for creation. USW WITH
+         * @param appName arbitrary application name
+         * @param vkApiVersion Defines the Vulkan API version which will be used for creation. Use with
          * VK_API_VERSION_1_X
-         * @param enableValidationLayer - Enables validation layers for debugging. This way everything that Vulkan does
+         * @param enableValidationLayer Enables validation layers for debugging. This way everything that Vulkan does
          * can be logged.
-         * @param appVersion - arbitrary version of the app.
-         * @param engineName - arbitrary engine name.
-         * @param engineVersion - arbitrary engine version.
+         * @param appVersion arbitrary version of the app.
+         * @param engineName arbitrary engine name.
+         * @param engineVersion arbitrary engine version.
          */
         static vk::Instance CreateInstance(const std::string &appName, const uint32_t vkApiVersion,
-                                           const std::vector<std::string> &instanceExtensions,
-                                           const uint32_t appVersion = 0, const std::string &engineName = "Engine",
-                                           const uint32_t engineVersion = 0);
+                                           const std::vector<const char*> &instanceExtensions,
+                                           const uint32_t appVersion = VK_MAKE_VERSION(0, 0, 0), const std::string &engineName = "Engine",
+                                           const uint32_t engineVersion = VK_MAKE_VERSION(0, 0, 0));
 
         /**
          * @brief Creates a DebugMessengerCreateInfo object used within the VkInstance object.
@@ -56,8 +56,12 @@ namespace VkCore
         {
             std::cout << "Hello" << std::endl;
         }
+
+        inline static bool m_ValidationLayersEnabled = false;
     };
+
 } // namespace VkCore
+//
 VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instance,
                                                               const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
                                                               const VkAllocationCallbacks *pAllocator,
