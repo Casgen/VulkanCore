@@ -1,14 +1,16 @@
 #pragma once
 
-#include "vulkan/vulkan_core.h"
 #include <cstdint>
 #include <iostream>
 #include <memory>
-#include <vulkan/vk_platform.h>
-#include <vulkan/vulkan.hpp>
+#include <set>
+
+#include "vulkan/vulkan.hpp"
 
 namespace VkCore
 {
+    struct SwapChainSupportDetails;
+
     class Utils
     {
       public:
@@ -24,8 +26,9 @@ namespace VkCore
          * @param engineVersion arbitrary engine version.
          */
         static vk::Instance CreateInstance(const std::string &appName, const uint32_t vkApiVersion,
-                                           const std::vector<const char*> &instanceExtensions,
-                                           const uint32_t appVersion = VK_MAKE_VERSION(0, 0, 0), const std::string &engineName = "Engine",
+                                           const std::vector<const char *> &instanceExtensions,
+                                           const uint32_t appVersion = VK_MAKE_VERSION(0, 0, 0),
+                                           const std::string &engineName = "Engine",
                                            const uint32_t engineVersion = VK_MAKE_VERSION(0, 0, 0));
 
         /**
@@ -46,18 +49,21 @@ namespace VkCore
                                                             const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
                                                             void *pUserData);
 
+        static bool CheckValidationLayerSupport();
+        /**
+         * @brief Checks the result of a Vulkan operation. The function may abort the program if the result is an error!
+         * @param result a VkResult object.
+         */
+        static void CheckVkResult(vk::Result result);
+
         /**
          * @brief Checks the result of a Vulkan operation. The function may abort the program if the result is an error!
          * @param result a VkResult object.
          */
         static void CheckVkResult(VkResult result);
 
-        static void PrintMsg()
-        {
-            std::cout << "Hello" << std::endl;
-        }
-
-        inline static bool m_ValidationLayersEnabled = false;
+        inline static std::set<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
+        
     };
 
 } // namespace VkCore

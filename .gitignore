@@ -1,8 +1,5 @@
 bin/
 obj/
-MeshAndTaskShaders/bin
-MeshAndTaskShaders/obj
-MeshAndTaskShaders/build
 build/
 /compile_commands.json
 Vendor/*.make

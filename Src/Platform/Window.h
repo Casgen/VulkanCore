@@ -17,9 +17,9 @@ namespace VkCore
     {
         std::string m_Title;
         uint32_t m_Width, m_Height;
-        std::function<void(Event &)> m_CbFunction;
+        std::function<void(Event&)> m_CbFunction;
 
-        WindowProps(const std::string &title = "Hello, World", uint32_t width = 1280, uint32_t height = 720)
+        WindowProps(const std::string& title = "Hello, World", uint32_t width = 1280, uint32_t height = 720)
             : m_Title(title), m_Width(width), m_Height(height)
         {
         }
@@ -28,7 +28,7 @@ namespace VkCore
     class Window
     {
       public:
-        Window(vk::Instance &vkInstance, const WindowProps &props = WindowProps());
+        Window(vk::Instance& vkInstance, const WindowProps& props = WindowProps());
 
         ~Window()
         {
@@ -36,40 +36,28 @@ namespace VkCore
             glfwDestroyWindow(m_GlfwWindow);
         }
 
-        [[nodiscard]] GLFWwindow *GetGLFWWindow() const
-        {
-            return m_GlfwWindow;
-        }
+        [[nodiscard]] GLFWwindow* GetGLFWWindow() const;
+        [[nodiscard]] MouseState GetMouseState() const;
+        [[nodiscard]] WindowProps GetProps() const;
+        [[nodiscard]] bool ShouldClose() const;
+        [[nodiscard]] vk::SurfaceKHR& GetSurface();
 
-        void SetEventCallback(const std::function<void(Event &)> &callback)
-        {
-            m_Props.m_CbFunction = callback;
-        }
+        void SetEventCallback(const std::function<void(Event&)>& callback);
 
-        [[nodiscard]] MouseState &GetMouseState()
-        {
-            return m_MouseState;
-        }
-
-        [[nodiscard]] WindowProps GetProps() const
-        {
-            return m_Props;
-        }
-
-        [[nodiscard]] bool ShouldClose() const
-        {
-            return glfwWindowShouldClose(m_GlfwWindow);
-        }
+        // ----------------------------------------------
 
         void SetWindowSize(const int width, const int height);
 
-        static void ErrorCallback(int error, const char *desc);
+        // ----------------------------------------------
 
-        static std::vector<const char *> GetRequiredInstanceExtensions();
+
+        static void ErrorCallback(int error, const char* desc);
+
+        static std::vector<const char*> GetRequiredInstanceExtensions();
 
       private:
         vk::SurfaceKHR m_Surface;
-        GLFWwindow *m_GlfwWindow;
+        GLFWwindow* m_GlfwWindow;
         WindowProps m_Props;
 
         MouseState m_MouseState;

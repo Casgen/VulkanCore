@@ -54,7 +54,6 @@ project "VulkanCore"
 
         defines {
             "_X11",
-            "_GLFW_VULKAN_STATIC"
         }
 
     filter { "system:windows" }
