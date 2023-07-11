@@ -42,10 +42,9 @@ namespace VkCore
         [[nodiscard]] bool ShouldClose() const;
         [[nodiscard]] vk::SurfaceKHR& GetSurface();
 
+        // ---------------- SETTERS ---------------------
+
         void SetEventCallback(const std::function<void(Event&)>& callback);
-
-        // ----------------------------------------------
-
         void SetWindowSize(const int width, const int height);
 
         // ----------------------------------------------

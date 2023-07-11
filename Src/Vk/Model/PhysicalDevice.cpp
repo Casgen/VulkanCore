@@ -86,6 +86,12 @@ namespace VkCore
         return std::move(details);
     }
 
+
+    vk::Device PhysicalDevice::CreateDevice(const vk::DeviceCreateInfo& deviceCreateInfo) const
+    {
+        return m_PhysicalDevice.createDevice(deviceCreateInfo);
+    }
+
     SwapChainSupportDetails PhysicalDevice::GetSwapChainSupportDetails() const
     {
         return m_SwapChainDetails;

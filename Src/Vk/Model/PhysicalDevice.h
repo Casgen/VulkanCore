@@ -7,6 +7,7 @@
 #include "QueueFamilyIndices.h"
 #include "SwapChainSupportDetails.h"
 #include "vulkan/vulkan_handles.hpp"
+#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {
@@ -37,6 +38,12 @@ namespace VkCore
          */
         SwapChainSupportDetails QuerySwapChainSupport(const vk::SurfaceKHR& surface) const;
 
+        /**
+         * @brief Creates a logical device from this physical device.
+         * @param deviceCreateInfo
+         */
+        vk::Device CreateDevice(const vk::DeviceCreateInfo& deviceCreateInfo) const;
+
         // ------------ GETTERS ------------
 
         SwapChainSupportDetails GetSwapChainSupportDetails() const;
@@ -50,8 +57,8 @@ namespace VkCore
         QueueFamilyIndices m_QueueFamilyIndices;
 
         /**
-         * @brief Enumerates all the queue families and chooses their index. They are then
-         * used for submitting commands to those queues.
+         * @brief Enumerates all the queue families and chooses their index. They are
+         * used later for submitting commands to those queues.
          * @param surface
          */
         QueueFamilyIndices FindQueueFamilyIndices(const vk::SurfaceKHR& surface);

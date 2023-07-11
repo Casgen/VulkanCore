@@ -100,6 +100,12 @@ const char* Logger::EvaluateCategoryString(ECategory category)
     case ECategory::Exception:
         return "EXCEPTION";
         break;
+    case ECategory::SystemError:
+        return "SYSTEM ERROR";
+        break;
+    case ECategory::Unknown:
+        return "UNKNOWN";
+        break;
 
     // Vulkan Specific
     case ECategory::Validation:
@@ -115,6 +121,6 @@ const char* Logger::EvaluateCategoryString(ECategory category)
         return "PERFORMANCE";
         break;
     default:
-        return "UNKNOWN";
+        return "UNCATEGORIZED";
     }
 }

@@ -3,13 +3,35 @@
 #include <mutex>
 #include <string>
 
+#define TRY_CATCH_BEGIN() try {
+
+#define TRY_CATCH_END() }\
+catch (const vk::SystemError& err)\
+{\
+    Logger::Print(ECategory::SystemError, ESeverity::Error, err.what());\
+    exit(-1);\
+}\
+catch (std::exception& err)\
+{\
+    Logger::Print(ECategory::Exception, ESeverity::Error, err.what());\
+    exit(-1);\
+}\
+catch (...)\
+{\
+    Logger::Print(ECategory::Unknown, ESeverity::Error, "Unknown error!");\
+    exit(-1);\
+}\
+
+
+
+
 enum class ESeverity : uint32_t
 {
-    Verbose = 0x0000001,
-    Info = 0x00000010,
-    Warning = 0x00000100,
-    Error = 0x000001000,
-    Fatal = 0x00010000,
+    Verbose     = 0x00000001,
+    Info        = 0x00000010,
+    Warning     = 0x00000100,
+    Error       = 0x00001000,
+    Fatal       = 0x00010000,
 };
 
 enum class ECategory : uint8_t
@@ -20,12 +42,14 @@ enum class ECategory : uint8_t
     Event = 0x3,
     Rendering = 0x4,
     Exception = 0x5,
+    SystemError = 0x6,
+    Unknown = 0x7,
 
     // Vulkan specific
-    Validation = 0x6,
-    Performance = 0x7,
-    DeviceAddressBinding = 0x8,
-    General = 0x9
+    Validation = 0x8,
+    Performance = 0x9,
+    DeviceAddressBinding = 0xA,
+    General = 0xB
 };
 
 class Logger

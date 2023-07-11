@@ -133,6 +133,8 @@ namespace VkCore
         LOG(Window, Verbose, "WindowSize callback set.")
     }
 
+    // -------------- GETTERS ------------------
+
     GLFWwindow* Window::GetGLFWWindow() const
     {
         return m_GlfwWindow;
@@ -157,6 +159,10 @@ namespace VkCore
     {
         m_Props.m_CbFunction = callback;
     }
+
+    // ------------------------------------------
+
+
 
     bool Window::ShouldClose() const
     {

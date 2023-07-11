@@ -20,8 +20,7 @@ namespace VkCore
          * @param vkApiVersion Defines the Vulkan API version which will be used for creation. Use with
          * VK_API_VERSION_1_X
          * @param enableValidationLayer Enables validation layers for debugging. This way everything that Vulkan does
-         * can be logged.
-         * @param appVersion arbitrary version of the app.
+         * can be logged. @param appVersion arbitrary version of the app.
          * @param engineName arbitrary engine name.
          * @param engineVersion arbitrary engine version.
          */
@@ -75,3 +74,4 @@ VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instanc
 
 VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger,
                                                            VkAllocationCallbacks const *pAllocator);
+
