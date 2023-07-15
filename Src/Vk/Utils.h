@@ -6,6 +6,7 @@
 #include <set>
 
 #include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_core.h"
 
 namespace VkCore
 {
@@ -24,10 +25,11 @@ namespace VkCore
          * @param engineName arbitrary engine name.
          * @param engineVersion arbitrary engine version.
          */
-        static vk::Instance CreateInstance(const std::string &appName, const uint32_t vkApiVersion,
-                                           const std::vector<const char *> &instanceExtensions,
+        static vk::Instance CreateInstance(const std::string& appName, const uint32_t vkApiVersion,
+                                           const std::vector<const char*>& instanceExtensions,
+                                           const std::vector<const char*>& layerExtensions = {},
                                            const uint32_t appVersion = VK_MAKE_VERSION(0, 0, 0),
-                                           const std::string &engineName = "Engine",
+                                           const std::string& engineName = "Engine",
                                            const uint32_t engineVersion = VK_MAKE_VERSION(0, 0, 0));
 
         /**
@@ -45,8 +47,8 @@ namespace VkCore
          */
         static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                                             VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                                            const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
-                                                            void *pUserData);
+                                                            const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                                                            void* pUserData);
 
         static bool CheckValidationLayerSupport();
         /**
@@ -61,17 +63,15 @@ namespace VkCore
          */
         static void CheckVkResult(VkResult result);
 
-        inline static std::set<const char*> m_ValidationLayers = { "VK_LAYER_KHRONOS_validation" };
-        
+        inline static std::vector<const char*> m_ValidationLayers = {"VK_LAYER_KHRONOS_validation"};
     };
 
 } // namespace VkCore
 //
 VKAPI_ATTR VkResult VKAPI_CALL vkCreateDebugUtilsMessengerEXT(VkInstance instance,
-                                                              const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-                                                              const VkAllocationCallbacks *pAllocator,
-                                                              VkDebugUtilsMessengerEXT *pMessenger);
+                                                              const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+                                                              const VkAllocationCallbacks* pAllocator,
+                                                              VkDebugUtilsMessengerEXT* pMessenger);
 
 VKAPI_ATTR void VKAPI_CALL vkDestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger,
-                                                           VkAllocationCallbacks const *pAllocator);
-
+                                                           VkAllocationCallbacks const* pAllocator);

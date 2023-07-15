@@ -1,6 +1,5 @@
 #include <iostream>
 #include <stdexcept>
-#include <vulkan/vulkan_core.h>
 
 #include "../Event/KeyEvent.h"
 #include "../Event/MouseEvent.h"
@@ -9,6 +8,7 @@
 
 #include "../Vk/Utils.h"
 #include "Window.h"
+#include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
 {
@@ -41,16 +41,8 @@ namespace VkCore
             throw std::runtime_error("Failed to create GLFW window! m_Window is nullptr!");
         }
 
-        std::vector<const char*> requiredExtensions = GetRequiredInstanceExtensions();
-
-        vkInstance = VkCore::Utils::CreateInstance(props.m_Title, VK_API_VERSION_1_3, requiredExtensions, true);
-
         glfwSetWindowUserPointer(m_GlfwWindow, this);
 
-        VkResult err = glfwCreateWindowSurface(static_cast<VkInstance>(vkInstance), m_GlfwWindow, nullptr,
-                                               reinterpret_cast<VkSurfaceKHR*>(&m_Surface));
-
-        VkCore::Utils::CheckVkResult(err);
 
         glfwSetKeyCallback(m_GlfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods) -> void {
             const WindowProps& data = static_cast<Window*>(glfwGetWindowUserPointer(window))->m_Props;
@@ -133,6 +125,13 @@ namespace VkCore
         LOG(Window, Verbose, "WindowSize callback set.")
     }
 
+    void Window::CreateSurface(const vk::Instance& instance)
+    {
+        VkResult err = glfwCreateWindowSurface(static_cast<VkInstance>(instance), m_GlfwWindow, nullptr,
+                                               reinterpret_cast<VkSurfaceKHR*>(&m_Surface));
+        VkCore::Utils::CheckVkResult(err);
+    }
+
     // -------------- GETTERS ------------------
 
     GLFWwindow* Window::GetGLFWWindow() const
@@ -162,8 +161,6 @@ namespace VkCore
 
     // ------------------------------------------
 
-
-
     bool Window::ShouldClose() const
     {
         return glfwWindowShouldClose(m_GlfwWindow);
@@ -189,10 +186,6 @@ namespace VkCore
         std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionsCount);
 
         extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-
-#ifdef DEBUG
-        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-#endif
 
         return extensions;
     }

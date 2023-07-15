@@ -3,8 +3,8 @@
 #include <functional>
 #include <memory>
 #include <sys/types.h>
-#include <vulkan/vulkan.hpp>
 
+#include <vulkan/vulkan.hpp>
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
@@ -28,6 +28,12 @@ namespace VkCore
     class Window
     {
       public:
+
+        /**
+        * Initializes GLFW and creates a new winow. Also Creates a new VkInstance.
+        * @param vkInstance a reference to a VkInstance object. In the constructor, the instance will be created.
+        * @param props
+        */
         Window(vk::Instance& vkInstance, const WindowProps& props = WindowProps());
 
         ~Window()
@@ -35,6 +41,10 @@ namespace VkCore
             glfwTerminate();
             glfwDestroyWindow(m_GlfwWindow);
         }
+
+        void CreateSurface(const vk::Instance& instance);
+
+
 
         [[nodiscard]] GLFWwindow* GetGLFWWindow() const;
         [[nodiscard]] MouseState GetMouseState() const;

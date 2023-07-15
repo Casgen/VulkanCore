@@ -38,13 +38,14 @@ namespace VkCore
 
             if (indices.isComplete() && extensionsSupported && swapChainAdequate)
             {
-                vk::PhysicalDeviceProperties2 deviceProperties = device.getProperties2();
+                vk::PhysicalDeviceProperties deviceProperties = device.getProperties();
 
-                LOGF(Vulkan, Info, "Suitable physical device has been found. Using %s", deviceProperties.properties.deviceName.data())
+                LOGF(Vulkan, Info, "Suitable physical device has been found. Using %s", deviceProperties.deviceName.data())
 
                 m_QueueFamilyIndices = indices;
                 m_PhysicalDevice = device;
                 m_SwapChainDetails = swapChainSupport;
+                break;
             }
         }
     }
@@ -67,17 +68,16 @@ namespace VkCore
 
         details.m_SurfaceInfo.surface = surface;
 
-        Utils::CheckVkResult(
-            m_PhysicalDevice.getSurfaceCapabilities2KHR(&details.m_SurfaceInfo, &details.m_Capabilites));
+        details.m_Capabilites = m_PhysicalDevice.getSurfaceCapabilitiesKHR(surface);
 
         uint32_t surfaceFormatCount;
         Utils::CheckVkResult(
-            m_PhysicalDevice.getSurfaceFormats2KHR(&details.m_SurfaceInfo, &surfaceFormatCount, nullptr));
+            m_PhysicalDevice.getSurfaceFormatsKHR(surface, &surfaceFormatCount, nullptr));
 
         if (surfaceFormatCount != 0)
         {
             details.m_SurfaceFormats.resize(surfaceFormatCount);
-            Utils::CheckVkResult(m_PhysicalDevice.getSurfaceFormats2KHR(&details.m_SurfaceInfo, &surfaceFormatCount,
+            Utils::CheckVkResult(m_PhysicalDevice.getSurfaceFormatsKHR(surface, &surfaceFormatCount,
                                                                         details.m_SurfaceFormats.data()));
         }
 

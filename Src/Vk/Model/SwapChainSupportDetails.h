@@ -9,9 +9,9 @@ namespace VkCore
     struct SwapChainSupportDetails
     {
 
-        vk::SurfaceCapabilities2KHR m_Capabilites;
+        vk::SurfaceCapabilitiesKHR m_Capabilites;
         vk::PhysicalDeviceSurfaceInfo2KHR m_SurfaceInfo;
-        std::vector<vk::SurfaceFormat2KHR> m_SurfaceFormats;
+        std::vector<vk::SurfaceFormatKHR> m_SurfaceFormats;
         std::vector<vk::PresentModeKHR> m_PresentModes;
     };
 

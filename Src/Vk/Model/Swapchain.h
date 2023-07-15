@@ -5,6 +5,7 @@
 #include "SwapChainSupportDetails.h"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
+#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {
@@ -25,15 +26,25 @@ namespace VkCore
          */
         void Destroy(Device& device);
 
+        // ------------ GETTERS ------------
+
+        vk::SwapchainKHR GetVkSwapchain() const;
+        vk::SurfaceFormat2KHR GetVkSurfaceFormat() const;
+        vk::Extent2D GetSwapExtent() const;
+
+
       private:
         vk::SwapchainKHR m_Swapchain;
 
         std::vector<vk::Image> m_Images;
         std::vector<vk::ImageView> m_ImageViews;
 
-        vk::SurfaceFormat2KHR ChooseSurfaceFormat(const std::vector<vk::SurfaceFormat2KHR>& surfaceFormats);
+        vk::SurfaceFormat2KHR m_SurfaceFormat;
+        vk::Extent2D m_SwapExtent;
+
+        vk::SurfaceFormat2KHR ChooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& surfaceFormats);
         vk::PresentModeKHR ChoosePresentMode(const std::vector<vk::PresentModeKHR>& presentModes);
-        vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilities2KHR& presentModes, const uint32_t desiredWidth,
+        vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& presentModes, const uint32_t desiredWidth,
                                       const uint32_t desiredHeight);
     };
 } // namespace VkCore

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstring>
 #include <iterator>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -11,15 +12,47 @@
 namespace VkCore
 {
     vk::Instance Utils::CreateInstance(const std::string& appName, const uint32_t vkApiVersion,
-                                       const std::vector<const char*>& instanceExtensions, const uint32_t appVersion,
+                                       const std::vector<const char*>& instanceExtensions,
+                                       const std::vector<const char*>& layerExtensions, const uint32_t appVersion,
                                        const std::string& engineName, const uint32_t engineVersion)
     {
+
+        std::vector<vk::ExtensionProperties> extensionProperties = vk::enumerateInstanceExtensionProperties();
+
+        for (const auto& extension : instanceExtensions)
+        {
+
+            for (const auto& prop : extensionProperties)
+            {
+                if (strcmp(prop.extensionName, extension))
+                {
+                    break;
+                }
+
+                LOGF(Vulkan, Fatal,
+                     "The desired extension %s was not found! This could be due to a misspell or an outdated version!",
+                     extension)
+                throw std::runtime_error(
+                    "The desired extension was not found! This could be due to a misspell or an outdated version!");
+            }
+        }
+
         vk::ApplicationInfo appInfo = {appName.c_str(), appVersion, engineName.c_str(), engineVersion, vkApiVersion};
 
         vk::InstanceCreateInfo instanceCreateInfo({}, &appInfo);
 
-        instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
-        instanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
+        instanceCreateInfo.setPEnabledExtensionNames(instanceExtensions);
+
+#if DEBUG
+
+        vk::DebugUtilsMessengerCreateInfoEXT debugCreateInfo = PopulateDebugMessengerCreateInfo();
+
+        if (CheckValidationLayerSupport())
+        {
+            instanceCreateInfo.setPEnabledLayerNames(m_ValidationLayers);
+            instanceCreateInfo.setPNext(&debugCreateInfo);
+        }
+#endif
 
         vk::Instance instance;
 
@@ -29,7 +62,7 @@ namespace VkCore
         }
         catch (const vk::SystemError& err)
         {
-            std::string errMsg = std::string("Failed to create VkInstance!: ").append(errMsg);
+            std::string errMsg = std::string("Failed to create VkInstance!: ").append(err.what());
 
             std::cerr << errMsg << std::endl;
             exit(-1);
@@ -94,8 +127,7 @@ namespace VkCore
 
         vk::DebugUtilsMessengerCreateInfoEXT createInfo;
 
-        createInfo.setPNext(nullptr)
-            .setPfnUserCallback(&Utils::DebugCallback)
+        createInfo.setPfnUserCallback(&Utils::DebugCallback)
             .setFlags({})
             .setMessageType(messageTypes)
             .setMessageSeverity(severityFlags);
@@ -107,18 +139,23 @@ namespace VkCore
     {
         std::vector<vk::LayerProperties> layerProperties = vk::enumerateInstanceLayerProperties();
 
-        for (const vk::LayerProperties& property : layerProperties)
+        for (const auto& layer : m_ValidationLayers)
         {
+            bool layerFound = false;
 
-            for (const auto layer : m_ValidationLayers)
+            for (const auto& property : layerProperties)
             {
                 if (strcmp(property.layerName, layer))
                 {
-                    continue;
+                    layerFound = true;
+                    break;
                 }
+                
             }
 
-            return false;
+            if (!layerFound) {
+                return false;
+            }
         }
 
         return true;
