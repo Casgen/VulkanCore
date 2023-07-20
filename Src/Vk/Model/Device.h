@@ -5,6 +5,7 @@
 #include "PhysicalDevice.h"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_handles.hpp"
+#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {
@@ -25,7 +26,7 @@ namespace VkCore
          */
         void InitSwapChain(const PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface, const uint32_t desiredWidth,
                            const uint32_t desiredHeight);
-        vk::RenderPass CreateSwapchainRenderPass();
+        vk::RenderPass CreateRenderPass(const vk::RenderPassCreateInfo createInfo) const;
         vk::SwapchainKHR CreateSwapchain(const vk::SwapchainCreateInfoKHR createInfo);
         vk::ImageView CreateImageView(const vk::ImageViewCreateInfo& createInfo);
 
@@ -37,6 +38,7 @@ namespace VkCore
         // ------------ GETTERS ------------
 
         vk::Device& GetVkDevice();
+        std::shared_ptr<Swapchain> GetSwapchain() const;
         std::vector<vk::Image> GetSwapchainImages(const vk::SwapchainKHR& swapchain);
 
       private:

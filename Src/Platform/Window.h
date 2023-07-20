@@ -36,15 +36,12 @@ namespace VkCore
         */
         Window(vk::Instance& vkInstance, const WindowProps& props = WindowProps());
 
-        ~Window()
-        {
-            glfwTerminate();
-            glfwDestroyWindow(m_GlfwWindow);
-        }
-
+        ~Window();
         void CreateSurface(const vk::Instance& instance);
+        void SwapBuffers() const;
 
 
+        // ---------------- GETTERS ---------------------
 
         [[nodiscard]] GLFWwindow* GetGLFWWindow() const;
         [[nodiscard]] MouseState GetMouseState() const;

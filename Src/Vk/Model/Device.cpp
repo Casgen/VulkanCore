@@ -65,51 +65,12 @@ namespace VkCore
         m_Device.destroy();
     }
 
-    vk::RenderPass Device::CreateSwapchainRenderPass()
+    vk::RenderPass Device::CreateRenderPass(const vk::RenderPassCreateInfo createInfo) const
     {
-        vk::AttachmentDescription colorAttachment{};
-        colorAttachment.format = m_Swapchain->GetVkSurfaceFormat().surfaceFormat.format;
-        colorAttachment.samples = vk::SampleCountFlagBits::e1;
-        // Before drawing a new frame, this ensures that the frambuffer is cleared to black
-        colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
-        // After rendering, the contents will be stored in memory with STORE_OP_STORE
-        colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
-
-        // This is used for the depth (stencil) buffer (not used here right now because we aren't rendering in 3D)
-        colorAttachment.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-        colorAttachment.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-
-        colorAttachment.initialLayout = vk::ImageLayout::eUndefined;
-        colorAttachment.finalLayout = vk::ImageLayout::ePresentSrcKHR;
-
-        vk::AttachmentReference colorAttachmentRef{};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout = vk::ImageLayout::eColorAttachmentOptimal;
-
-        vk::SubpassDescription subpass{};
-        subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-
-        vk::SubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-        dependency.srcAccessMask = vk::AccessFlagBits::eNone;
-        dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-        dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-
-        vk::RenderPassCreateInfo renderPassInfo{};
-        renderPassInfo.attachmentCount = 1;
-        renderPassInfo.pAttachments = &colorAttachment;
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
 
         TRY_CATCH_BEGIN()
 
-        return m_Device.createRenderPass(renderPassInfo);
+        return m_Device.createRenderPass(createInfo);
         
         TRY_CATCH_END()
     }
@@ -136,6 +97,10 @@ namespace VkCore
     vk::Device& Device::GetVkDevice()
     {
         return m_Device;
+    }
+
+    std::shared_ptr<Swapchain> Device::GetSwapchain() const {
+        return m_Swapchain;
     }
 
     std::vector<vk::Image> Device::GetSwapchainImages(const vk::SwapchainKHR& swapchain)
