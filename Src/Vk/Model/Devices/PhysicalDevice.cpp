@@ -1,7 +1,7 @@
 #include "PhysicalDevice.h"
-#include "../../Log/Log.h"
-#include "../Utils.h"
-#include "SwapChainSupportDetails.h"
+#include "../../../Log/Log.h"
+#include "../../Utils.h"
+#include "../SwapChainSupportDetails.h"
 
 namespace VkCore
 {

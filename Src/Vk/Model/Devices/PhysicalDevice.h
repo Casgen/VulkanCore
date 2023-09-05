@@ -4,8 +4,8 @@
 #include <string>
 #include <vulkan/vulkan.hpp>
 
-#include "QueueFamilyIndices.h"
-#include "SwapChainSupportDetails.h"
+#include "../QueueFamilyIndices.h"
+#include "../SwapChainSupportDetails.h"
 #include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore

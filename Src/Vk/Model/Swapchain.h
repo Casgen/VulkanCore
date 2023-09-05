@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Device.h"
+#include "Devices/Device.h"
 #include "GLFW/glfw3.h"
 #include "SwapChainSupportDetails.h"
 #include "vulkan/vulkan_enums.hpp"

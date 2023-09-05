@@ -1,14 +1,15 @@
-#include "Device.h"
-#include "../../Log/Log.h" // IMPORTANT! Always include this when using the TRY_CATCH_BEGIN and TRY_CATCH_END macro
-#include "../Utils.h"
-#include "PhysicalDevice.h"
-#include "Swapchain.h"
-#include "vulkan/vulkan_enums.hpp"
-#include "vulkan/vulkan_structs.hpp"
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <vulkan/vulkan_core.h>
+
+#include "Device.h"
+#include "../../../Log/Log.h" // IMPORTANT! Always include this when using the TRY_CATCH_BEGIN and TRY_CATCH_END macro
+#include "../../Utils.h"
+#include "PhysicalDevice.h"
+#include "../Swapchain.h"
+#include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_structs.hpp"
+#include "vulkan/vulkan_core.h"
 
 namespace VkCore
 {
@@ -71,7 +72,7 @@ namespace VkCore
         TRY_CATCH_BEGIN()
 
         return m_Device.createRenderPass(createInfo);
-        
+
         TRY_CATCH_END()
     }
 
@@ -84,6 +85,16 @@ namespace VkCore
         return m_Device.createImageView(createInfo);
     }
 
+    vk::DescriptorPool Device::CreateDescriptorPool(const vk::DescriptorPoolCreateInfo& createInfo)
+    {
+        return m_Device.createDescriptorPool(createInfo);
+    }
+
+    vk::DescriptorSetLayout Device::CreateDescriptorSetLayout(const vk::DescriptorSetLayoutCreateInfo& createInfo)
+    {
+        return m_Device.createDescriptorSetLayout(createInfo);
+    }
+
     void Device::DestroyImageView(const vk::ImageView& imageView)
     {
         m_Device.destroyImageView(imageView);
@@ -94,12 +105,23 @@ namespace VkCore
         m_Device.destroySwapchainKHR(swapchain);
     }
 
+    void Device::DestroyDescriptorPool(const vk::DescriptorPool& pool)
+    {
+        m_Device.destroyDescriptorPool(pool);
+    }
+
+    void Device::DestroyDescriptorSetLayout(const vk::DescriptorSetLayout& layout)
+    {
+        m_Device.destroyDescriptorSetLayout(layout);
+    }
+
     vk::Device& Device::GetVkDevice()
     {
         return m_Device;
     }
 
-    std::shared_ptr<Swapchain> Device::GetSwapchain() const {
+    std::shared_ptr<Swapchain> Device::GetSwapchain() const
+    {
         return m_Swapchain;
     }
 
@@ -107,4 +129,26 @@ namespace VkCore
     {
         return m_Device.getSwapchainImagesKHR(swapchain);
     }
+
+    std::vector<vk::DescriptorSet> Device::AllocateDescriptorSets(const vk::DescriptorSetAllocateInfo& allocInfo)
+    {
+        return m_Device.allocateDescriptorSets(allocInfo);
+    }
+
+    void Device::ResetDescriptorPool(const vk::DescriptorPool& pool, const vk::DescriptorPoolResetFlags& resetFlags)
+    {
+        m_Device.resetDescriptorPool(pool, resetFlags);
+    }
+
+    void Device::UpdateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes)
+    {
+        m_Device.updateDescriptorSets(writes.size(), writes.data(), 0, nullptr);
+    }
+
+    void Device::UpdateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes,
+                                      std::vector<vk::CopyDescriptorSet>& copies)
+    {
+        m_Device.updateDescriptorSets(writes, copies);
+    }
+
 } // namespace VkCore
