@@ -49,7 +49,8 @@ enum class ECategory : uint8_t
     Validation = 0x8,
     Performance = 0x9,
     DeviceAddressBinding = 0xA,
-    General = 0xB
+    General = 0xB,
+    Allocation = 0xC
 };
 
 class Logger

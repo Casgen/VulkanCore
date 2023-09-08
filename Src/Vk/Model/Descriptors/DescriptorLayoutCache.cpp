@@ -11,9 +11,8 @@
 namespace VkCore
 {
 
-    DescriptorLayoutCache::DescriptorLayoutCache(Device device)
+    DescriptorLayoutCache::DescriptorLayoutCache(const Device& device) : m_Device(device)
     {
-        m_Device = device;
     }
 
     vk::DescriptorSetLayout DescriptorLayoutCache::CreateDescriptorLayout(
@@ -112,7 +111,7 @@ namespace VkCore
             uint32_t stageFlags = static_cast<uint32_t>(b.descriptorType);
 
             size_t bindingHash = b.binding | descriptorType << 8 | b.descriptorCount << 16 | stageFlags << 24;
-            
+
             result ^= std::hash<size_t>()(bindingHash);
         }
 

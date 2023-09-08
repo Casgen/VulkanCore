@@ -34,6 +34,7 @@ project "VulkanCore"
         "Vendor/stb_image/**.h",
         "Vendor/vma/**.h",
         "Vendor/vma/**.cpp",
+        "Vendor/vma/**.hpp",
     }
 
     filter { "system:linux" }

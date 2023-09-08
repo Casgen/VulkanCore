@@ -2,14 +2,20 @@
 
 #include <cstdint>
 #include <optional>
+#include <vector>
 
-namespace VkCore {
+namespace VkCore
+{
 
-    struct QueueFamilyIndices {
+    struct QueueFamilyIndices
+    {
 
-    std::optional<uint32_t> m_GraphicsFamily, m_PresentFamily, m_ComputeFamily, m_TransferFamily = 0;
-    
-    bool isComplete() { return m_GraphicsFamily.has_value() && m_PresentFamily; }
+        std::optional<uint32_t> m_GraphicsFamily, m_PresentFamily, m_ComputeFamily, m_TransferFamily;
 
+        bool IsComplete() const
+        {
+            return m_GraphicsFamily.has_value() && m_PresentFamily.has_value();
+        }
     };
-}
+
+} // namespace VkCore

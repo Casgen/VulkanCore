@@ -1,0 +1,8 @@
+namespace VkCore {
+
+    class VertexBuffer {
+
+        
+
+    };
+}

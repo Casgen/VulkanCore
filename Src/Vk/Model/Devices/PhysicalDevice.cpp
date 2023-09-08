@@ -36,7 +36,7 @@ namespace VkCore
                     !swapChainSupport.m_SurfaceFormats.empty() && !swapChainSupport.m_PresentModes.empty();
             }
 
-            if (indices.isComplete() && extensionsSupported && swapChainAdequate)
+            if (indices.IsComplete() && extensionsSupported && swapChainAdequate)
             {
                 vk::PhysicalDeviceProperties deviceProperties = device.getProperties();
 
@@ -102,7 +102,7 @@ namespace VkCore
         return m_QueueFamilyIndices;
     }
 
-    vk::PhysicalDevice& PhysicalDevice::GetPhysicalDevice()
+    vk::PhysicalDevice& PhysicalDevice::operator*()
     {
         return m_PhysicalDevice;
     }
@@ -127,7 +127,7 @@ namespace VkCore
                 indices.m_PresentFamily = i;
             }
 
-            if (indices.isComplete())
+            if (indices.IsComplete())
                 break;
         }
 

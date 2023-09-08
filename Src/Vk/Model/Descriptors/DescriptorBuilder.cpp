@@ -7,6 +7,20 @@
 
 namespace VkCore
 {
+    DescriptorBuilder::DescriptorBuilder()
+    {
+    }
+
+    DescriptorBuilder::~DescriptorBuilder()
+    {
+    }
+
+    DescriptorBuilder::DescriptorBuilder(const Device& device)
+        : m_Cache(std::make_unique<DescriptorLayoutCache>(device)),
+          m_Allocator(std::make_unique<DescriptorAllocator>(device))
+    {
+    }
+
     DescriptorBuilder::DescriptorBuilder(std::unique_ptr<DescriptorLayoutCache> layoutCache,
                                          std::unique_ptr<DescriptorAllocator> allocator)
     {

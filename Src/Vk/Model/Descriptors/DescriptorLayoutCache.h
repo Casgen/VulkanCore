@@ -12,7 +12,7 @@ namespace VkCore
     class DescriptorLayoutCache
     {
       public:
-        DescriptorLayoutCache(Device newDevice);
+        DescriptorLayoutCache(const Device& newDevice);
         void Cleanup();
 
         vk::DescriptorSetLayout CreateDescriptorLayout(const vk::DescriptorSetLayoutCreateInfo& createInfo);

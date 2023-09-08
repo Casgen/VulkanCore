@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 #include <tuple>
@@ -36,6 +37,7 @@ namespace VkCore
         vk::ImageView CreateImageView(const vk::ImageViewCreateInfo& createInfo);
         vk::DescriptorPool CreateDescriptorPool(const vk::DescriptorPoolCreateInfo& createInfo);
         vk::DescriptorSetLayout CreateDescriptorSetLayout(const vk::DescriptorSetLayoutCreateInfo& createInfo);
+        vk::CommandPool CreateCommandPool(const vk::CommandPoolCreateInfo& createInfo);
 
         // ---------- DESTROYERS -----------
 
@@ -46,18 +48,42 @@ namespace VkCore
 
         // ------------ GETTERS ------------
 
-        vk::Device& GetVkDevice();
+        vk::Device& operator*();
         std::shared_ptr<Swapchain> GetSwapchain() const;
         std::vector<vk::Image> GetSwapchainImages(const vk::SwapchainKHR& swapchain);
+        vk::Queue GetQueue(const uint32_t queueFamilyIndex, const uint32_t queueIndex) const;
 
+        vk::Queue GetGraphicsQueue() const;
+        vk::Queue GetTransferQueue() const;
+        vk::Queue GetComputeQueue() const;
+        vk::Queue GetPresentQueue() const;
+
+        // ------------ ALLOCATIONS --------
         std::vector<vk::DescriptorSet> AllocateDescriptorSets(const vk::DescriptorSetAllocateInfo& allocInfo);
+        std::vector<vk::CommandBuffer> AllocateCommandBuffers(const vk::CommandBufferAllocateInfo& allocInfo);
+
+        // -------- FREEING METHODS --------
+
+        void FreeCommandBuffers(const vk::CommandPool& commandPool, const std::vector<vk::CommandBuffer>& commandBuffers) const;
+        void FreeCommandBuffer(const vk::CommandPool& commandPool, const vk::CommandBuffer& commandBuffer) const;
+        
+
         void ResetDescriptorPool(const vk::DescriptorPool& pool, const vk::DescriptorPoolResetFlags& resetFlags = vk::Flags<vk::DescriptorPoolResetFlagBits>(0));
         void UpdateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes);
         void UpdateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes, std::vector<vk::CopyDescriptorSet>& copies);
+        void InitQueues(const QueueFamilyIndices& indices);
+
+
 
       private:
         std::shared_ptr<Swapchain> m_Swapchain;
         vk::Device m_Device;
+
+        vk::Queue m_GraphicsQueue;
+        vk::Queue m_TransferQueue;
+        vk::Queue m_ComputeQueue;
+        vk::Queue m_PresentQueue;
+
     };
 
 } // namespace VkCore

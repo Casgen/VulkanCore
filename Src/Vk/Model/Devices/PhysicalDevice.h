@@ -10,7 +10,6 @@
 
 namespace VkCore
 {
-
     class PhysicalDevice
     {
 
@@ -47,7 +46,7 @@ namespace VkCore
 
         SwapChainSupportDetails GetSwapChainSupportDetails() const;
         QueueFamilyIndices GetQueueFamilyIndices() const;
-        vk::PhysicalDevice& GetPhysicalDevice();
+        vk::PhysicalDevice& operator*();
 
       private:
         vk::PhysicalDevice m_PhysicalDevice;
