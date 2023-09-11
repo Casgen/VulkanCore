@@ -16,6 +16,16 @@ namespace VkCore
         {
             return m_GraphicsFamily.has_value() && m_PresentFamily.has_value();
         }
+
+        bool HasCompute() const
+        {
+            return m_ComputeFamily.has_value();
+        }
+
+        bool HasTransfer() const
+        {
+            return m_ComputeFamily.has_value();
+        }
     };
 
 } // namespace VkCore

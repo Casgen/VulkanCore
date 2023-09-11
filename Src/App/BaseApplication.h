@@ -28,13 +28,16 @@ namespace VkCore
         void Shutdown();
 
       private:
-        std::set<std::string> m_DeviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+        std::vector<const char*> m_DeviceExtensions = {
+            //VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        };
 
         vk::DebugUtilsMessengerEXT m_DebugMessenger;
         vk::Instance m_Instance;
         RenderPass m_RenderPass;
 
-        PhysicalDevice m_PhysicalDevice;
+        PhysicalDevice* m_PhysicalDevice;
         Device* m_Device;
 
         DescriptorBuilder m_DescriptorBuilder;

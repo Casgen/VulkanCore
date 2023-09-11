@@ -37,6 +37,10 @@ project "VulkanCore"
         "Vendor/vma/**.hpp",
     }
 
+    defines {
+        "VMA_STATIC_VULKAN_FUNCTIONS"
+    }
+
     filter { "system:linux" }
 
         -- In case of using with VulkanSDK make sure that you have VULKAN_SDK environment variable set! (for ex. /home/username/Development/VulkanSDK/1.3.250.0/x86_64)

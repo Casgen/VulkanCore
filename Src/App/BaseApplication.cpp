@@ -43,13 +43,13 @@ namespace VkCore
 
         m_Window->CreateSurface(m_Instance);
 
-        m_PhysicalDevice = VkCore::PhysicalDevice(m_Instance, m_Window->GetSurface(), m_DeviceExtensions);
-        m_Device = new VkCore::Device(m_PhysicalDevice);
+        m_PhysicalDevice = new VkCore::PhysicalDevice(m_Instance, m_Window->GetSurface(), m_DeviceExtensions);
+        m_Device = new VkCore::Device(*m_PhysicalDevice, m_DeviceExtensions);
 
-        VmaAllocatorService* allocationService = new VmaAllocatorService(*m_Device, m_PhysicalDevice, m_Instance);
+        VmaAllocatorService* allocationService = new VmaAllocatorService(*m_Device, *m_PhysicalDevice, m_Instance);
         ServiceLocator::ProvideAllocatorService(allocationService);
 
-        m_Device->InitSwapChain(m_PhysicalDevice, m_Window->GetSurface(), m_WinWidth, m_WinHeight);
+        m_Device->InitSwapChain(*m_PhysicalDevice, m_Window->GetSurface(), m_WinWidth, m_WinHeight);
     }
 
     void BaseApplication::InitVulkan()

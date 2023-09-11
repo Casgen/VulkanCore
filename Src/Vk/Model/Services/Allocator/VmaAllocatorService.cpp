@@ -1,15 +1,16 @@
+#include <cstdint>
 #include <cstring>
 #include <iterator>
-#include <vk_mem_alloc.h>
+
 #include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan_structs.hpp>
 
 #include "VmaAllocatorService.h"
 #include "../../../Utils.h"
 #include "../../../../Log/Log.h"
-#include "vulkan/vulkan_enums.hpp"
-#include "vulkan/vulkan_handles.hpp"
+#include "vulkan/vulkan_core.h"
+
+// Include it always all the way down!
+#include <vk_mem_alloc.h>
 
 namespace VkCore
 {
@@ -23,7 +24,13 @@ namespace VkCore
         createInfo.device = *device;
         createInfo.physicalDevice = *physicalDevice;
         createInfo.instance = instance;
-        createInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT; 
+        // createInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+
+        createInfo.pHeapSizeLimit = nullptr;
+        createInfo.pAllocationCallbacks = nullptr;
+        createInfo.pVulkanFunctions = nullptr;
+        createInfo.pDeviceMemoryCallbacks = nullptr;
+        createInfo.pTypeExternalMemoryHandleTypes = nullptr;
 
         vmaCreateAllocator(&createInfo, &m_VmaAllocator);
     }
@@ -39,42 +46,62 @@ namespace VkCore
 
         uint32_t dataSize = buffer.GetSize();
 
-        VkBufferCreateInfo srcBufferInfo;
-        srcBufferInfo.size = dataSize;
-        srcBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        // VkBufferCreateInfo srcBufferInfo;
+        // srcBufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        // srcBufferInfo.pNext = nullptr;
+        // srcBufferInfo.size = dataSize;
+        // srcBufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        // srcBufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        VmaAllocationCreateInfo stagingAllocInfo;
-        stagingAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-        stagingAllocInfo.flags =
-            VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+        // vk::BufferCreateInfo srcBufferInfo;
+        // srcBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc)
+        //     .setSharingMode(vk::SharingMode::eExclusive)
+        //     .setSize(dataSize);
+        //
+        // VkBufferCreateInfo srcVkBufferInfo = srcBufferInfo;
+        //
+        // VmaAllocationCreateInfo stagingAllocInfo;
+        // stagingAllocInfo.pool = nullptr;
+        // stagingAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        // stagingAllocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+        // stagingAllocInfo.priority = 1.f;
+        //
+        // VmaAllocation srcAllocation;
 
-        VkBuffer srcBuffer;
+        // Utils::CheckVkResult(
+        //     vmaCreateBuffer(m_VmaAllocator, &srcVkBufferInfo, &stagingAllocInfo, &srcBuffer, &srcAllocation,
+        //     nullptr));
+
         VmaAllocation srcAllocation;
-
-        Utils::CheckVkResult(
-            vmaCreateBuffer(m_VmaAllocator, &srcBufferInfo, &stagingAllocInfo, &srcBuffer, &srcAllocation, nullptr));
+        VkBuffer srcBuffer = CreateBuffer(dataSize, buffer.GetUsageFlags() | vk::BufferUsageFlagBits::eTransferSrc,
+                                          VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, srcAllocation);
 
         // Copy the data from the memory to the staging buffer.
-        void* mapData;
+        void* mapData = nullptr;
 
         vmaMapMemory(m_VmaAllocator, srcAllocation, &mapData);
         std::memcpy(mapData, buffer.GetData(), dataSize);
         vmaUnmapMemory(m_VmaAllocator, srcAllocation);
 
-        // Create an only GPU-accessible buffer.
-        VkBufferCreateInfo dstBufferInfo;
-        dstBufferInfo.size = dataSize;
-        dstBufferInfo.usage = static_cast<uint32_t>(buffer.GetUsageFlags()) | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        // Create the GPU Buffer.
+        vk::BufferCreateInfo dstBufferInfo;
+        dstBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc)
+            .setSharingMode(vk::SharingMode::eExclusive)
+            .setSize(dataSize);
+
+        VkBufferCreateInfo dstVkBufferInfo = dstBufferInfo;
 
         VmaAllocationCreateInfo gpuAllocInfo;
+        gpuAllocInfo.pool = nullptr;
+        gpuAllocInfo.priority = 1.f;
         gpuAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-        gpuAllocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        gpuAllocInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 
         VkBuffer dstBuffer;
         VmaAllocation dstAllocation;
 
         Utils::CheckVkResult(
-            vmaCreateBuffer(m_VmaAllocator, &dstBufferInfo, &gpuAllocInfo, &dstBuffer, &dstAllocation, nullptr));
+            vmaCreateBuffer(m_VmaAllocator, &dstVkBufferInfo, &gpuAllocInfo, &dstBuffer, &dstAllocation, nullptr));
 
         CopyBuffer(srcBuffer, dstBuffer, dataSize);
 
@@ -86,7 +113,8 @@ namespace VkCore
         LOG(Allocation, Verbose, "Buffer has been allocated.")
     }
 
-    void VmaAllocatorService::CopyBuffer(const vk::Buffer& srcBuffer, const vk::Buffer& dstBuffer, const uint32_t size, const uint32_t srcOffset, const uint32_t dstOffset)
+    void VmaAllocatorService::CopyBuffer(const vk::Buffer& srcBuffer, const vk::Buffer& dstBuffer, const uint32_t size,
+                                         const uint32_t srcOffset, const uint32_t dstOffset)
     {
         // Copy the contents of the staging (src) buffer to the gpu (destination) buffer
         vk::CommandPoolCreateInfo poolInfo{};
@@ -122,5 +150,38 @@ namespace VkCore
         m_Device.GetGraphicsQueue().waitIdle();
 
         m_Device.FreeCommandBuffer(commandPool, commandBuffer);
+    }
+    VkBuffer VmaAllocatorService::CreateBuffer(const size_t size, vk::BufferUsageFlags usageFlags,
+                                               VmaAllocationCreateFlags allocFlags, VmaAllocation& outAllocation,
+                                               vk::SharingMode sharingMode, vk::BufferCreateFlags bufferCreateFlags,
+                                               VmaMemoryUsage memoryUsage)
+    {
+        // vk::BufferCreateInfo srcBufferInfo;
+        // srcBufferInfo.setUsage(vk::BufferUsageFlagBits::eTransferSrc).setSharingMode(sharingMode).setSize(size);
+
+        VkBufferCreateInfo bufferCreateInfo;
+        bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferCreateInfo.pNext = nullptr;
+        bufferCreateInfo.size = size;
+        // bufferCreateInfo.sharingMode = static_cast<VkSharingMode>(sharingMode);
+        // bufferCreateInfo.flags = static_cast<VkBufferCreateFlags>(bufferCreateFlags);
+        // bufferCreateInfo.usage = static_cast<VkBufferUsageFlags>(usageFlags);
+
+        bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        bufferCreateInfo.flags = 0;
+        bufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+
+        VmaAllocationCreateInfo allocCreateInfo;
+        allocCreateInfo.pool = nullptr;
+        allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+        allocCreateInfo.priority = 1.f;
+        allocCreateInfo.memoryTypeBits = 0;
+
+        VkBuffer outBuffer;
+       
+        VkResult result = vmaCreateBuffer(m_VmaAllocator, &bufferCreateInfo, &allocCreateInfo, &outBuffer, &outAllocation, nullptr);
+
+        return outBuffer;
     }
 } // namespace VkCore

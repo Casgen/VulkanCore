@@ -20,7 +20,7 @@ namespace VkCore
       public:
         Device();
 
-        Device(const PhysicalDevice& physicalDevice, const std::vector<const char*> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME});
+        Device(const PhysicalDevice& physicalDevice, const std::vector<const char*>& deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME});
 
         ~Device();
 

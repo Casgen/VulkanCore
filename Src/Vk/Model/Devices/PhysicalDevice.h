@@ -23,18 +23,7 @@ namespace VkCore
          * preprocessor macros. Not manually!
          */
         PhysicalDevice(const vk::Instance& instance, const vk::SurfaceKHR& surface,
-                       std::set<std::string> requiredExtensions);
-
-        /**
-         * @brief Checks if the physical device supports the defined extensions;
-         * @param physicalDevice
-         */
-        bool CheckDeviceExtensionSupport(std::set<std::string> requiredExtensions) const;
-
-        /**
-         * @brief Queries the swap chain support details of the physical device;
-         */
-        SwapChainSupportDetails QuerySwapChainSupport(const vk::SurfaceKHR& surface) const;
+                       const std::vector<const char*>& requiredExtensions);
 
         /**
          * @brief Creates a logical device from this physical device.
@@ -42,10 +31,32 @@ namespace VkCore
          */
         vk::Device CreateDevice(const vk::DeviceCreateInfo& deviceCreateInfo) const;
 
+        /**
+         * @brief Checks if the physical device supports the defined extensions;
+         * @param physicalDevice
+         */
+        static bool CheckDeviceExtensionSupport(const vk::PhysicalDevice& physicalDevice, std::vector<const char*> requiredExtensions);
+
+        /**
+         * @brief Queries the swap chain support details of the physical device;
+         */
+        static SwapChainSupportDetails QuerySwapChainSupport(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface);
+
+        /**
+         * @brief Enumerates all the queue families and chooses their index. They are
+         * used later for submitting commands to those queues.
+         * @param surface
+         */
+        static QueueFamilyIndices FindQueueFamilyIndices(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface);
+
+
         // ------------ GETTERS ------------
 
         SwapChainSupportDetails GetSwapChainSupportDetails() const;
         QueueFamilyIndices GetQueueFamilyIndices() const;
+        vk::PhysicalDeviceProperties GetProperties() const;
+        vk::PhysicalDeviceMemoryProperties GetMemoryProperties() const;
+
         vk::PhysicalDevice& operator*();
 
       private:
@@ -54,11 +65,5 @@ namespace VkCore
         SwapChainSupportDetails m_SwapChainDetails;
         QueueFamilyIndices m_QueueFamilyIndices;
 
-        /**
-         * @brief Enumerates all the queue families and chooses their index. They are
-         * used later for submitting commands to those queues.
-         * @param surface
-         */
-        QueueFamilyIndices FindQueueFamilyIndices(const vk::SurfaceKHR& surface);
     };
 } // namespace VkCore

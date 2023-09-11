@@ -25,8 +25,9 @@ namespace VkCore
     {
     }
 
-    Device::Device(const PhysicalDevice& physicalDevice, const std::vector<const char*> deviceExtensions)
+    Device::Device(const PhysicalDevice& physicalDevice, const std::vector<const char*>& deviceExtensions)
     {
+
         QueueFamilyIndices indices = physicalDevice.GetQueueFamilyIndices();
 
         // TODO: Maybe take care of the priorities somehow in the future?
