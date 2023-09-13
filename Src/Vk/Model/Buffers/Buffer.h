@@ -32,17 +32,21 @@ namespace VkCore
         uint32_t GetSize() const;
         vk::Buffer GetVkBuffer() const;
         VmaAllocation GetVmaAllocation() const;
+        VmaAllocationInfo GetVmaAllocationInfo() const;
 
         void SetVkBuffer(const vk::Buffer& buffer);
         void SetVmaAllocation(const VmaAllocation& allocation);
+        void SetVmaAllocationInfo(const VmaAllocationInfo& allocationInfo);
+        void SetUsageFlags(const vk::BufferUsageFlags& flags);
 
       private:
-        uint32_t m_Size;
-        vk::BufferUsageFlags m_UsageFlags;
+        uint32_t m_Size = 0;
+        vk::BufferUsageFlags m_UsageFlags{};
 
         vk::Buffer m_Buffer{};
         VmaAllocation m_Allocation{};
+        VmaAllocationInfo m_AllocationInfo{};
 
-        void* m_Data;
+        void* m_Data = nullptr;
     };
 } // namespace VkCore

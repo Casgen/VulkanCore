@@ -36,15 +36,17 @@ namespace VkCore
          * @param usageFlags - how or what is the buffer used for.
          * @param allocFlags - Create flags to use when allocating a buffer. (see VmaAllocationCreateFlags)
          * @param outAllocation - Output VmaAllocation struct.
+         * @param outAllocation - Output VmaAllocationInfo struct.
+         * @param memoryUsage - How the memory should be used. (VMA_MEMORY_USAGE_AUTO is the default)
          * @param sharingMode - indicates whether the buffer will be used in one queue or shared between more queues.
          * @param bufferCreateFlags - Buffer creation flags
-         * @param memoryUsage - How the memory should be used. (VMA_MEMORY_USAGE_AUTO is the default)
          * @return newly created buffer.
          */
-        VkBuffer CreateBuffer(const size_t size, vk::BufferUsageFlags usageFlags,
-                              VmaAllocationCreateFlags allocFlags, VmaAllocation& outAllocation,
+        VkBuffer CreateBuffer(const size_t size, vk::BufferUsageFlags usageFlags, VmaAllocationCreateFlags allocFlags,
+                              VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo = nullptr,
+                              VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO,
                               vk::SharingMode sharingMode = vk::SharingMode::eExclusive,
-                              vk::BufferCreateFlags bufferCreateFlags = {}, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO);
+                              vk::BufferCreateFlags bufferCreateFlags = {});
     };
 
 } // namespace VkCore

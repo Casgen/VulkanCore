@@ -43,6 +43,11 @@ namespace VkCore
         return m_Allocation;
     }
 
+    VmaAllocationInfo Buffer::GetVmaAllocationInfo() const
+    {
+        return m_AllocationInfo;
+    }
+
     void Buffer::SetVkBuffer(const vk::Buffer& buffer)
     {
         m_Buffer = buffer;
@@ -53,5 +58,14 @@ namespace VkCore
         m_Allocation = allocation;
     }
 
+    void Buffer::SetVmaAllocationInfo(const VmaAllocationInfo& allocationInfo)
+    {
+        m_AllocationInfo = allocationInfo;
+    }
+
+    void Buffer::SetUsageFlags(const vk::BufferUsageFlags& flags)
+    {
+        m_UsageFlags = flags;
+    }
 
 } // namespace VkCore

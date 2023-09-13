@@ -57,22 +57,19 @@ namespace VkCore
 
         std::vector<vk::ExtensionProperties> extensionProperties = physicalDevice.enumerateDeviceExtensionProperties();
 
-        for (uint32_t i = 0; i < requiredExtensions.size(); i++)
+        for (const auto& property : extensionProperties)
         {
-            for (const vk::ExtensionProperties& property : extensionProperties)
-            {
+            if (requiredExtensions.empty()) break;
 
-                if (strcmp(requiredExtensions[i], property.extensionName) == 0)
-                {
-                    requiredExtensions.erase(requiredExtensions.begin() + i);
-                }
+            auto it = std::find_if(requiredExtensions.begin(), requiredExtensions.end(), [&](const char* const& item) {
+                return strcmp(item, property.extensionName) == 0;
+            });
+
+            if (it != requiredExtensions.end()) {
+                requiredExtensions.erase(it);
             }
         }
 
-        // for (const vk::ExtensionProperties& property : extensionProperties)
-        // {
-        //     std::remove(requiredExtensions.begin(), requiredExtensions.end(), property.extensionName);
-        // }
 
         return requiredExtensions.empty();
     }

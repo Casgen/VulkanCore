@@ -121,7 +121,7 @@ const char* Logger::EvaluateCategoryString(ECategory category)
         return "PERFORMANCE";
         break;
     case ECategory::Allocation:
-        return "Allocation";
+        return "ALLOCATION";
         break;
     default:
         return "UNCATEGORIZED";
