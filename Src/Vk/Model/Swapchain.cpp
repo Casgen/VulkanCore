@@ -2,6 +2,7 @@
 
 #include "../../Log/Log.h"
 #include "GLFW/glfw3.h"
+#include "Services/ServiceLocator.h"
 #include "Swapchain.h"
 
 namespace VkCore

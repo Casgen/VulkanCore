@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "../Devices/Device.h"
+#include "../Buffers/Buffer.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_enums.hpp"
@@ -15,7 +16,8 @@ namespace VkCore
     class DescriptorBuilder
     {
       public:
-        DescriptorBuilder();
+
+        DescriptorBuilder() = default;
         ~DescriptorBuilder();
         
 
@@ -30,11 +32,19 @@ namespace VkCore
          *   @param layoutCache - a unique pointer to the layoutCache. Use std::move()!
          *   @param allocator - a unique pointer to the layoutCache. Use std::move()!
          */
-        DescriptorBuilder(std::unique_ptr<DescriptorLayoutCache> layoutCache,
-                          std::unique_ptr<DescriptorAllocator> allocator);
+        DescriptorBuilder(DescriptorLayoutCache* layoutCache,
+                          DescriptorAllocator* allocator);
 
         DescriptorBuilder& BindBuffer(uint32_t binding, const vk::DescriptorBufferInfo& bufferInfo,
                                       vk::DescriptorType type, vk::ShaderStageFlags stageFlags);
+
+        DescriptorBuilder& BindBuffer(uint32_t binding, const Buffer& buffer,
+                                      vk::DescriptorType type, vk::ShaderStageFlags stageFlags);
+
+        DescriptorBuilder& BindBuffer(uint32_t binding, const Buffer& buffer,
+                                      vk::DescriptorType type, vk::ShaderStageFlags stageFlags, const vk::DeviceSize offset, const vk::DeviceSize range);
+
+
         DescriptorBuilder& BindImage(uint32_t binding, const vk::DescriptorImageInfo& imageInfo,
                                      vk::DescriptorType type, vk::ShaderStageFlags stageFlags);
 
@@ -45,8 +55,11 @@ namespace VkCore
         std::vector<vk::WriteDescriptorSet> m_Writes = {};
         std::vector<vk::DescriptorSetLayoutBinding> m_Bindings = {};
 
-        std::unique_ptr<DescriptorLayoutCache> m_Cache;
-        std::unique_ptr<DescriptorAllocator> m_Allocator;
+        // The Descriptor builder takes ownership of the DescriptorLayoutCache's a DescriptorAllocator's memory
+        // Therefore it is responsible for their deletion.
+
+        DescriptorLayoutCache* m_Cache = nullptr;
+        DescriptorAllocator* m_Allocator = nullptr;
     };
 
 } // namespace VkCore

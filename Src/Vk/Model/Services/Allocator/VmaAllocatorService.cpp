@@ -42,8 +42,13 @@ namespace VkCore
         vmaDestroyAllocator(m_VmaAllocator);
     }
 
-    void VmaAllocatorService::AllocateBufferOnGPU(Buffer& buffer)
+    void VmaAllocatorService::AllocateBufferOnGPU(Buffer& buffer, const void* data)
     {
+
+        if (data == nullptr) {
+            LOG(Vulkan, Fatal, "Couldn't allocate buffer on the GPU! Pointer to the data is nullptr!")
+            throw std::runtime_error("Couldn't allocate buffer on the GPU! Pointer to the data is nullptr!");
+        }
 
         uint32_t dataSize = buffer.GetSize();
 
@@ -56,7 +61,7 @@ namespace VkCore
         void* mapData = nullptr;
 
         vmaMapMemory(m_VmaAllocator, srcAllocation, &mapData);
-        std::memcpy(mapData, buffer.GetData(), dataSize);
+        std::memcpy(mapData, data, dataSize);
         vmaUnmapMemory(m_VmaAllocator, srcAllocation);
 
         // Create the GPU Buffer.
@@ -74,7 +79,13 @@ namespace VkCore
         buffer.SetVkBuffer(dstBuffer);
         buffer.SetVmaAllocation(dstAllocation);
 
-        LOGF(Allocation, Verbose, "Buffer has been succesfully allocated and data has been transferred onto the GPU. Size: %d", dataSize)
+        LOGF(Allocation, Verbose,
+             "Buffer has been succesfully allocated and data has been transferred onto the GPU. Size: %d", dataSize)
+    }
+
+    void VmaAllocatorService::DestroyBuffer(Buffer& buffer)
+    {
+        vmaDestroyBuffer(m_VmaAllocator, buffer.GetVkBuffer(), buffer.GetVmaAllocation());
     }
 
     void VmaAllocatorService::CopyBuffer(const vk::Buffer& srcBuffer, const vk::Buffer& dstBuffer, const uint32_t size,

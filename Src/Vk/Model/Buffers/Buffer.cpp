@@ -4,22 +4,21 @@
 
 #include "vulkan/vulkan_structs.hpp"
 #include "../Services/ServiceLocator.h"
+#include <alloca.h>
+#include <cstdint>
 
 namespace VkCore
 {
 
-    Buffer::Buffer(void* data, const uint32_t size, const vk::BufferUsageFlags& usageFlags)
-        : m_Size(size), m_UsageFlags(usageFlags), m_Data(data)
+    Buffer::Buffer(void* data, const size_t size, const vk::BufferUsageFlags& usageFlags)
+        : m_Size(size), m_UsageFlags(usageFlags)
     {
-        ServiceLocator::GetAllocatorService().AllocateBufferOnGPU(*this);
+        ServiceLocator::GetAllocatorService().AllocateBufferOnGPU(*this, data);
     }
 
     Buffer::~Buffer()
     {
-    }
-    void* Buffer::GetData()
-    {
-        return m_Data;
+        ServiceLocator::GetAllocatorService().DestroyBuffer(*this);
     }
 
     vk::BufferUsageFlags Buffer::GetUsageFlags() const

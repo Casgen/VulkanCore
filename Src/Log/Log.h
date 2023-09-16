@@ -1,3 +1,5 @@
+#pragma once
+
 #include <chrono>
 #include <cstdint>
 #include <mutex>
@@ -44,13 +46,14 @@ enum class ECategory : uint8_t
     Exception = 0x5,
     SystemError = 0x6,
     Unknown = 0x7,
+    Shader = 0x8,
 
     // Vulkan specific
-    Validation = 0x8,
-    Performance = 0x9,
-    DeviceAddressBinding = 0xA,
-    General = 0xB,
-    Allocation = 0xC
+    Validation = 0x9,
+    Performance = 0xA,
+    DeviceAddressBinding = 0xB,
+    General = 0xC,
+    Allocation = 0xD
 };
 
 class Logger

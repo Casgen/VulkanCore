@@ -9,6 +9,7 @@
 #include "PhysicalDevice.h"
 #include "../Swapchain.h"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
 #include "vulkan/vulkan_core.h"
 
@@ -79,7 +80,7 @@ namespace VkCore
                                         physicalDevice.GetSwapChainSupportDetails(), desiredWidth, desiredHeight);
     }
 
-    Device::~Device()
+    void Device::Destroy()
     {
         m_Swapchain->Destroy(*this);
         m_Device.destroy();
@@ -118,6 +119,14 @@ namespace VkCore
     {
         return m_Device.createCommandPool(createInfo);
     }
+
+    vk::ShaderModule Device::CreateShaderModule(const vk::ShaderModuleCreateInfo& createInfo)
+    {
+        return m_Device.createShaderModule(createInfo);
+    }
+
+
+
 
     void Device::DestroyImageView(const vk::ImageView& imageView)
     {

@@ -22,8 +22,6 @@ namespace VkCore
 
         Device(const PhysicalDevice& physicalDevice, const std::vector<const char*>& deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME});
 
-        ~Device();
-
         /**
          * @brief Initializes a Swapchain Object. THIS HAS TO BE CALLED AFTER CREATING A LOGICAL DEVICE!
          * @param physicalDevice
@@ -38,6 +36,7 @@ namespace VkCore
         vk::DescriptorPool CreateDescriptorPool(const vk::DescriptorPoolCreateInfo& createInfo);
         vk::DescriptorSetLayout CreateDescriptorSetLayout(const vk::DescriptorSetLayoutCreateInfo& createInfo);
         vk::CommandPool CreateCommandPool(const vk::CommandPoolCreateInfo& createInfo);
+        vk::ShaderModule CreateShaderModule(const vk::ShaderModuleCreateInfo& createInfo);
 
         // ---------- DESTROYERS -----------
 
@@ -45,6 +44,7 @@ namespace VkCore
         void DestroySwapchain(const vk::SwapchainKHR& swapchain);
         void DestroyDescriptorPool(const vk::DescriptorPool& pool);
         void DestroyDescriptorSetLayout(const vk::DescriptorSetLayout& layout);
+        void Destroy();
 
         // ------------ GETTERS ------------
 

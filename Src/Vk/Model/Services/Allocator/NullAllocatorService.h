@@ -8,7 +8,8 @@ namespace VkCore
     class NullAllocatorService : public IAllocatorService
     {
       public:
-        virtual void AllocateBufferOnGPU(Buffer& buffer);
+        void AllocateBufferOnGPU(Buffer& inoutBuffer, const void* data) override;
+        void DestroyBuffer(Buffer& buffer) override;
 
     };
 

@@ -19,7 +19,8 @@ namespace VkCore
          *  accessed by the CPU!
          *  @param buffer - A block of memory to copy the data from and transfer to the GPU.
          */
-        void AllocateBufferOnGPU(Buffer& buffer) override;
+        void AllocateBufferOnGPU(Buffer& inoutBuffer, const void* data) override;
+        void DestroyBuffer(Buffer& buffer) override;
 
       private:
         VmaAllocator m_VmaAllocator;

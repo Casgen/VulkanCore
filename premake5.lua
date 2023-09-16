@@ -10,7 +10,7 @@ project "VulkanCore"
     architecture "x86_64"
 
     language "C++"
-    cppdialect "C++20"
+    cppdialect "C++17"
 
     local output_dir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
@@ -54,7 +54,7 @@ project "VulkanCore"
         }
 
         -- On linux, make sure that you have installed libvulkan-dev through your package manager!
-        links { "vulkan", "pthread" }
+        links { "vulkan", "pthread", "libshaderc_shared"}
 
 
         defines {

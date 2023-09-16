@@ -1,4 +1,5 @@
 
+#include <cstdint>
 #include <memory>
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan.hpp"
@@ -11,7 +12,8 @@
 #include "../Vk/Utils.h"
 #include "../Vk/Model/Services/Allocator/VmaAllocatorService.h"
 #include "../Vk/Model/Services/ServiceLocator.h"
-
+#include "../FileUtils.h"
+#include "../Model/Shaders/ShaderLoader.h"
 
 namespace VkCore
 {
@@ -22,13 +24,94 @@ namespace VkCore
         Logger::SetSeverityFilter(ESeverity::Verbose);
     }
 
+    BaseApplication::~BaseApplication()
+    {
+    }
+
     void BaseApplication::PreInitVulkan()
+    {
+    }
+
+    void BaseApplication::InitVulkan()
+    {
+        // The window has to be created before the instance in order to obtain the required extensions
+        // for the VkInstance!
+        CreateWindow();
+        CreateInstance();
+
+        m_Window->CreateSurface(m_Instance);
+
+        CreateDevices();
+
+        m_DescriptorBuilder = DescriptorBuilder(*m_Device);
+
+        CreateServices();
+
+        m_Device->InitSwapChain(*m_PhysicalDevice, m_Window->GetSurface(), m_WinWidth, m_WinHeight);
+    }
+
+    void BaseApplication::PostInitVulkan()
+    {
+        // Render Pass
+        m_RenderPass = VkCore::SwapchainRenderPass(*m_Device);
+
+        // Buffer
+        float* vertices = new float[]{
+            -0.5f, .5f, 1.f, 0.f, 0.f, .0f, .5f, 0.f, 1.f, 0.f, .5f, -0.5f, 0.f, 0.f, 1.f,
+        };
+
+        Buffer vertexBuffer = Buffer(&vertices, sizeof(float) * 15, vk::BufferUsageFlagBits::eVertexBuffer);
+
+        // Decsriptor Sets
+
+        // m_DescriptorBuilder.BindBuffer(0, vertexBuffer, vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlags
+        // stageFlags)
+
+        CreatePipeline();
+    }
+
+    void BaseApplication::CreatePipeline()
+    {
+        const auto shaders = ShaderLoader::LoadClassicShaders("MeshAndTaskShaders/Res/Shaders");
+
+        
+    }
+
+    void BaseApplication::Run()
+    {
+        PreInitVulkan();
+        InitVulkan();
+        PostInitVulkan();
+        Loop();
+        Shutdown();
+    };
+
+    void BaseApplication::Loop()
+    {
+        while (!m_Window->ShouldClose())
+        {
+            glfwPollEvents();
+        }
+    }
+
+    void BaseApplication::Shutdown()
+    {
+
+        m_Device->Destroy();
+        m_Instance.destroy();
+    }
+
+    void BaseApplication::CreateWindow()
     {
         VkCore::WindowProps windowProps{m_Title, m_WinWidth, m_WinHeight};
 
         m_Window = std::make_unique<VkCore::Window>(m_Instance, windowProps);
+    }
 
-        std::vector<const char*> requiredExtensions(m_Window->GetRequiredInstanceExtensions()), layers;
+    void BaseApplication::CreateInstance()
+    {
+
+        std::vector<const char*> requiredExtensions(Window::GetRequiredInstanceExtensions()), layers;
 
 #ifdef DEBUG
         requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -40,62 +123,18 @@ namespace VkCore
         // Debug messenger has to be created after creating the VkInstance!
         m_DebugMessenger = m_Instance.createDebugUtilsMessengerEXT(VkCore::Utils::PopulateDebugMessengerCreateInfo());
 #endif
+    }
 
-        m_Window->CreateSurface(m_Instance);
-
+    void BaseApplication::CreateDevices()
+    {
         m_PhysicalDevice = new VkCore::PhysicalDevice(m_Instance, m_Window->GetSurface(), m_DeviceExtensions);
         m_Device = new VkCore::Device(*m_PhysicalDevice, m_DeviceExtensions);
+    }
 
+    void BaseApplication::CreateServices()
+    {
         VmaAllocatorService* allocationService = new VmaAllocatorService(*m_Device, *m_PhysicalDevice, m_Instance);
         ServiceLocator::ProvideAllocatorService(allocationService);
-
-        m_Device->InitSwapChain(*m_PhysicalDevice, m_Window->GetSurface(), m_WinWidth, m_WinHeight);
-    }
-
-    void BaseApplication::InitVulkan()
-    {
-        m_RenderPass = VkCore::SwapchainRenderPass(*m_Device);
-
-        float vertices[15] = {
-            -0.5f, 0.5f,        1.f, 0.f, 0.f,
-            .0f, 0.5f,          0.f, 1.f, 0.f,
-            0.5f, -0.5f,        0.f, 0.f, 1.f,
-        };
-
-        Buffer vertexBuffer = Buffer(&vertices, sizeof(float) * 15, vk::BufferUsageFlagBits::eVertexBuffer);
-    }
-
-    BaseApplication::~BaseApplication()
-    {
-    }
-
-    void BaseApplication::Run()
-    {
-        PreInitVulkan();
-        InitVulkan();
-        Loop();
-    };
-
-    void BaseApplication::Loop()
-    {
-        while (!m_Window->ShouldClose())
-        {
-            glfwPollEvents();
-        }
-
-        m_Instance.destroy();
-    }
-
-    void BaseApplication::CreateVmaAllocator(VkCore::Device& device, VkCore::PhysicalDevice& physicalDevice, vk::Instance& instance)
-    {
-        VmaAllocatorCreateInfo createInfo;
-
-        createInfo.vulkanApiVersion = VK_API_VERSION_1_3;
-        createInfo.device = *device;
-        createInfo.physicalDevice = *physicalDevice;
-        createInfo.instance = instance;
-        
-        vmaCreateAllocator(&createInfo, &m_VmaAllocator);
     }
 
 } // namespace VkCore

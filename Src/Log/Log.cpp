@@ -106,6 +106,9 @@ const char* Logger::EvaluateCategoryString(ECategory category)
     case ECategory::Unknown:
         return "UNKNOWN";
         break;
+    case ECategory::Shader:
+        return "SHADER";
+        break;
 
     // Vulkan Specific
     case ECategory::Validation:

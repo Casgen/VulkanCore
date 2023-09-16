@@ -9,6 +9,7 @@
 #include "../Vk/Utils.h"
 #include "GLFW/glfw3.h"
 #include "Window.h"
+#include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
