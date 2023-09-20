@@ -56,6 +56,11 @@ namespace VkCore
         std::unique_ptr<Window> m_Window;
         uint32_t m_WinWidth, m_WinHeight;
         std::string m_Title;
+
+        VertexAttributeBuilder m_AttributeBuilder;
+        GraphicsPipelineBuilder m_PipelineBuilder;
+
+        vk::Pipeline m_Pipeline;
     };
 
 } // namespace VkCore

@@ -110,14 +110,14 @@ namespace VkCore
     std::vector<VkCore::ShaderData> ShaderLoader::LoadClassicShaders(const fs::path& path, const bool isOptimized)
     {
 
-        fs::path relativePath("./../../../../" + path.string());
+        fs::path relativePath = "../../../" + path.string() ;
 
         if (!fs::exists(relativePath))
         {
             LOGF(Shader, Error,
                  "Failed to compile shaders! The given file system path does not exist! given "
                  "path: %s\n",
-                 relativePath.string().data())
+                 path.string().data())
             return {};
         }
 
@@ -127,7 +127,7 @@ namespace VkCore
             LOGF(Shader, Error,
                  "Failed to compile shaders! The given file system path is not a directory! given "
                  "path: %s\n",
-                 relativePath.string().data())
+                 path.string().data())
             return {};
         }
 

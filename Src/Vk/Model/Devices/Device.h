@@ -37,6 +37,8 @@ namespace VkCore
         vk::DescriptorSetLayout CreateDescriptorSetLayout(const vk::DescriptorSetLayoutCreateInfo& createInfo);
         vk::CommandPool CreateCommandPool(const vk::CommandPoolCreateInfo& createInfo);
         vk::ShaderModule CreateShaderModule(const vk::ShaderModuleCreateInfo& createInfo);
+        vk::PipelineLayout CreatePipelineLayout(const vk::PipelineLayoutCreateInfo& createInfo);
+        vk::ResultValue<std::vector<vk::Pipeline>> CreateGraphicsPipelines(const std::vector<vk::GraphicsPipelineCreateInfo>& createInfo);
 
         // ---------- DESTROYERS -----------
 

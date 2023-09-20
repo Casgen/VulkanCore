@@ -1,8 +1,10 @@
 
 #include <cstdint>
 #include <memory>
+#include "glm/fwd.hpp"
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_enums.hpp"
 
 #define VMA_IMPLEMENTATION
 #include "BaseApplication.h"
@@ -67,14 +69,22 @@ namespace VkCore
         // m_DescriptorBuilder.BindBuffer(0, vertexBuffer, vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlags
         // stageFlags)
 
+        m_AttributeBuilder.PushAttribute<float>(2).PushAttribute<float>(3);
+
         CreatePipeline();
     }
 
     void BaseApplication::CreatePipeline()
     {
-        const auto shaders = ShaderLoader::LoadClassicShaders("MeshAndTaskShaders/Res/Shaders");
+        const std::vector<ShaderData> shaders = ShaderLoader::LoadClassicShaders("Res/Shaders/");
 
-        
+        m_Pipeline = m_PipelineBuilder.BindShaderModules(shaders)
+            .BindRenderPass(m_RenderPass.GetRenderPass())
+            .AddViewport(glm::uvec4(0,0,m_WinWidth, m_WinHeight))
+            .BindVertexAttributes(m_AttributeBuilder)
+            .SetPrimitiveAssembly(vk::PrimitiveTopology::eLineStrip)
+            .Build();
+               
     }
 
     void BaseApplication::Run()

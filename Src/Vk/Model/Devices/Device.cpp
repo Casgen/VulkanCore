@@ -8,6 +8,7 @@
 #include "../../Utils.h"
 #include "PhysicalDevice.h"
 #include "../Swapchain.h"
+#include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
@@ -125,7 +126,15 @@ namespace VkCore
         return m_Device.createShaderModule(createInfo);
     }
 
+    vk::PipelineLayout Device::CreatePipelineLayout(const vk::PipelineLayoutCreateInfo& createInfo)
+    {
+        return m_Device.createPipelineLayout(createInfo);
+    }
 
+    vk::ResultValue<std::vector<vk::Pipeline>> Device::CreateGraphicsPipelines(const std::vector<vk::GraphicsPipelineCreateInfo>& createInfo)
+    {
+        return m_Device.createGraphicsPipelines(nullptr, createInfo);
+    }
 
 
     void Device::DestroyImageView(const vk::ImageView& imageView)
