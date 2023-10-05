@@ -4,6 +4,7 @@
 #include "GLFW/glfw3.h"
 #include "Services/ServiceLocator.h"
 #include "Swapchain.h"
+#include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
 {
@@ -21,8 +22,7 @@ namespace VkCore
 
         // Checks whether the imageCount taken from the minImageCount doesn't exceed the maxImageCount.
         // if it does, it uses the maxImageCount instead.
-        if (supportDetails.m_Capabilites.maxImageCount > 0 &&
-            supportDetails.m_Capabilites.maxImageCount < imageCount)
+        if (supportDetails.m_Capabilites.maxImageCount > 0 && supportDetails.m_Capabilites.maxImageCount < imageCount)
         {
             imageCount = supportDetails.m_Capabilites.maxImageCount;
         }
@@ -102,12 +102,21 @@ namespace VkCore
         return m_SwapExtent;
     }
 
+    std::vector<vk::ImageView> Swapchain::GetImageViews() const
+    {
+        return m_ImageViews;
+    }
+
+    uint32_t Swapchain::GetNumberOfSwapBuffers() const
+    {
+        return m_ImageViews.size();
+    }
+
     vk::SurfaceFormat2KHR Swapchain::ChooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& surfaceFormats)
     {
         for (const auto& format : surfaceFormats)
         {
-            if (format.format == vk::Format::eB8G8R8A8Srgb &&
-                format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
+            if (format.format == vk::Format::eB8G8R8A8Srgb && format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear)
             {
                 return format;
             }
@@ -116,8 +125,7 @@ namespace VkCore
         LOGF(Vulkan, Warning,
              "The appropriate surface format was not found! Using the first one in the array! (format = %s, colorSpace "
              "= %s)",
-             vk::to_string(surfaceFormats[0].format).c_str(),
-             vk::to_string(surfaceFormats[0].colorSpace).c_str())
+             vk::to_string(surfaceFormats[0].format).c_str(), vk::to_string(surfaceFormats[0].colorSpace).c_str())
         return surfaceFormats[0];
     }
     vk::PresentModeKHR Swapchain::ChoosePresentMode(const std::vector<vk::PresentModeKHR>& presentModes)

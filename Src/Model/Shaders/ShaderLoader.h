@@ -20,7 +20,7 @@ namespace VkCore
         /**
          * @brief Reads all the types of shaders and compiles them into SPIR-V binary in order to use them in the
          * Vulkan classic programmable graphics pipeline
-         * @param sourceFilename - A path to the directory with all its shaders. All shaders should be contained in one
+         * @param path - A path to the directory with all its shaders. All shaders should be contained in one
          * directory
          * (/res/shaders/triangle_shader.frag,/res/shaders/triangle_shader.vert, ...) and you should only pass the name
          * of the directory with the shaders inside! for ex. /res/shaders/
@@ -30,6 +30,7 @@ namespace VkCore
          */
         static std::vector<VkCore::ShaderData> LoadClassicShaders(const std::filesystem::path& path,
                                                                   const bool isOptimized = true);
+
 
         static const char* ShadercCompilationStatusToString(shaderc_compilation_status status);
 

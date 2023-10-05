@@ -18,11 +18,9 @@
 #include "shaderc/status.h"
 #include "vulkan/vulkan_enums.hpp"
 
-namespace fs = std::filesystem;
-
 namespace VkCore
 {
-    ShaderData ShaderLoader::LoadClassicShader(const fs::path& path, const bool isOptimized)
+    ShaderData ShaderLoader::LoadClassicShader(const std::filesystem::path& path, const bool isOptimized)
     {
         shaderc::Compiler compiler;
         shaderc::CompileOptions compileOptions;
@@ -35,13 +33,13 @@ namespace VkCore
         return LoadClassicShader(path, compiler, compileOptions);
     }
 
-    ShaderData ShaderLoader::LoadClassicShader(const fs::path& path, const shaderc::Compiler& compiler,
-                                                       const shaderc::CompileOptions& compileOptions)
+    ShaderData ShaderLoader::LoadClassicShader(const std::filesystem::path& path, const shaderc::Compiler& compiler,
+                                               const shaderc::CompileOptions& compileOptions)
     {
 
         std::vector<char> data = FileUtils::ReadFile(path.string());
 
-        shaderc_shader_kind shaderKind = DetermineShaderType(path);
+        shaderc_shader_kind shaderKind = DetermineShaderType(path.string());
 
         shaderc::SpvCompilationResult result =
             compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data());
@@ -107,27 +105,29 @@ namespace VkCore
         }
     }
 
-    std::vector<VkCore::ShaderData> ShaderLoader::LoadClassicShaders(const fs::path& path, const bool isOptimized)
+    std::vector<VkCore::ShaderData> ShaderLoader::LoadClassicShaders(const std::filesystem::path& path,
+                                                                     const bool isOptimized)
     {
 
-        fs::path relativePath = "../../../" + path.string() ;
+        std::filesystem::path relativePath = std::filesystem::current_path() / path;
 
-        if (!fs::exists(relativePath))
+        if (!std::filesystem::exists(relativePath))
         {
+
             LOGF(Shader, Error,
-                 "Failed to compile shaders! The given file system path does not exist! given "
+                 "Failed to compile shaders! The given file system path doesn't exist! given "
                  "path: %s\n",
-                 path.string().data())
+                 relativePath.string().data())
             return {};
         }
 
-        if (!fs::is_directory(relativePath))
+        if (!std::filesystem::is_directory(relativePath))
         {
 
             LOGF(Shader, Error,
-                 "Failed to compile shaders! The given file system path is not a directory! given "
+                 "Failed to compile shaders! The given file system path is not a directory or doesn't exist! given "
                  "path: %s\n",
-                 path.string().data())
+                 relativePath.string().data())
             return {};
         }
 
@@ -141,9 +141,16 @@ namespace VkCore
 
         std::vector<ShaderData> modulesMap;
 
-        for (const auto& dirEntry : fs::directory_iterator(relativePath))
+        for (const auto& dirEntry : std::filesystem::directory_iterator(relativePath))
         {
-            fs::path pathEntry = dirEntry.path();
+            std::filesystem::path pathEntry = dirEntry.path();
+
+            std::string extension = pathEntry.extension().string();
+
+            if (extension == ".mesh" || extension == ".task") {
+                LOG(Vulkan, Warning, "Found a task or mesh shader! Skipping!")
+                continue;
+            }
 
             LOGF(Shader, Info, "Found a file: %s", pathEntry.string().data())
 

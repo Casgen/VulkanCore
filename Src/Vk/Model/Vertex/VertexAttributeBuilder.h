@@ -70,10 +70,7 @@ namespace VkCore
         * @brief Pushes onto a stack the vertex attribute. With it its location index is automatically incremented.
         */
         template <typename T>
-        VertexAttributeBuilder& PushAttribute(const uint32_t count)
-        {
-            return *this;
-        }
+        VertexAttributeBuilder& PushAttribute(const uint32_t count);
 
 
 

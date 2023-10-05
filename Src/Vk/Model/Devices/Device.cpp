@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <sys/types.h>
 #include <vector>
 
 #include "Device.h"
@@ -36,14 +37,15 @@ namespace VkCore
         const float queuePriority = 1.f;
 
         std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
-        std::set<uint32_t> uniqueQueueFamilies = {indices.m_GraphicsFamily.value(),
-                                                  indices.m_PresentFamily.value()};
+        std::set<uint32_t> uniqueQueueFamilies = {indices.m_GraphicsFamily.value(), indices.m_PresentFamily.value()};
 
-        if (indices.m_ComputeFamily.has_value()) {
+        if (indices.m_ComputeFamily.has_value())
+        {
             uniqueQueueFamilies.emplace(indices.m_ComputeFamily.value());
         }
 
-        if (indices.m_TransferFamily.has_value()) {
+        if (indices.m_TransferFamily.has_value())
+        {
             uniqueQueueFamilies.emplace(indices.m_TransferFamily.value());
         }
 
@@ -131,11 +133,26 @@ namespace VkCore
         return m_Device.createPipelineLayout(createInfo);
     }
 
-    vk::ResultValue<std::vector<vk::Pipeline>> Device::CreateGraphicsPipelines(const std::vector<vk::GraphicsPipelineCreateInfo>& createInfo)
+    vk::Framebuffer Device::CreateFrameBuffer(const vk::FramebufferCreateInfo& createInfo)
+    {
+        return m_Device.createFramebuffer(createInfo);
+    }
+
+    vk::ResultValue<std::vector<vk::Pipeline>> Device::CreateGraphicsPipelines(
+        const std::vector<vk::GraphicsPipelineCreateInfo>& createInfo)
     {
         return m_Device.createGraphicsPipelines(nullptr, createInfo);
     }
 
+    vk::Semaphore Device::CreateSemaphore(const vk::SemaphoreCreateInfo& createInfo)
+    {
+        return m_Device.createSemaphore(createInfo);
+    }
+
+    vk::Fence Device::CreateFence(const vk::FenceCreateInfo& createInfo)
+    {
+        return m_Device.createFence(createInfo);
+    }
 
     void Device::DestroyImageView(const vk::ImageView& imageView)
     {
@@ -155,6 +172,11 @@ namespace VkCore
     void Device::DestroyDescriptorSetLayout(const vk::DescriptorSetLayout& layout)
     {
         m_Device.destroyDescriptorSetLayout(layout);
+    }
+
+    void Device::DestroyShaderModule(const vk::ShaderModule& module)
+    {
+        m_Device.destroyShaderModule(module);
     }
 
     vk::Device& Device::operator*()
@@ -212,7 +234,20 @@ namespace VkCore
         return m_Device.allocateCommandBuffers(allocInfo);
     }
 
-    void Device::FreeCommandBuffers(const vk::CommandPool& commandPool, const std::vector<vk::CommandBuffer>& commandBuffers) const
+    // --------- WATING OPTS ----------------
+
+    vk::Result Device::WaitForFences(const vk::ArrayProxy<vk::Fence>& fences, const bool waitForAll, uint64_t timeout)
+    {
+        return m_Device.waitForFences(fences, waitForAll, timeout);
+    }
+
+    void Device::ResetFences(const vk::ArrayProxy<vk::Fence>& fences)
+    {
+        m_Device.resetFences(fences);
+    }
+
+    void Device::FreeCommandBuffers(const vk::CommandPool& commandPool,
+                                    const std::vector<vk::CommandBuffer>& commandBuffers) const
     {
         m_Device.freeCommandBuffers(commandPool, commandBuffers);
     }
@@ -278,6 +313,12 @@ namespace VkCore
         }
 
         LOG(Vulkan, Verbose, "Queues done initializing...")
+    }
+
+    vk::ResultValue<uint32_t> Device::AcquireNextImageKHR(const vk::Semaphore& semaphore, const vk::Fence& fence,
+                                                          const uint64_t timeout)
+    {
+        return m_Device.acquireNextImageKHR(m_Swapchain->GetVkSwapchain(), timeout, semaphore, fence);
     }
 
 } // namespace VkCore

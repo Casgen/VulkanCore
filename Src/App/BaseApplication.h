@@ -13,6 +13,7 @@
 
 #include "vulkan/vulkan_core.h"
 #include "vk_mem_alloc.h"
+#include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
 {
@@ -28,7 +29,10 @@ namespace VkCore
 
         void Run();
         void Loop();
+        void DrawFrame();
+        void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, const uint32_t imageIndex);
         void Shutdown();
+
 
       private:
         void CreateWindow();
@@ -37,6 +41,10 @@ namespace VkCore
         void CreateServices();
         
         void CreatePipeline();
+        void CreateFramebuffers();
+        void CreateCommandPool();
+        void CreateCommandBuffer();
+        void CreateSyncObjects();
 
 
         std::vector<const char*> m_DeviceExtensions = {
@@ -51,6 +59,8 @@ namespace VkCore
         PhysicalDevice* m_PhysicalDevice;
         Device* m_Device;
 
+        uint32_t m_CurrentFrame = 0;
+
         DescriptorBuilder m_DescriptorBuilder;
 
         std::unique_ptr<Window> m_Window;
@@ -60,7 +70,22 @@ namespace VkCore
         VertexAttributeBuilder m_AttributeBuilder;
         GraphicsPipelineBuilder m_PipelineBuilder;
 
+        Buffer m_VertexBuffer;
+
         vk::Pipeline m_Pipeline;
+
+        std::vector<vk::Framebuffer> m_SwapchainFramebuffers;
+
+        // Commands
+        vk::CommandPool m_CommandPool;
+        std::vector<vk::CommandBuffer> m_CommandBuffers;
+
+        // Sync Objects
+        std::vector<vk::Fence> m_InFlightFences;
+        std::vector<vk::Semaphore> m_RenderFinishedSemaphores;
+        std::vector<vk::Semaphore> m_ImageAvailableSemaphores;
+
+
     };
 
 } // namespace VkCore

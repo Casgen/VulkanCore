@@ -213,6 +213,26 @@ namespace VkCore
 
         return *this;
     }
+    GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddBlendAttachment(
+        const vk::PipelineColorBlendAttachmentState blendAttachment)
+    {
+        m_ColorBlendAttachmentStates.emplace_back(blendAttachment);
+
+        return *this;
+    }
+
+    GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddDisabledBlendAttachment()
+    {
+        vk::PipelineColorBlendAttachmentState state{};
+
+        state.setBlendEnable(false);
+        state.setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+                                vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
+
+        m_ColorBlendAttachmentStates.emplace_back(state);
+
+        return *this;
+    }
 
     GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetLineWidth(const float lineWidth)
     {
@@ -265,7 +285,16 @@ namespace VkCore
         ValidateViewportInfo();
 
         m_PipelineCreateInfo.setStages(m_ShaderStageCreateInfos);
+
         vk::PipelineVertexInputStateCreateInfo vertexInputState{};
+
+        if (m_VertexInputAttributes.size() == 0) {
+            vertexInputState.setVertexBindingDescriptionCount(0);
+            vertexInputState.setVertexAttributeDescriptionCount(0);
+            vertexInputState.pVertexBindingDescriptions = nullptr;
+            vertexInputState.pVertexAttributeDescriptions = nullptr;
+        }
+
         vertexInputState.setVertexBindingDescriptions(m_VertexInputBinding);
         vertexInputState.setVertexAttributeDescriptions(m_VertexInputAttributes);
 
@@ -307,7 +336,9 @@ namespace VkCore
             .setPMultisampleState(&m_MultisampleCreateInfo)
             .setStageCount(m_ShaderStageCreateInfos.size())
             .setPDepthStencilState(nullptr)
+            .setPRasterizationState(&m_RasterizationInfo)
             .setPVertexInputState(&vertexInputState)
+            .setPInputAssemblyState(&m_VertexInputAssembly)
             // These member variables are for creating a derivative of this pipeline. Won't be used here.
             .setBasePipelineIndex(-1)
             .setBasePipelineHandle(VK_NULL_HANDLE);
@@ -319,6 +350,12 @@ namespace VkCore
         VkCore::Utils::CheckVkResult(layout.result);
 
         LOG(Vulkan, Info, "Graphics Pipeline was successfully created!")
+
+        for (const vk::PipelineShaderStageCreateInfo& info : m_ShaderStageCreateInfos)
+        {
+            m_Device.DestroyShaderModule(info.module);
+            LOG(Vulkan, Verbose, "vk::ShaderModule destroyed.")
+        }
 
         return layout.value[0];
 
@@ -374,8 +411,15 @@ namespace VkCore
 
     void GraphicsPipelineBuilder::ValidateVertexInfo()
     {
+        if (m_VertexInputAttributes.size() == 0)
+        {
+            LOG(Vulkan, Warning,
+                "No input attributes defined! Setting input binding descriptions and attribute description as blank!")
+            return;
+        }
+
         uint32_t actualBinding = m_VertexInputBinding.binding;
-        uint32_t expectedLocationCount, actualLocationCount = 0;
+        uint32_t expectedLocationCount = 0, actualLocationCount = 0;
 
         for (int i = 0; i < m_VertexInputAttributes.size(); i++)
         {
@@ -393,7 +437,8 @@ namespace VkCore
 
         if (expectedLocationCount != actualLocationCount)
         {
-            LOG(Vulkan, Warning, "Locations are not incrementing correctly! Some index/indices are missing!")
+            LOG(Vulkan, Warning,
+                "Locations are not incrementing correctly! Some index/indices are missing or set incorrectly!")
         }
     }
 
@@ -412,7 +457,7 @@ namespace VkCore
 
         // TODO: Test them if they are actually set right. There might be possiblity that the polygons won't draw!
         m_RasterizationInfo.setFrontFace(vk::FrontFace::eClockwise);
-        m_RasterizationInfo.setCullMode(vk::CullModeFlagBits::eBack);
+        m_RasterizationInfo.setCullMode(vk::CullModeFlagBits::eFront);
 
         m_RasterizationInfo.setDepthBiasEnable(false)
             .setDepthClampEnable(false)

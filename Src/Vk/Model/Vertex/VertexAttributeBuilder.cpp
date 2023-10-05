@@ -3,6 +3,13 @@
 namespace VkCore
 {
 
+    template <typename T>
+    VertexAttributeBuilder& VertexAttributeBuilder::PushAttribute(const uint32_t count)
+    {
+        LOG(Vulkan, Error, "The attribute format was not recognized! No attribute has been pushed!")
+        return *this;
+    }
+
     template <>
     vk::Format VertexAttributeBuilder::GetFormat<float>(const uint32_t count)
     {

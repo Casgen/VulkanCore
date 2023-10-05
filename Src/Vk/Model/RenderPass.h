@@ -16,7 +16,7 @@ namespace VkCore
 
         // ------------- GETTERS -----------------
 
-        vk::RenderPass GetRenderPass() const
+        vk::RenderPass GetVkRenderPass() const
         {
             return m_RenderPass;
         }

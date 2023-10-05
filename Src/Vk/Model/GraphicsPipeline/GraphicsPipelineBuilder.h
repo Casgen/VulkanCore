@@ -152,6 +152,16 @@ namespace VkCore
         GraphicsPipelineBuilder& FrontFaceDirection(const vk::FrontFace frontFace);
 
         /**
+         * @brief Sets the thickness of the lines when Polygons are drawn with lines. By default it is
+         * set to 1.f
+         * */
+        GraphicsPipelineBuilder& SetLineWidth(const float lineWidth = 1.0f);
+
+
+
+        // ------------------ BLENDING ----------------------
+
+        /**
          * @brief tells Vulkan to enable transformation of depth values. By default it is false.
          */
         GraphicsPipelineBuilder& EnableDepthBias(const bool isEnabled);
@@ -165,10 +175,18 @@ namespace VkCore
                                                     const float slopeFactor = 0.0f);
 
         /**
-         * @brief Sets the thickness of the lines when Polygons are drawn with lines. By default it is
-         * set to 1.f
+         * @brief Adds a customized color blend attachment state. If you don't want any blending for the
+         * attachment, use the @code AddDisabledBlendAttachment @endcode method
          * */
-        GraphicsPipelineBuilder& SetLineWidth(const float lineWidth = 1.0f);
+        GraphicsPipelineBuilder& AddBlendAttachment(const vk::PipelineColorBlendAttachmentState blendAttachment);
+
+        /**
+         * @brief Adds a color blend attachment state which is automatically disables blending. This is required to do for every
+         * attchment in the Render Pass!
+         */
+        GraphicsPipelineBuilder& AddDisabledBlendAttachment();
+
+
 
         // ---------------------- PIPELINE LAYOUT -------------------------
 
@@ -190,6 +208,8 @@ namespace VkCore
         GraphicsPipelineBuilder& AddPushConstantRange(const vk::PushConstantRange& range);
 
         GraphicsPipelineBuilder& BindRenderPass(const vk::RenderPass& renderPass);
+
+
 
         /**
          * @brief Gathers all the data, sets all the necessary pipeline states and creates a new graphics pipeline.
