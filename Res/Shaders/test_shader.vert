@@ -1,7 +1,7 @@
 #version 460
 
-// layout (location = 0) in vec2 a_Location;
-// layout (location = 1) in vec3 a_Color;
+layout (location = 0) in vec2 a_Location;
+layout (location = 1) in vec3 a_Color;
 
 layout (location = 0) out vec3 o_Color;
 
@@ -19,6 +19,6 @@ vec3 colors[3] = vec3[](
 
 
 void main() {
-    gl_Position = vec4(vertices[gl_VertexIndex], 1.0f);
-    o_Color = colors[gl_VertexIndex];
+    gl_Position = vec4(a_Location, 0.0f, 1.0f);
+    o_Color = a_Color;
 }

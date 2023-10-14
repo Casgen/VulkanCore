@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../Buffers/Buffer.h"
+#include "vulkan/vulkan_core.h"
 
 namespace VkCore
 {
@@ -12,12 +13,41 @@ namespace VkCore
         virtual ~IAllocatorService(){};
 
         /**
-        * @brief takes data and info from the buffer and creates a new GPU buffer, allocates and populates it.
-        * @param - A reference to an existing buffer. Used for obtaining info about the buffer.
-        * @param - pointer to the data.
-        */
-        virtual void AllocateBufferOnGPU(Buffer& inoutBuffer, const void* data) = 0;
+         * @brief takes data and info from the buffer and creates a new GPU-only visible buffer (allocates and populates
+         * it).
+         * @param - A reference to an existing buffer. Used for obtaining info about the buffer.
+         * @param - pointer to the data.
+         */
+        virtual VkBuffer CreateBufferOnGpu(const void* data, const Buffer::BufferInfo bufferInfo,
+                                           VmaAllocation& allocation, VmaAllocationInfo* allocationInfo) = 0;
+
+        /**
+         * @brief Allocates and creates a new buffer. Note that no data is being transferred!
+         * @param bufferInfo - Struct containg information for creating a buffer
+         * @param outAllocation - Output VmaAllocation struct.
+         * @param outAllocationInfo - Optional output VmaAllocationInfo struct.
+         * @return newly created VkBuffer handle.
+         */
+        virtual VkBuffer CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
+                                      VmaAllocationInfo* outAllocationInfo = nullptr) = 0;
+
+        /**
+         * Destroys the buffer and frees the memory
+         * @param buffer - buffer to destroy
+         */
         virtual void DestroyBuffer(Buffer& buffer) = 0;
+
+        /**
+         * @brief Copies the data from the source buffer to the destination buffer. A Command buffer is used to transfer
+         * the data with a transfer queue.
+         * @param srcBuffer - source buffer to copy
+         * @param dstBuffer - destination buffer to paste the data into
+         * @param size - how many bytes should be copied
+         * @param srcOffset - the offset in bytes to start the copy from the source buffer
+         * @param dstOffset - the offset in bytes to paste the data into the destination buffer
+         */
+        virtual void CopyBuffer(const VkBuffer& srcBuffer, const VkBuffer& dstBuffer, const size_t size,
+                                const uint32_t srcOffset = 0, const uint32_t dstOffset = 0) = 0;
     };
 
 } // namespace VkCore

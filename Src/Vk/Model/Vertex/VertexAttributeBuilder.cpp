@@ -162,7 +162,7 @@ namespace VkCore
         vk::VertexInputAttributeDescription description{};
         description.setFormat(GetFormat<float>(count));
         description.setOffset(m_Binding.stride);
-        description.setBinding(0);
+        description.setBinding(m_Binding.binding);
         description.setLocation(m_Descriptions.size());
 
         m_Descriptions.emplace_back(description);
@@ -177,7 +177,7 @@ namespace VkCore
         vk::VertexInputAttributeDescription description{};
         description.setFormat(GetFormat<uint32_t>(count));
         description.setOffset(m_Binding.stride);
-        description.setBinding(0);
+        description.setBinding(m_Binding.binding);
         description.setLocation(m_Descriptions.size());
 
         m_Descriptions.emplace_back(description);
@@ -192,7 +192,7 @@ namespace VkCore
         vk::VertexInputAttributeDescription description{};
         description.setFormat(GetFormat<int32_t>(count));
         description.setOffset(m_Binding.stride);
-        description.setBinding(0);
+        description.setBinding(m_Binding.binding);
         description.setLocation(m_Descriptions.size());
 
         m_Descriptions.emplace_back(description);
@@ -207,7 +207,7 @@ namespace VkCore
         vk::VertexInputAttributeDescription description{};
         description.setFormat(GetFormat<double>(count));
         description.setOffset(m_Binding.stride);
-        description.setBinding(0);
+        description.setBinding(m_Binding.binding);
         description.setLocation(m_Descriptions.size());
 
         m_Descriptions.emplace_back(description);
@@ -220,9 +220,9 @@ namespace VkCore
     VertexAttributeBuilder& VertexAttributeBuilder::PushAttribute<unsigned char>(const uint32_t count)
     {
         vk::VertexInputAttributeDescription description{};
-        // description.setFormat(GetFormat<unsigned char>(count));
+        description.setFormat(GetFormat<unsigned char>(count));
         description.setOffset(m_Binding.stride);
-        description.setBinding(0);
+        description.setBinding(m_Binding.binding);
         description.setLocation(m_Descriptions.size());
 
         m_Descriptions.emplace_back(description);

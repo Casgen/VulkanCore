@@ -42,6 +42,12 @@ namespace VkCore
         VertexAttributeBuilder& SetBinding(const uint32_t binding)
         {
             m_Binding.setBinding(binding);
+
+            for (auto& desc : m_Descriptions)
+            {
+                desc.binding = binding;
+            }
+
             return *this;
         }
 
@@ -67,12 +73,10 @@ namespace VkCore
         // ------------- ATTRIBUTES ----------------
 
         /**
-        * @brief Pushes onto a stack the vertex attribute. With it its location index is automatically incremented.
-        */
+         * @brief Pushes onto a stack the vertex attribute. With it its location index is automatically incremented.
+         */
         template <typename T>
         VertexAttributeBuilder& PushAttribute(const uint32_t count);
-
-
 
       private:
         std::vector<vk::VertexInputAttributeDescription> m_Descriptions;
@@ -85,8 +89,6 @@ namespace VkCore
         {
             return vk::Format::eUndefined;
         }
-
     };
-
 
 } // namespace VkCore

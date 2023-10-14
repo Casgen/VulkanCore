@@ -5,6 +5,7 @@
 #include "../../Devices/PhysicalDevice.h"
 #include "IAllocatorService.h"
 #include "vk_mem_alloc.h"
+#include "vulkan/vulkan_core.h"
 
 namespace VkCore
 {
@@ -14,40 +15,46 @@ namespace VkCore
         VmaAllocatorService(Device& device, PhysicalDevice& physicalDevice, vk::Instance& instance);
         ~VmaAllocatorService();
 
+        void DestroyBuffer(Buffer& buffer) override;
+
+
+        /**
+         * @brief Allocates and creates a new buffer.
+         * @param data - pointer to the data.
+         * @param bufferInfo - Struct containg information for creating a buffer
+         * @param outAllocation - Output VmaAllocation struct.
+         * @param outAllocationInfo - Optional output VmaAllocationInfo struct.
+         * @return newly created buffer.
+         */
+        VkBuffer CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
+                              VmaAllocationInfo* outAllocationInfo = nullptr) override;
+        /**
+         * @brief Copies the data from the source buffer to the destination buffer. A Command buffer is used to transfer
+         * the data with a transfer queue.
+         * @param srcBuffer - source buffer to copy
+         * @param dstBuffer - destination buffer to paste the data into
+         * @param size - how many bytes should be copied
+         * @param srcOffset - the offset in bytes to start the copy from the source buffer
+         * @param dstOffset - the offset in bytes to paste the data into the destination buffer
+         */
+        void CopyBuffer(const VkBuffer& srcBuffer, const VkBuffer& dstBuffer, const size_t size,
+                        const uint32_t srcOffset = 0, const uint32_t dstOffset = 0) override;
+
         /**
          *  @brief Allocated a buffer onto the GPU device, making it only writable/readable for the GPU. It cannot be
          *  accessed by the CPU!
          *  @param buffer - A block of memory to copy the data from and transfer to the GPU.
+         *  @param data - pointer to the data.
          */
-        void AllocateBufferOnGPU(Buffer& inoutBuffer, const void* data) override;
-        void DestroyBuffer(Buffer& buffer) override;
+        VkBuffer CreateBufferOnGpu(const void* data, const Buffer::BufferInfo bufferInfo, VmaAllocation& allocation,
+                                   VmaAllocationInfo* allocationInfo) override;
+
 
       private:
         VmaAllocator m_VmaAllocator;
 
         PhysicalDevice m_PhysicalDevice;
         Device m_Device;
-
-        void CopyBuffer(const vk::Buffer& srcBuffer, const vk::Buffer& dstBuffer, const uint32_t size,
-                        const uint32_t srcOffset = 0, const uint32_t dstOffset = 0);
-
-        /**
-         * @brief Allocates and creates a new buffer. After creation, no data is being transfered!
-         * @param size - size of the data in bytes.
-         * @param usageFlags - how or what is the buffer used for.
-         * @param allocFlags - Create flags to use when allocating a buffer. (see VmaAllocationCreateFlags)
-         * @param outAllocation - Output VmaAllocation struct.
-         * @param outAllocation - Output VmaAllocationInfo struct.
-         * @param memoryUsage - How the memory should be used. (VMA_MEMORY_USAGE_AUTO is the default)
-         * @param sharingMode - indicates whether the buffer will be used in one queue or shared between more queues.
-         * @param bufferCreateFlags - Buffer creation flags
-         * @return newly created buffer.
-         */
-        VkBuffer CreateBuffer(const size_t size, vk::BufferUsageFlags usageFlags, VmaAllocationCreateFlags allocFlags,
-                              VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo = nullptr,
-                              VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO,
-                              vk::SharingMode sharingMode = vk::SharingMode::eExclusive,
-                              vk::BufferCreateFlags bufferCreateFlags = {});
     };
 
 } // namespace VkCore

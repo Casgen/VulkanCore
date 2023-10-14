@@ -12,7 +12,6 @@
 #include "../Vk/Model/GraphicsPipeline/GraphicsPipelineBuilder.h"
 
 #include "vulkan/vulkan_core.h"
-#include "vk_mem_alloc.h"
 #include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
@@ -40,6 +39,7 @@ namespace VkCore
         void CreateDevices();
         void CreateServices();
         
+        void CreateVertexBuffer();
         void CreatePipeline();
         void CreateFramebuffers();
         void CreateCommandPool();
@@ -71,6 +71,9 @@ namespace VkCore
         GraphicsPipelineBuilder m_PipelineBuilder;
 
         Buffer m_VertexBuffer;
+        VkBuffer m_VkBuffer = VK_NULL_HANDLE;
+        VmaAllocationInfo m_VertexAllocInfo{};
+        VmaAllocation m_VertexAlloc{};
 
         vk::Pipeline m_Pipeline;
 

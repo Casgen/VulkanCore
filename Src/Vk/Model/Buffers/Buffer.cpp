@@ -10,15 +10,39 @@
 namespace VkCore
 {
 
-    Buffer::Buffer(void* data, const size_t size, const vk::BufferUsageFlags& usageFlags)
-        : m_Size(size), m_UsageFlags(usageFlags)
-    {
-        ServiceLocator::GetAllocatorService().AllocateBufferOnGPU(*this, data);
-    }
-
     Buffer::~Buffer()
     {
         ServiceLocator::GetAllocatorService().DestroyBuffer(*this);
+    }
+
+    void Buffer::InitializeOnGpu(const void* data, const size_t size)
+    {
+        BufferInfo bufferInfo{};
+
+        bufferInfo.m_UsageFlags = m_UsageFlags;
+        bufferInfo.m_Size = size;
+
+        m_Buffer =
+            ServiceLocator::GetAllocatorService().CreateBufferOnGpu(data, bufferInfo, m_Allocation, &m_AllocationInfo);
+    }
+
+    void Buffer::InitializeOnCpu(const void* data, const size_t size, const bool isMappable)
+    {
+        BufferInfo bufferInfo{};
+
+        bufferInfo.m_UsageFlags = m_UsageFlags;
+        bufferInfo.m_Size = size;
+        bufferInfo.m_AllocCreateFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+        bufferInfo.m_MemoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+
+        if (isMappable)
+        {
+            bufferInfo.m_AllocCreateFlags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+        }
+
+        ServiceLocator::GetAllocatorService().CreateBuffer(bufferInfo, m_Allocation, &m_AllocationInfo);
+
+        std::memcpy(m_AllocationInfo.pMappedData, data, size);
     }
 
     vk::BufferUsageFlags Buffer::GetUsageFlags() const
@@ -28,7 +52,6 @@ namespace VkCore
 
     uint32_t Buffer::GetSize() const
     {
-
         return m_Size;
     }
 
@@ -47,7 +70,7 @@ namespace VkCore
         return m_AllocationInfo;
     }
 
-    void Buffer::SetVkBuffer(const vk::Buffer& buffer)
+    void Buffer::SetVkBuffer(const VkBuffer& buffer)
     {
         m_Buffer = buffer;
     }
@@ -65,6 +88,10 @@ namespace VkCore
     void Buffer::SetUsageFlags(const vk::BufferUsageFlags& flags)
     {
         m_UsageFlags = flags;
+    }
+    void Buffer::Destroy()
+    {
+        ServiceLocator::GetAllocatorService().DestroyBuffer(*this);
     }
 
 } // namespace VkCore

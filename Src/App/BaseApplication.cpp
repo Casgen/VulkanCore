@@ -1,5 +1,6 @@
 
 #include <cstdint>
+#include <cstring>
 #include <fenv.h>
 #include <memory>
 #include "glm/fwd.hpp"
@@ -49,11 +50,11 @@ namespace VkCore
 
         CreateDevices();
 
-        m_DescriptorBuilder = DescriptorBuilder(*m_Device);
-
         CreateServices();
 
         m_Device->InitSwapChain(*m_PhysicalDevice, m_Window->GetSurface(), m_WinWidth, m_WinHeight);
+
+        m_DescriptorBuilder = DescriptorBuilder(*m_Device);
     }
 
     void BaseApplication::PostInitVulkan()
@@ -61,25 +62,26 @@ namespace VkCore
         // Render Pass
         m_RenderPass = VkCore::SwapchainRenderPass(*m_Device);
 
-        // Buffer
-        float* vertices = new float[]{
-            -0.5f, .5f, 1.f, 0.f, 0.f, .0f, .5f, 0.f, 1.f, 0.f, .5f, -0.5f, 0.f, 0.f, 1.f,
-        };
-
-        m_VertexBuffer = Buffer(&vertices, sizeof(float) * 15, vk::BufferUsageFlagBits::eVertexBuffer);
-
-        // Decsriptor Sets
-
-        // m_DescriptorBuilder.BindBuffer(0, vertexBuffer, vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlags
-        // stageFlags)
-
-        m_AttributeBuilder.PushAttribute<float>(2).PushAttribute<float>(3);
-
+        CreateVertexBuffer();
         CreatePipeline();
         CreateFramebuffers();
         CreateCommandPool();
         CreateCommandBuffer();
         CreateSyncObjects();
+    }
+
+    void BaseApplication::CreateVertexBuffer()
+    {
+        // Buffer
+        float vertices[15] = {
+            -0.5f, -0.5f, 1.f, 0.f, 0.f, .0f, .5f, 0.f, 1.f, 0.f, .5f, -0.5f, 0.f, 0.f, 1.f,
+        };
+
+        m_VertexBuffer = Buffer(vk::BufferUsageFlagBits::eVertexBuffer);
+        m_VertexBuffer.InitializeOnGpu(vertices, 60);
+
+
+        m_AttributeBuilder.PushAttribute<float>(2).PushAttribute<float>(3).SetBinding(0);
     }
 
     void BaseApplication::CreatePipeline()
@@ -200,13 +202,13 @@ namespace VkCore
 
         vk::SubmitInfo submitInfo{};
         submitInfo.setCommandBuffers(m_CommandBuffers[m_CurrentFrame])
-        .setWaitSemaphores(m_ImageAvailableSemaphores[m_CurrentFrame])
-        .setWaitDstStageMask(dstStageMask)
-        .setSignalSemaphores(m_RenderFinishedSemaphores[m_CurrentFrame]);
+            .setWaitSemaphores(m_ImageAvailableSemaphores[m_CurrentFrame])
+            .setWaitDstStageMask(dstStageMask)
+            .setSignalSemaphores(m_RenderFinishedSemaphores[m_CurrentFrame]);
 
         TRY_CATCH_BEGIN()
 
-        m_Device->GetGraphicsQueue().submit(submitInfo,m_InFlightFences[m_CurrentFrame]);
+        m_Device->GetGraphicsQueue().submit(submitInfo, m_InFlightFences[m_CurrentFrame]);
 
         TRY_CATCH_END()
 
@@ -214,12 +216,12 @@ namespace VkCore
 
         vk::PresentInfoKHR presentInfo{};
         presentInfo.setWaitSemaphores(m_RenderFinishedSemaphores[m_CurrentFrame])
-        .setSwapchains(swapchain)
-        .setImageIndices(imageIndex)
-        .setPResults(nullptr);
+            .setSwapchains(swapchain)
+            .setImageIndices(imageIndex)
+            .setPResults(nullptr);
 
         Utils::CheckVkResult(m_Device->GetPresentQueue().presentKHR(presentInfo));
-        
+
         m_CurrentFrame = (m_CurrentFrame + 1) % m_Device->GetSwapchain()->GetNumberOfSwapBuffers();
     }
 
@@ -246,8 +248,15 @@ namespace VkCore
             // Bind the necessary resource
             commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, m_Pipeline);
 
+            const VkBuffer* buffer = reinterpret_cast<const VkBuffer*>(&m_VertexBuffer);
+
+            if (buffer == VK_NULL_HANDLE)
+            {
+                LOG(Vulkan, Fatal, "Failed to create a Destination buffer!")
+            }
+
             // TODO fix the bugged creationg of VkBuffers
-            //commandBuffer.bindVertexBuffers(0, {m_VertexBuffer.GetVkBuffer()}, {0});
+            commandBuffer.bindVertexBuffers(0, {m_VertexBuffer.GetVkBuffer()}, {0});
 
             commandBuffer.draw(3, 1, 0, 0);
 
