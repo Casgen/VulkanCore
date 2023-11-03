@@ -1,56 +1,61 @@
 #include "DescriptorBuilder.h"
 #include "DescriptorAllocator.h"
 #include "DescriptorLayoutCache.h"
+#include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_structs.hpp"
+#include "../../../Log/Log.h"
 
 #include <algorithm>
 #include <memory>
 
 namespace VkCore
 {
-    DescriptorBuilder::~DescriptorBuilder()
+
+    DescriptorBuilder::DescriptorBuilder()
+        : m_Cache(std::make_unique<DescriptorLayoutCache>()), m_Allocator(std::make_unique<DescriptorAllocator>())
     {
-        delete m_Cache;
-        delete m_Allocator;
     }
 
     DescriptorBuilder::DescriptorBuilder(const Device& device)
-        : m_Cache(new DescriptorLayoutCache(device)), m_Allocator(new DescriptorAllocator(device))
+        : m_Cache(std::make_unique<DescriptorLayoutCache>(device)),
+          m_Allocator(std::make_unique<DescriptorAllocator>(device))
     {
     }
 
-    DescriptorBuilder::DescriptorBuilder(DescriptorLayoutCache* layoutCache, DescriptorAllocator* allocator)
+    DescriptorBuilder::~DescriptorBuilder()
     {
-        m_Cache = layoutCache;
-        m_Allocator = allocator;
+        // TODO: Check if this works!
+        for (vk::WriteDescriptorSet& write : m_Writes)
+        {
+            delete[] write.pBufferInfo;
+        }
     }
 
-    DescriptorBuilder& DescriptorBuilder::BindBuffer(uint32_t binding, const vk::DescriptorBufferInfo& bufferInfo,
-                                                     vk::DescriptorType type, vk::ShaderStageFlags stageFlags)
+    DescriptorBuilder::DescriptorBuilder(DescriptorBuilder&& other)
     {
-        // create the descriptor binding for the layout
-        vk::DescriptorSetLayoutBinding newBinding(binding, type, 1, stageFlags, nullptr);
-        m_Bindings.push_back(newBinding);
+        if (this != &other)
+        {
+            m_Cache = std::move(other.m_Cache);
+            m_Allocator = std::move(other.m_Allocator);
+        }
+    }
 
-        // create the descriptor write
-        vk::WriteDescriptorSet newWrite({}, binding, {}, 1, type, nullptr, &bufferInfo, nullptr);
+    DescriptorBuilder& DescriptorBuilder::operator=(DescriptorBuilder&& other)
+    {
+        if (this != &other)
+        {
+            m_Cache = std::move(other.m_Cache);
+            m_Allocator = std::move(other.m_Allocator);
+        }
 
-        m_Writes.push_back(newWrite);
         return *this;
     }
 
-    DescriptorBuilder& DescriptorBuilder::BindBuffer(uint32_t binding, const Buffer& buffer, vk::DescriptorType type,
-                                                     vk::ShaderStageFlags stageFlags)
+    DescriptorBuilder::DescriptorBuilder(std::unique_ptr<DescriptorLayoutCache> layoutCache,
+                                         std::unique_ptr<DescriptorAllocator> allocator)
     {
-        vk::DescriptorBufferInfo bufferInfo{buffer.GetVkBuffer(), 0, buffer.GetSize()};
-        return BindBuffer(binding, bufferInfo, type, stageFlags);
-    }
-
-    DescriptorBuilder& DescriptorBuilder::BindBuffer(uint32_t binding, const Buffer& buffer, vk::DescriptorType type,
-                                                     vk::ShaderStageFlags stageFlags, const vk::DeviceSize offset, const vk::DeviceSize range)
-    {
-        vk::DescriptorBufferInfo bufferInfo{buffer.GetVkBuffer(), offset, range};
-        return BindBuffer(binding, bufferInfo, type, stageFlags);
+        m_Cache = std::move(layoutCache);
+        m_Allocator = std::move(allocator);
     }
 
     DescriptorBuilder& DescriptorBuilder::BindImage(uint32_t binding, const vk::DescriptorImageInfo& imageInfo,
@@ -60,17 +65,24 @@ namespace VkCore
         vk::DescriptorSetLayoutBinding newBinding(binding, type, 1, stageFlags, nullptr);
         m_Bindings.push_back(newBinding);
 
-        // create the descriptor write
+        // create the descriptor writ
         vk::WriteDescriptorSet newWrite({}, binding, {}, 1, type, &imageInfo, nullptr, nullptr);
 
         m_Writes.push_back(newWrite);
         return *this;
     }
 
+    bool DescriptorBuilder::Build(vk::DescriptorSet& set)
+    {
+        vk::DescriptorSetLayout layout;
+        return Build(set, layout);
+    }
+
     bool DescriptorBuilder::Build(vk::DescriptorSet& set, vk::DescriptorSetLayout& layout)
     {
-        vk::DescriptorSetLayoutCreateInfo layoutInfo;
-        layoutInfo.setPNext(nullptr).setBindings(m_Bindings);
+        vk::DescriptorSetLayoutCreateInfo layoutInfo = vk::DescriptorSetLayoutCreateInfo();
+        layoutInfo.pBindings = m_Bindings.data();
+        layoutInfo.bindingCount = m_Bindings.size();
 
         layout = m_Cache->CreateDescriptorLayout(layoutInfo);
 
@@ -81,31 +93,28 @@ namespace VkCore
 
         for (vk::WriteDescriptorSet& write : m_Writes)
         {
-            write.setDstSet(set);
+            write.dstSet = set;
         }
 
+        TRY_CATCH_BEGIN()
+
         m_Allocator->m_Device.UpdateDescriptorSets(m_Writes);
+
+        TRY_CATCH_END()
 
         return true;
     }
 
-    bool DescriptorBuilder::Build(vk::DescriptorSet& set)
+    void DescriptorBuilder::Clear()
     {
-        vk::DescriptorSetLayoutCreateInfo layoutInfo;
-        layoutInfo.setPNext(nullptr).setBindings(m_Bindings);
-
-        bool success = m_Allocator->Allocate(set, m_Cache->CreateDescriptorLayout(layoutInfo));
-
-        if (!success)
-            return false;
+        m_Bindings.clear();
 
         for (vk::WriteDescriptorSet& write : m_Writes)
         {
-            write.setDstSet(set);
+            delete[] write.pBufferInfo;
         }
 
-        m_Allocator->m_Device.UpdateDescriptorSets(m_Writes);
-
-        return true;
+        m_Writes.clear();
     }
+
 } // namespace VkCore

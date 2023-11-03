@@ -36,6 +36,8 @@ namespace VkCore
                                                            {vk::DescriptorType::eInputAttachment, 0.5f}};
         };
 
+        DescriptorAllocator() : m_FreePools({}), m_UsedPools({}), m_Device(Device()) {}
+
         /**
          * @brief Initializes the object only with a logical device
          */
@@ -53,7 +55,6 @@ namespace VkCore
         DescriptorAllocator(const Device& logicalDevice, int count, vk::DescriptorPoolCreateFlagBits flags,
                             const PoolSizes& poolSizes = PoolSizes());
 
-        ~DescriptorAllocator();
 
         /**
          * @brief Creates a new descriptor pool

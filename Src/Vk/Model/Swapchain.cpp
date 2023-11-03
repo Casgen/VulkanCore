@@ -92,6 +92,11 @@ namespace VkCore
         return m_Swapchain;
     }
 
+    uint32_t Swapchain::GetImageCount() const
+    {
+        return m_Images.size();
+    }
+
     vk::SurfaceFormat2KHR Swapchain::GetVkSurfaceFormat() const
     {
         return m_SurfaceFormat;

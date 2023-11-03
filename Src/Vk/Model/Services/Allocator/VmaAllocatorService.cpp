@@ -46,7 +46,14 @@ namespace VkCore
 
     void VmaAllocatorService::DestroyBuffer(Buffer& buffer)
     {
-        vmaDestroyBuffer(m_VmaAllocator, buffer.GetVkBuffer(), buffer.GetVmaAllocation());
+        if (buffer.GetVkBuffer() && buffer.GetVmaAllocation() != VK_NULL_HANDLE)
+        {
+            vmaDestroyBuffer(m_VmaAllocator, buffer.GetVkBuffer(), buffer.GetVmaAllocation());
+            return;
+        }
+
+        const char* errorMsg = "Failed to destroy a buffer! Either the VkBuffer or VmaAllocation is NULL!";
+        LOG(Vulkan, Error, errorMsg)
     }
 
     void VmaAllocatorService::CopyBuffer(const VkBuffer& srcBuffer, const VkBuffer& dstBuffer, const size_t size,
@@ -92,6 +99,7 @@ namespace VkCore
 
         // Don't forget to free the Command buffer after it is done copying!
         m_Device.FreeCommandBuffer(commandPool, commandBuffer);
+        m_Device.DestroyCommandPool(commandPool);
     }
 
     VkBuffer VmaAllocatorService::CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
@@ -225,4 +233,13 @@ namespace VkCore
         return gpuBuffer;
     }
 
+    void VmaAllocatorService::MapMemory(const VmaAllocation& allocation, void* mappedPtr)
+    {
+        vmaMapMemory(m_VmaAllocator, allocation, &mappedPtr);
+    }
+
+    void VmaAllocatorService::UnmapMemory(const VmaAllocation& allocation)
+    {
+        vmaUnmapMemory(m_VmaAllocator, allocation);
+    }
 } // namespace VkCore

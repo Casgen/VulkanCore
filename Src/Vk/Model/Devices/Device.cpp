@@ -179,6 +179,11 @@ namespace VkCore
         m_Device.destroyShaderModule(module);
     }
 
+    void Device::DestroyCommandPool(const vk::CommandPool& commandPool)
+    {
+        m_Device.destroyCommandPool(commandPool);
+    }
+
     vk::Device& Device::operator*()
     {
         return m_Device;
@@ -239,6 +244,11 @@ namespace VkCore
     vk::Result Device::WaitForFences(const vk::ArrayProxy<vk::Fence>& fences, const bool waitForAll, uint64_t timeout)
     {
         return m_Device.waitForFences(fences, waitForAll, timeout);
+    }
+
+    void Device::WaitIdle()
+    {
+        return m_Device.waitIdle();
     }
 
     void Device::ResetFences(const vk::ArrayProxy<vk::Fence>& fences)

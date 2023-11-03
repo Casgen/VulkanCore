@@ -217,6 +217,12 @@ namespace VkCore
          */
         vk::Pipeline Build();
 
+        /**
+         * @brief Gathers all the data, sets all the necessary pipeline states and layots and builds a new graphics pipeline and its layout.
+         * @return Vulkan pipeline object;
+         */
+        vk::Pipeline Build(vk::PipelineLayout& pipelineLayout);
+
       private:
         vk::ShaderModule CreateShaderModule(const std::vector<uint32_t>& data);
 
@@ -252,7 +258,6 @@ namespace VkCore
         vk::PipelineColorBlendStateCreateInfo m_BlendStateCreateInfo{};
 
         std::vector<vk::DescriptorSetLayout> m_DescriptorSetLayouts{};
-
         std::vector<vk::PushConstantRange> m_PushConstantRanges{};
     };
 

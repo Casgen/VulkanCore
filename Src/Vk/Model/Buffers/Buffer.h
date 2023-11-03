@@ -53,7 +53,17 @@ namespace VkCore
         };
 
         Buffer() = default;
-        ~Buffer();
+        virtual ~Buffer();
+
+        // Copy
+        Buffer(const Buffer& other) = delete;
+        Buffer& operator=(const Buffer& other) = delete;
+
+        // Move
+        Buffer& operator=(Buffer&& other);
+        Buffer(Buffer&& other);
+
+
 
         /**
          *  @brief Creates a buffer object. Note that no vulkan buffer has been created and allocated yet! Call after
@@ -62,6 +72,7 @@ namespace VkCore
         Buffer(const vk::BufferUsageFlags& usageFlags) : m_UsageFlags(usageFlags)
         {
         }
+        
 
         // ----------- INITIALIZATION -----------------
 
@@ -74,14 +85,35 @@ namespace VkCore
         void InitializeOnGpu(const void* data, const size_t size);
 
         /**
-         * @brief Allocates a new buffer with the given data and puts it on the CPU. The buffer will be visible both to
+         * @brief Allocates a new buffer, puts it on the CPU and fills it with the given data. The buffer will be visible both to
          * the device (GPU) and host (CPU)
          * @param data - Pointer to a block of data to allocate on the buffer. Note that the data is being copied!
          * @param size - size of data in BYTES
-         * @param isMappable - Allows the buffer to return a pointer to the buffer, making it able to transfer data into.
+         * @param isMapped - Allows the buffer to return a pointer to the buffer, making it able to transfer data into.
          * The pointer to the buffer is located in m_AllocationInfo.pMappedData.
          */
-        void InitializeOnCpu(const void* data, const size_t size, const bool isMappable);
+        void InitializeOnCpu(const void* data, const size_t size, const bool isMapped = true);
+
+        /**
+         * @brief Allocates a new buffer and puts it on the CPU. The buffer will be visible both to
+         * the device (GPU) and host (CPU)
+         * @param size - size of data in BYTES
+         * @param isMapped - Allows the buffer to return a pointer to the buffer, making it able to transfer data into.
+         * The pointer to the buffer is located in m_AllocationInfo.pMappedData.
+         */
+        void InitializeOnCpu(const size_t size, const bool isMapped = true);
+
+        /**
+         * @brief Updates the buffer's content with the provided data. Note that the size here is taken from the point,
+         * where the buffer was initialized!
+         */
+        void UpdateData(const void* data);
+
+        /**
+         * @brief Updates the buffer's content with the provided data with number of BYTES. Note that if the size exceeds the size set at the initialization
+         * stage, it will throw an exception!
+         */
+        void UpdateData(const void* data, const size_t size);
 
         vk::BufferUsageFlags GetUsageFlags() const;
         uint32_t GetSize() const;
@@ -101,11 +133,11 @@ namespace VkCore
 
       private:
         size_t m_Size = 0;
-
         vk::BufferUsageFlags m_UsageFlags;
-        VkBuffer m_Buffer = VK_NULL_HANDLE;
+        bool m_IsHostVisible, m_IsMapped;
 
-        VmaAllocation m_Allocation = {};
-        VmaAllocationInfo m_AllocationInfo = {};
+        VkBuffer m_Buffer;
+        VmaAllocation m_Allocation;
+        VmaAllocationInfo m_AllocationInfo;
     };
 } // namespace VkCore

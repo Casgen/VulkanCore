@@ -43,9 +43,6 @@ namespace VkCore
         vk::RenderPassCreateInfo createInfo;
         createInfo.setAttachments(colorAttachment).setSubpasses(subpass).setDependencies(dependency);
 
-
         m_RenderPass = device.CreateRenderPass(createInfo);
-
-
     }
 } // namespace VkCore

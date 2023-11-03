@@ -48,6 +48,15 @@ namespace VkCore
          */
         virtual void CopyBuffer(const VkBuffer& srcBuffer, const VkBuffer& dstBuffer, const size_t size,
                                 const uint32_t srcOffset = 0, const uint32_t dstOffset = 0) = 0;
+        /**
+         * @brief Maps the buffer memory and returns back a pointer to the VkBuffer memory. It can be used for updating the data
+         */
+        virtual void MapMemory(const VmaAllocation& allocation, void* mappedPtr) = 0;
+
+        /**
+         * @brief unmaps the buffer memory, making the mapped pointer invalid.
+         */
+        virtual void UnmapMemory(const VmaAllocation& allocation) = 0;
     };
 
 } // namespace VkCore

@@ -29,6 +29,7 @@ namespace VkCore
         // ------------ GETTERS ------------
 
         vk::SwapchainKHR GetVkSwapchain() const;
+        uint32_t GetImageCount() const;
         vk::SurfaceFormat2KHR GetVkSurfaceFormat() const;
         vk::Extent2D GetSwapExtent() const;
         std::vector<vk::ImageView> GetImageViews() const;

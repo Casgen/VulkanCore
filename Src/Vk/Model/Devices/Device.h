@@ -41,8 +41,7 @@ namespace VkCore
         vk::ShaderModule CreateShaderModule(const vk::ShaderModuleCreateInfo& createInfo);
         vk::PipelineLayout CreatePipelineLayout(const vk::PipelineLayoutCreateInfo& createInfo);
         vk::Framebuffer CreateFrameBuffer(const vk::FramebufferCreateInfo& createInfo);
-        vk::ResultValue<std::vector<vk::Pipeline>> CreateGraphicsPipelines(
-            const std::vector<vk::GraphicsPipelineCreateInfo>& createInfo);
+        vk::ResultValue<std::vector<vk::Pipeline>> CreateGraphicsPipelines(const std::vector<vk::GraphicsPipelineCreateInfo>& createInfo);
         vk::Semaphore CreateSemaphore(const vk::SemaphoreCreateInfo& createInfo);
         vk::Fence CreateFence(const vk::FenceCreateInfo& createInfo);
 
@@ -53,6 +52,7 @@ namespace VkCore
         void DestroyDescriptorPool(const vk::DescriptorPool& pool);
         void DestroyDescriptorSetLayout(const vk::DescriptorSetLayout& layout);
         void DestroyShaderModule(const vk::ShaderModule& module);
+        void DestroyCommandPool(const vk::CommandPool& commandPool);
         void Destroy();
 
         // ------------ GETTERS ------------
@@ -82,6 +82,11 @@ namespace VkCore
          */
         vk::Result WaitForFences(const vk::ArrayProxy<vk::Fence>& fences, const bool waitForAll,
                                  uint64_t timeout = UINT64_MAX);
+
+        /**
+         * Waits for any operations to be completed on the whole device (GPU).
+         */
+        void WaitIdle();
 
         void ResetFences(const vk::ArrayProxy<vk::Fence>& fences);
 

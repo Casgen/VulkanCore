@@ -14,17 +14,16 @@ struct MouseState
     {
     }
 
-    void Update()
+    void UpdatePosition(const glm::dvec2& position)
     {
         m_IsDragging = false;
 
-        glm::dvec2 currPosition(0.0), lastPositionDouble(m_LastPosition);
-        glfwGetCursorPos(glfwGetCurrentContext(), &currPosition.x, &currPosition.y);
+        glm::dvec2 lastPositionDouble = m_LastPosition;
 
-        const glm::vec<2, bool> isDifferent = glm::notEqual(currPosition, lastPositionDouble);
+        const glm::vec<2, bool> isDifferent = glm::notEqual(position, lastPositionDouble);
 
         m_IsDragging = (isDifferent.x || isDifferent.y) && m_IsLMBPressed;
 
-        m_LastPosition = currPosition;
+        m_LastPosition = position;
     }
 };

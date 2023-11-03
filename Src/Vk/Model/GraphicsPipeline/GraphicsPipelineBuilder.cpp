@@ -280,6 +280,12 @@ namespace VkCore
 
     vk::Pipeline GraphicsPipelineBuilder::Build()
     {
+        vk::PipelineLayout pipelineLayout;
+        return Build(pipelineLayout);
+    }
+
+    vk::Pipeline GraphicsPipelineBuilder::Build(vk::PipelineLayout& pipelineLayout)
+    {
         ValidateShaderInfo();
         ValidateVertexInfo();
         ValidateViewportInfo();
@@ -288,7 +294,8 @@ namespace VkCore
 
         vk::PipelineVertexInputStateCreateInfo vertexInputState{};
 
-        if (m_VertexInputAttributes.size() == 0) {
+        if (m_VertexInputAttributes.size() == 0)
+        {
             vertexInputState.setVertexBindingDescriptionCount(0);
             vertexInputState.setVertexAttributeDescriptionCount(0);
             vertexInputState.pVertexBindingDescriptions = nullptr;
@@ -307,8 +314,6 @@ namespace VkCore
         vk::PipelineLayoutCreateInfo layoutCreateInfo;
 
         layoutCreateInfo.setSetLayouts(m_DescriptorSetLayouts).setPushConstantRanges({});
-
-        vk::PipelineLayout pipelineLayout;
 
         TRY_CATCH_BEGIN()
 

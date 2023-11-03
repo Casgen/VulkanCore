@@ -22,11 +22,9 @@ namespace VkCore
     }
 
     void NullAllocatorService::CopyBuffer(const VkBuffer& srcBuffer, const VkBuffer& dstBuffer, const size_t size,
-                                          const uint32_t srcOffset, const uint32_t dstOffset)
-    {
+                                          const uint32_t srcOffset, const uint32_t dstOffset){
         LOG(Allocation, Fatal,
-            "Allocation service couldn't be located! Please make sure you have provided an allocation service!")
-    }
+            "Allocation service couldn't be located! Please make sure you have provided an allocation service!")}
 
     VkBuffer NullAllocatorService::CreateBufferOnGpu(const void* data, const Buffer::BufferInfo bufferInfo,
                                                      VmaAllocation& allocation, VmaAllocationInfo* allocationInfo)
@@ -35,6 +33,24 @@ namespace VkCore
             "Allocation service couldn't be located! Please make sure you have provided an allocation service!")
 
         return VK_NULL_HANDLE;
+    }
+    /**
+     * @brief Maps the buffer memory and returns back a pointer to the VkBuffer memory. It can be used for updating the
+     * data
+     */
+    void NullAllocatorService::MapMemory(const VmaAllocation& allocation, void* mappedPtr)
+    {
+        LOG(Allocation, Fatal,
+            "Allocation service couldn't be located! Please make sure you have provided an allocation service!")
+    }
+
+    /**
+     * @brief unmaps the buffer memory, making the mapped pointer invalid.
+     */
+    void NullAllocatorService::UnmapMemory(const VmaAllocation& allocation)
+    {
+        LOG(Allocation, Fatal,
+            "Allocation service couldn't be located! Please make sure you have provided an allocation service!")
     }
 
 } // namespace VkCore

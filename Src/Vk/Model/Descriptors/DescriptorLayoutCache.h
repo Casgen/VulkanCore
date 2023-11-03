@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 
-
 #include "../Devices/Device.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_structs.hpp"
@@ -12,6 +11,10 @@ namespace VkCore
     class DescriptorLayoutCache
     {
       public:
+        DescriptorLayoutCache() : m_LayoutCache({}), m_Device()
+        {
+        }
+
         DescriptorLayoutCache(const Device& newDevice);
         void Cleanup();
 
@@ -37,7 +40,7 @@ namespace VkCore
             }
         };
 
-        std::unordered_map<DescriptorLayoutInfo, vk::DescriptorSetLayout, DescriptorLayoutHash> m_LayoutCache;
+        std::unordered_map<DescriptorLayoutInfo, VkDescriptorSetLayout, DescriptorLayoutHash> m_LayoutCache;
         Device m_Device;
     };
 

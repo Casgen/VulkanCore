@@ -8,6 +8,8 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
 
+#define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
+
 namespace VkCore
 {
     struct SwapChainSupportDetails;

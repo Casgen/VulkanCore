@@ -17,7 +17,6 @@ namespace VkCore
 
         void DestroyBuffer(Buffer& buffer) override;
 
-
         /**
          * @brief Allocates and creates a new buffer.
          * @param data - pointer to the data.
@@ -49,6 +48,15 @@ namespace VkCore
         VkBuffer CreateBufferOnGpu(const void* data, const Buffer::BufferInfo bufferInfo, VmaAllocation& allocation,
                                    VmaAllocationInfo* allocationInfo) override;
 
+        /**
+         * @brief Maps the buffer memory and returns back a pointer to the VkBuffer memory. It can be used for updating the data
+         */
+        void MapMemory(const VmaAllocation& allocation, void* mappedPtr) override;
+
+        /**
+         * @brief unmaps the buffer memory, making the mapped pointer invalid.
+         */
+        void UnmapMemory(const VmaAllocation& allocation) override;
 
       private:
         VmaAllocator m_VmaAllocator;

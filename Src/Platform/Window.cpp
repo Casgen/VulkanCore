@@ -44,86 +44,9 @@ namespace VkCore
         }
 
         glfwSetWindowUserPointer(m_GlfwWindow, this);
+        glfwMakeContextCurrent(m_GlfwWindow);
 
-        // glfwSetKeyCallback(m_GlfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods) -> void {
-        //     const WindowProps& data = static_cast<Window*>(glfwGetWindowUserPointer(window))->m_Props;
-        //
-        //     switch (action)
-        //     {
-        //     case GLFW_PRESS: {
-        //         KeyPressedEvent event = KeyPressedEvent(key);
-        //         return data.m_CbFunction(event);
-        //     }
-        //     case GLFW_RELEASE: {
-        //         KeyReleasedEvent event = KeyReleasedEvent(key);
-        //         return data.m_CbFunction(event);
-        //     }
-        //     case GLFW_REPEAT: {
-        //         KeyRepeatedEvent event = KeyRepeatedEvent(key);
-        //         return data.m_CbFunction(event);
-        //     }
-        //     default:
-        //         std::cout << "Action couldn't be recognized!" << std::endl;
-        //     }
-        // });
-        //
-        // LOG(Window, Verbose, "KeyCallback set.")
-        //
-        // glfwSetMouseButtonCallback(m_GlfwWindow, [](GLFWwindow* window, int button, int action, int mods) -> void {
-        //     Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        //
-        //     switch (action)
-        //     {
-        //     case GLFW_PRESS: {
-        //         MouseButtonPressedEvent event = MouseButtonPressedEvent(button);
-        //         return usrWindow->m_Props.m_CbFunction(event);
-        //     }
-        //     case GLFW_RELEASE: {
-        //         MouseButtonReleasedEvent event = MouseButtonReleasedEvent(button);
-        //         return usrWindow->m_Props.m_CbFunction(event);
-        //     }
-        //     case GLFW_REPEAT: {
-        //         MouseButtonRepeatedEvent event = MouseButtonRepeatedEvent(button);
-        //         return usrWindow->m_Props.m_CbFunction(event);
-        //     }
-        //     }
-        // });
-        //
-        // LOG(Window, Verbose, "MouseButton callback set.")
-        //
-        // glfwSetWindowCloseCallback(m_GlfwWindow, [](GLFWwindow* window) -> void {
-        //     const WindowProps& data = static_cast<Window*>(glfwGetWindowUserPointer(window))->m_Props;
-        //
-        //     WindowClosedEvent event;
-        //     data.m_CbFunction(event);
-        // });
-        //
-        // LOG(Window, Verbose, "Close callback set.")
-        //
-        // glfwSetScrollCallback(m_GlfwWindow, [](GLFWwindow* window, double xoffset, double yoffset) -> void {
-        //     const WindowProps& data = static_cast<Window*>(glfwGetWindowUserPointer(window))->m_Props;
-        //
-        //     MouseScrolledEvent event(xoffset, yoffset);
-        //     data.m_CbFunction(event);
-        // });
-        //
-        // LOG(Window, Verbose, "ScrollCallback callback set.")
-        // glfwSetCursorPosCallback(m_GlfwWindow, [](GLFWwindow* window, double xpos, double ypos) -> void {
-        //     const Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        //
-        //     MouseMovedEvent event(xpos, ypos);
-        //     usrWindow->m_Props.m_CbFunction(event);
-        // });
-        // LOG(Window, Verbose, "CursorPos callback set.")
-        //
-        // glfwSetWindowSizeCallback(m_GlfwWindow, [](GLFWwindow* window, int width, int height) {
-        //     const Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        //
-        //     WindowResizedEvent event(width, height);
-        //     usrWindow->m_Props.m_CbFunction(event);
-        // });
-        //
-        // LOG(Window, Verbose, "WindowSize callback set.")
+        LOG(Window, Verbose, "WindowSize callback set.")
     }
 
     Window::~Window()
@@ -169,6 +92,87 @@ namespace VkCore
     void Window::SetEventCallback(const std::function<void(Event&)>& callback)
     {
         m_Props.m_CbFunction = callback;
+
+        glfwSetKeyCallback(m_GlfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods) -> void {
+            const WindowProps& data = static_cast<Window*>(glfwGetWindowUserPointer(window))->m_Props;
+
+            switch (action)
+            {
+            case GLFW_PRESS: {
+                KeyPressedEvent event = KeyPressedEvent(key);
+                return data.m_CbFunction(event);
+            }
+            case GLFW_RELEASE: {
+                KeyReleasedEvent event = KeyReleasedEvent(key);
+                return data.m_CbFunction(event);
+            }
+            case GLFW_REPEAT: {
+                KeyRepeatedEvent event = KeyRepeatedEvent(key);
+                return data.m_CbFunction(event);
+            }
+            default:
+                std::cout << "Action couldn't be recognized!" << std::endl;
+            }
+        });
+
+        LOG(Window, Verbose, "KeyCallback set.")
+
+        glfwSetMouseButtonCallback(m_GlfwWindow, [](GLFWwindow* window, int button, int action, int mods) -> void {
+            Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+            switch (action)
+            {
+            case GLFW_PRESS: {
+                MouseButtonPressedEvent event = MouseButtonPressedEvent(button);
+                return usrWindow->m_Props.m_CbFunction(event);
+            }
+            case GLFW_RELEASE: {
+                MouseButtonReleasedEvent event = MouseButtonReleasedEvent(button);
+                return usrWindow->m_Props.m_CbFunction(event);
+            }
+            case GLFW_REPEAT: {
+                MouseButtonRepeatedEvent event = MouseButtonRepeatedEvent(button);
+                return usrWindow->m_Props.m_CbFunction(event);
+            }
+            default:
+                std::cout << "Action couldn't be recognized!" << std::endl;
+            }
+        });
+
+        LOG(Window, Verbose, "MouseButton callback set.")
+
+        glfwSetWindowCloseCallback(m_GlfwWindow, [](GLFWwindow* window) -> void {
+            const WindowProps& data = static_cast<Window*>(glfwGetWindowUserPointer(window))->m_Props;
+
+            WindowClosedEvent event;
+            data.m_CbFunction(event);
+        });
+
+        LOG(Window, Verbose, "Close callback set.")
+
+        glfwSetScrollCallback(m_GlfwWindow, [](GLFWwindow* window, double xoffset, double yoffset) -> void {
+            const WindowProps& data = static_cast<Window*>(glfwGetWindowUserPointer(window))->m_Props;
+
+            MouseScrolledEvent event(xoffset, yoffset);
+            data.m_CbFunction(event);
+        });
+
+        LOG(Window, Verbose, "ScrollCallback callback set.")
+        glfwSetCursorPosCallback(m_GlfwWindow, [](GLFWwindow* window, double xpos, double ypos) -> void {
+            const Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+            MouseMovedEvent event(xpos, ypos);
+            usrWindow->m_Props.m_CbFunction(event);
+        });
+        LOG(Window, Verbose, "CursorPos callback set.")
+
+        glfwSetWindowSizeCallback(m_GlfwWindow, [](GLFWwindow* window, int width, int height) {
+            const Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+            WindowResizedEvent event(width, height);
+            usrWindow->m_Props.m_CbFunction(event);
+        });
+
     }
 
     // ------------------------------------------

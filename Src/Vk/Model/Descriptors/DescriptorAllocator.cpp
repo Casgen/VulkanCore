@@ -23,10 +23,6 @@ namespace VkCore
         m_UsedPools.emplace_back(CreatePool(count, flags, poolSizes));
     }
 
-    DescriptorAllocator::~DescriptorAllocator()
-    {
-    }
-
     vk::DescriptorPool DescriptorAllocator::CreatePool(int count, vk::DescriptorPoolCreateFlags flags,
                                                        const DescriptorAllocator::PoolSizes& poolSizes)
     {
@@ -35,7 +31,6 @@ namespace VkCore
 
         for (const auto& pair : poolSizes.m_Sizes)
         {
-
             vk::DescriptorPoolSize poolSize(pair.first, pair.second * count);
             vkSizes.emplace_back(poolSize);
         }
@@ -81,7 +76,8 @@ namespace VkCore
 
         if (!m_CurrentPool)
         {
-            m_UsedPools.push_back(GrabPool());
+            m_CurrentPool = GrabPool();
+            m_UsedPools.push_back(m_CurrentPool);
         }
 
         vk::DescriptorSetAllocateInfo allocInfo;
@@ -109,27 +105,27 @@ namespace VkCore
             default:
                 return false;
             }
-
-            if (isReallocNeeded)
-            {
-                m_CurrentPool = GrabPool();
-                m_UsedPools.push_back(m_CurrentPool);
-                allocInfo.setDescriptorPool(m_CurrentPool);
-
-                TRY_CATCH_BEGIN()
-
-                std::vector<vk::DescriptorSet> newSets = m_Device.AllocateDescriptorSets(allocInfo);
-
-                // TODO: This might fail later with a nullptr!
-                if (newSets.size() > 0)
-                    set = vk::DescriptorSet(newSets[0]);
-
-                return true;
-
-                TRY_CATCH_END()
-            }
-            return false;
         }
+
+        if (isReallocNeeded)
+        {
+            m_CurrentPool = GrabPool();
+            m_UsedPools.push_back(m_CurrentPool);
+            allocInfo.setDescriptorPool(m_CurrentPool);
+
+            TRY_CATCH_BEGIN()
+
+            std::vector<vk::DescriptorSet> newSets = m_Device.AllocateDescriptorSets(allocInfo);
+
+            // TODO: This might fail later with a nullptr!
+            if (newSets.size() > 0)
+                set = vk::DescriptorSet(newSets[0]);
+
+            return true;
+
+            TRY_CATCH_END()
+        }
+        return false;
     }
 
     void DescriptorAllocator::ResetPools()
@@ -137,9 +133,9 @@ namespace VkCore
         for (const vk::DescriptorPool& pool : m_UsedPools)
         {
             m_Device.ResetDescriptorPool(pool);
-            m_FreePools.push_back(pool);
         }
 
+        m_FreePools = m_UsedPools;
         m_UsedPools.clear();
 
         m_CurrentPool = nullptr;

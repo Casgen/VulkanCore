@@ -8,10 +8,12 @@
 #include "vulkan/vulkan_structs.hpp"
 #include "vulkan/vulkan_enums.hpp"
 
+#include "../../../Log/Log.h"
+
 namespace VkCore
 {
 
-    DescriptorLayoutCache::DescriptorLayoutCache(const Device& device) : m_Device(device)
+    DescriptorLayoutCache::DescriptorLayoutCache(const Device& device) : m_Device(device), m_LayoutCache({})
     {
     }
 
@@ -20,7 +22,7 @@ namespace VkCore
     {
         DescriptorLayoutInfo layoutInfo;
 
-        layoutInfo.m_Bindings.resize(createInfo.bindingCount);
+        layoutInfo.m_Bindings.reserve(createInfo.bindingCount);
 
         bool isSorted = true;
         int lastBinding = -1;
@@ -28,10 +30,10 @@ namespace VkCore
         // copy from the direct info struct into our own one
         for (int i = 0; i < createInfo.bindingCount; i++)
         {
-            layoutInfo.m_Bindings.push_back(createInfo.pBindings[i]);
+            layoutInfo.m_Bindings.emplace_back(createInfo.pBindings[i]);
 
             // check that the bindings are in strict increasing order
-            if (createInfo.pBindings[i].binding > lastBinding)
+            if (static_cast<int>(createInfo.pBindings[i].binding) > lastBinding)
             {
                 lastBinding = createInfo.pBindings[i].binding;
             }
@@ -48,21 +50,24 @@ namespace VkCore
                 [](VkDescriptorSetLayoutBinding& a, VkDescriptorSetLayoutBinding& b) { return a.binding < b.binding; });
         }
 
-        // try to grab from cache
         auto it = m_LayoutCache.find(layoutInfo);
+
         if (it != m_LayoutCache.end())
         {
-            return (*it).second;
+            return it->second;
         }
-        else
-        {
-            // create a new one (not found)
-            vk::DescriptorSetLayout layout = m_Device.CreateDescriptorSetLayout(createInfo);
 
-            // add to cache
-            m_LayoutCache[layoutInfo] = layout;
-            return layout;
-        }
+        vk::DescriptorSetLayout layout;
+
+        TRY_CATCH_BEGIN()
+        // create a new one (not found)
+        layout = m_Device.CreateDescriptorSetLayout(createInfo);
+
+        TRY_CATCH_END()
+
+        // add to cache
+        m_LayoutCache[layoutInfo] = layout;
+        return layout;
     }
 
     void DescriptorLayoutCache::Cleanup()
@@ -107,10 +112,10 @@ namespace VkCore
         for (const vk::DescriptorSetLayoutBinding& b : m_Bindings)
         {
 
-            uint32_t descriptorType = static_cast<uint32_t>(b.descriptorType);
-            uint32_t stageFlags = static_cast<uint32_t>(b.descriptorType);
+            size_t descriptorType = static_cast<uint32_t>(b.descriptorType);
+            size_t stageFlags = static_cast<uint32_t>(b.stageFlags);
 
-            size_t bindingHash = b.binding | descriptorType << 8 | b.descriptorCount << 16 | stageFlags << 24;
+            size_t bindingHash = b.binding | descriptorType << 16 | b.descriptorCount << 24 | stageFlags << 32;
 
             result ^= std::hash<size_t>()(bindingHash);
         }
