@@ -22,47 +22,41 @@
 
 namespace VkCore
 {
-    class Application
+    class BaseApplication
     {
       public:
-        Application(const uint32_t width, const uint32_t height, const std::string& title);
-        virtual ~Application();
+        BaseApplication(const uint32_t width, const uint32_t height, const std::string& title);
 
-        Application* Get() { return s_Instance; };
+        BaseApplication* Get()
+        {
+            return s_Instance;
+        };
 
-        void PreInitVulkan();
+        virtual void PreInitVulkan() = 0;
         void InitVulkan();
-        void PostInitVulkan();
+        virtual void PostInitVulkan() = 0;
 
         void Run();
         void Loop();
-        void DrawFrame();
-        void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, const uint32_t imageIndex);
-        void Shutdown();
+        virtual void DrawFrame() = 0;
+        virtual void RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, const uint32_t imageIndex) = 0;
+        virtual void Shutdown() = 0;
 
-        void OnEvent(Event& event);
-        bool OnMousePress(MouseButtonEvent& event);
-        bool OnMouseMoved(MouseMovedEvent& event);
-        bool OnMouseScrolled(MouseScrolledEvent& event);
-        bool OnMouseRelease(MouseButtonEvent& event);
-        bool OnKeyPressed(KeyPressedEvent& event);
-        bool OnKeyReleased(KeyReleasedEvent& event);
-        bool OnWindowResize(WindowResizedEvent& event);
+        virtual void OnEvent(Event& event);
+        virtual bool OnMousePress(MouseButtonEvent& event) { return false; }
+        virtual bool OnMouseMoved(MouseMovedEvent& event) { return false; }
+        virtual bool OnMouseScrolled(MouseScrolledEvent& event) { return false; }
+        virtual bool OnMouseRelease(MouseButtonEvent& event) { return false; }
+        virtual bool OnKeyPressed(KeyPressedEvent& event) { return false; }
+        virtual bool OnKeyReleased(KeyReleasedEvent& event) { return false; }
+        virtual bool OnWindowResize(WindowResizedEvent& event) { return false; }
 
-      private:
         void CreateWindow();
         void CreateInstance();
         void CreateDevices();
         void CreateServices();
 
-        void CreateBuffers();
-        void CreateDescriptorSets();
-        void CreatePipeline();
-        void CreateFramebuffers();
-        void CreateCommandPool();
-        void CreateCommandBuffer();
-        void CreateSyncObjects();
-
+      protected:
         std::vector<const char*> m_DeviceExtensions = {VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
                                                        VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
@@ -72,7 +66,7 @@ namespace VkCore
         vk::Instance m_Instance;
         RenderPass m_RenderPass;
 
-        PhysicalDevice* m_PhysicalDevice;
+        PhysicalDevice m_PhysicalDevice;
         Device m_Device;
 
         uint32_t m_CurrentFrame = 0;
@@ -84,34 +78,16 @@ namespace VkCore
         VertexAttributeBuilder m_AttributeBuilder;
         GraphicsPipelineBuilder m_PipelineBuilder;
 
-        Buffer m_VertexBuffer;
-        VkBuffer m_VkBuffer = VK_NULL_HANDLE;
-        VmaAllocationInfo m_VertexAllocInfo{};
-        VmaAllocation m_VertexAlloc{};
-
-        vk::Pipeline m_Pipeline;
-        vk::PipelineLayout m_PipelineLayout;
-
         std::vector<vk::Framebuffer> m_SwapchainFramebuffers;
 
-        // Commands
-        vk::CommandPool m_CommandPool;
-        std::vector<vk::CommandBuffer> m_CommandBuffers;
-
-        // Sync Objects
-        std::vector<vk::Fence> m_InFlightFences;
-        std::vector<vk::Semaphore> m_RenderFinishedSemaphores;
-        std::vector<vk::Semaphore> m_ImageAvailableSemaphores;
-
-        Camera m_Camera;
-        std::vector<Buffer> m_MatBuffers;
-
         DescriptorBuilder m_DescriptorBuilder;
-        std::vector<vk::DescriptorSet> m_DescriptorSets;
-        vk::DescriptorSetLayout m_DescriptorSetLayout;
 
         bool m_Running;
-        static inline Application* s_Instance = nullptr;
+        static inline BaseApplication* s_Instance = nullptr;
+
+      private:
+        void PreShutdown();
+        void PostShutdown();
     };
 
 } // namespace VkCore

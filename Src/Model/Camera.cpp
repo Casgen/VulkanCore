@@ -98,10 +98,6 @@ void Camera::Pitch(const float step)
 
 void Camera::UpdateVectors()
 {
-    float x = cos(this->m_Azimuth) * cos(this->m_Zenith);
-    float y = sin(this->m_Azimuth) * cos(this->m_Zenith);
-    float z = sin(this->m_Zenith);
-
     m_BackVector = glm::vec3(sin(this->m_Azimuth) * cos(this->m_Zenith), sin(this->m_Zenith),
                              -cos(this->m_Azimuth) * cos(this->m_Zenith));
 
