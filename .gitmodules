@@ -4,3 +4,6 @@
 [submodule "Vendor/glm"]
 	path = Vendor/glm
 	url = https://github.com/Casgen/glm
+[submodule "Vendor/assimp"]
+	path = Vendor/assimp
+	url = https://github.com/Casgen/assimp

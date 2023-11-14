@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 include "Vendor/glfw.lua"
 include "Vendor/glm.lua"
+include "Vendor/assimp.lua"
 
 project "VulkanCore"
     kind "StaticLib"
@@ -17,21 +18,22 @@ project "VulkanCore"
     targetdir("../bin/" .. output_dir .. "/%{prj.name}")
     objdir("../obj/" .. output_dir .. "/%{prj.name}")
 
-    links { "GLFW", "GLM" }
+    links { "GLFW", "GLM", "Assimp" }
 
     includedirs {
         "Vendor/glfw/include",
         "Vendor/glm",
-        "Vendor/stb_image",
+        "Vendor/stb",
         "Vendor/vma/",
+        "Vendor/assimp/include"
     }
 
     files {
         "Src/**.cpp",
         "Src/**.h",
         "Src/**.hpp",
-        "Vendor/stb_image/**.cpp",
-        "Vendor/stb_image/**.h",
+        "Vendor/stb/**.cpp",
+        "Vendor/stb/**.h",
         "Vendor/vma/**.h",
         "Vendor/vma/**.cpp",
         "Vendor/vma/**.hpp",

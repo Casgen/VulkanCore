@@ -6,14 +6,12 @@
 #include <fenv.h>
 #include <memory>
 #include "glm/fwd.hpp"
-#include "vk_mem_alloc.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
 
-#define VMA_IMPLEMENTATION
 #include "BaseApplication.h"
 #include "GLFW/glfw3.h"
 #include "../Log/Log.h"
@@ -60,7 +58,9 @@ namespace VkCore
 
     void BaseApplication::Run()
     {
+        PreInitVulkan();
         InitVulkan();
+        PreInitVulkan();
         Loop();
         PreShutdown();
         Shutdown();

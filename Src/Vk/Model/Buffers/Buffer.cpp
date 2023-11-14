@@ -1,7 +1,5 @@
 
-#include "../../Vendor/vma/vk_mem_alloc.h"
 #include "Buffer.h"
-
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_structs.hpp"
