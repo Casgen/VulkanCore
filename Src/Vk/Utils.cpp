@@ -7,7 +7,7 @@
 
 #include "../Log/Log.h"
 #include "Utils.h"
-#include "Model/SwapChainSupportDetails.h"
+#include "SwapChainSupportDetails.h"
 
 namespace VkCore
 {

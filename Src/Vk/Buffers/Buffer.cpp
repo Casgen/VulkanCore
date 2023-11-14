@@ -1,10 +1,9 @@
-
 #include "Buffer.h"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_structs.hpp"
 #include "../Services/ServiceLocator.h"
-#include "../../../Log/Log.h"
+#include "../../Log/Log.h"
 #include <alloca.h>
 #include <cstdint>
 #include <stdexcept>

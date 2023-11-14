@@ -15,10 +15,10 @@
 #include "BaseApplication.h"
 #include "GLFW/glfw3.h"
 #include "../Log/Log.h"
-#include "../Vk/Model/SwapchainRenderPass.h"
+#include "../Vk/SwapchainRenderPass.h"
 #include "../Vk/Utils.h"
-#include "../Vk/Model/Services/Allocator/VmaAllocatorService.h"
-#include "../Vk/Model/Services/ServiceLocator.h"
+#include "../Vk/Services/Allocator/VmaAllocatorService.h"
+#include "../Vk/Services/ServiceLocator.h"
 #include "../FileUtils.h"
 #include "../Model/Shaders/ShaderLoader.h"
 

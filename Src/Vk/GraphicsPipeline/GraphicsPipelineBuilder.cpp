@@ -6,12 +6,12 @@
 #include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
 
-#include "../../../Log/Log.h"
+#include "../../Log/Log.h"
 #include <cstdint>
 #include <stdexcept>
-#include "../../glm/glm/vec4.hpp"
-#include "../../glm/glm/vec2.hpp"
-#include "../../Utils.h"
+#include "glm/vec4.hpp"
+#include "glm/vec2.hpp"
+#include "../Utils.h"
 
 namespace VkCore
 {

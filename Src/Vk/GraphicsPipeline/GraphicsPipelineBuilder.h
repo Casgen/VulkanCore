@@ -11,7 +11,7 @@
 #include "vulkan/vulkan_structs.hpp"
 
 #include "../Devices/Device.h"
-#include "../../../Model/Shaders/ShaderData.h"
+#include "../../Model/Shaders/ShaderData.h"
 #include "../Vertex/VertexAttributeBuilder.h"
 #include "../Descriptors/DescriptorBuilder.h"
 

@@ -8,7 +8,7 @@
 #include "vulkan/vulkan_structs.hpp"
 #include "vulkan/vulkan_enums.hpp"
 
-#include "../../../Log/Log.h"
+#include "../../Log/Log.h"
 
 namespace VkCore
 {

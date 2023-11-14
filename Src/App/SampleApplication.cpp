@@ -8,7 +8,7 @@
 #include "../Log/Log.h"
 #include "../Vk/Utils.h"
 #include "../FileUtils.h"
-#include "../Vk/Model/Swapchain.h"
+#include "../Vk/Swapchain.h"
 #include "../Model/Shaders/ShaderLoader.h"
 
 namespace VkCore
@@ -31,7 +31,7 @@ namespace VkCore
         CreateCommandPool();
         CreateCommandBuffer();
         CreateSyncObjects();
-    }
+   }
 
     void SampleApplication::CreateBuffers()
     {

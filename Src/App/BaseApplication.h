@@ -5,11 +5,11 @@
 #include <set>
 #include <string>
 
-#include "../Vk/Model/Descriptors/DescriptorBuilder.h"
-#include "../Vk/Model/Devices/Device.h"
+#include "../Vk/Descriptors/DescriptorBuilder.h"
+#include "../Vk/Devices/Device.h"
 #include "../Platform/Window.h"
-#include "../Vk/Model/RenderPass.h"
-#include "../Vk/Model/GraphicsPipeline/GraphicsPipelineBuilder.h"
+#include "../Vk/RenderPass.h"
+#include "../Vk/GraphicsPipeline/GraphicsPipelineBuilder.h"
 #include "../Model/Camera.h"
 #include "../Event/Event.h"
 #include "../Event/KeyEvent.h"
