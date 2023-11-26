@@ -1,9 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <iostream>
-#include <memory>
-#include <set>
 
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"

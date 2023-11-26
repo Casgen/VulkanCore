@@ -1,13 +1,11 @@
-#include <algorithm>
 #include <cstring>
-#include <iterator>
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "../Log/Log.h"
 #include "Utils.h"
-#include "SwapChainSupportDetails.h"
 
 namespace VkCore
 {

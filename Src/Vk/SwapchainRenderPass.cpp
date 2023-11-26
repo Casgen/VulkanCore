@@ -2,6 +2,7 @@
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_structs.hpp"
+#include "Swapchain.h"
 
 namespace VkCore
 {

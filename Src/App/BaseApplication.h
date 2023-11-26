@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <set>
 #include <string>
 
 #include "../Vk/Descriptors/DescriptorBuilder.h"
@@ -10,7 +9,6 @@
 #include "../Platform/Window.h"
 #include "../Vk/RenderPass.h"
 #include "../Vk/GraphicsPipeline/GraphicsPipelineBuilder.h"
-#include "../Model/Camera.h"
 #include "../Event/Event.h"
 #include "../Event/KeyEvent.h"
 #include "../Event/WindowEvent.h"
@@ -18,7 +16,6 @@
 
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_handles.hpp"
-#include "../Model/MatrixBuffer.h"
 
 namespace VkCore
 {

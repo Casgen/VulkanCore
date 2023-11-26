@@ -1,14 +1,12 @@
-#include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include "vulkan/vulkan.hpp"
 
 #include "SampleApplication.h"
 #include "GLFW/glfw3.h"
 #include "../Log/Log.h"
 #include "../Vk/Utils.h"
-#include "../FileUtils.h"
 #include "../Vk/Swapchain.h"
+#include "../Model/MatrixBuffer.h"
 #include "../Model/Shaders/ShaderLoader.h"
 
 namespace VkCore

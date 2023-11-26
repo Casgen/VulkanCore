@@ -1,8 +1,5 @@
 #pragma once
 
-#include <set>
-#include <string>
-
 #include "vulkan/vulkan.hpp"
 #include "../QueueFamilyIndices.h"
 #include "../SwapChainSupportDetails.h"

@@ -5,10 +5,6 @@
 #include <cstdint>
 #include "glm/fwd.hpp"
 
-#include "../../Log/Log.h"
-#include "vulkan/vulkan_enums.hpp"
-#include "vulkan/vulkan_structs.hpp"
-
 namespace VkCore
 {
     class VertexAttributeBuilder

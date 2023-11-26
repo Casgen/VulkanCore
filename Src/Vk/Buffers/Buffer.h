@@ -2,11 +2,8 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 
 #include "vulkan/vulkan.hpp"
-#include "vulkan/vulkan_core.h"
-#include "vulkan/vulkan_enums.hpp"
 #include "vk_mem_alloc.h"
 
 namespace VkCore

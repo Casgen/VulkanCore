@@ -3,17 +3,13 @@
 #include <stdexcept>
 #include <sys/types.h>
 #include <vector>
+#include <set>
 
 #include "Device.h"
 #include "../../Log/Log.h" // IMPORTANT! Always include this when using the TRY_CATCH_BEGIN and TRY_CATCH_END macro
-#include "../Utils.h"
 #include "PhysicalDevice.h"
 #include "../Swapchain.h"
 #include "vulkan/vulkan.hpp"
-#include "vulkan/vulkan_enums.hpp"
-#include "vulkan/vulkan_handles.hpp"
-#include "vulkan/vulkan_structs.hpp"
-#include "vulkan/vulkan_core.h"
 
 static std::vector<const char*> layerExtensions{
 #ifdef DEBUG

@@ -1,11 +1,9 @@
 #include "DescriptorBuilder.h"
 #include "DescriptorAllocator.h"
 #include "DescriptorLayoutCache.h"
-#include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_structs.hpp"
 #include "../../Log/Log.h"
 
-#include <algorithm>
 #include <memory>
 
 namespace VkCore

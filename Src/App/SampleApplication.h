@@ -1,13 +1,8 @@
-#pragma once
-
 #include <cstdint>
-#include <memory>
-#include <set>
 #include <string>
 
 #include "../Model/Camera.h"
 #include "BaseApplication.h"
-#include "../Model/MatrixBuffer.h"
 
 namespace VkCore
 {

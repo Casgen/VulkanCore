@@ -1,16 +1,7 @@
-#pragma once
-
-#include <cstddef>
 #include <cstdint>
-#include <cstring>
-#include <fenv.h>
 #include <memory>
 #include "glm/fwd.hpp"
 #include "vulkan/vulkan.hpp"
-#include "vulkan/vulkan_core.h"
-#include "vulkan/vulkan_enums.hpp"
-#include "vulkan/vulkan_handles.hpp"
-#include "vulkan/vulkan_structs.hpp"
 
 #include "BaseApplication.h"
 #include "GLFW/glfw3.h"

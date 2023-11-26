@@ -1,12 +1,7 @@
-#include <algorithm>
 #include <vector>
 
 #include "DescriptorAllocator.h"
 #include "vulkan/vulkan.hpp"
-#include "vulkan/vulkan_core.h"
-#include "vulkan/vulkan_enums.hpp"
-#include "vulkan/vulkan_handles.hpp"
-#include "vulkan/vulkan_structs.hpp"
 #include "../../Log/Log.h"
 
 namespace VkCore

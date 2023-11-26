@@ -1,13 +1,9 @@
 ---@diagnostic disable: undefined-global
 include "Vendor/glfw.lua"
 include "Vendor/glm.lua"
-include "Vendor/assimp.lua"
 
 project "VulkanCore"
     kind "StaticLib"
-
-    configurations {"Debug", "Release"}
-
     architecture "x86_64"
 
     language "C++"
@@ -18,14 +14,13 @@ project "VulkanCore"
     targetdir("../bin/" .. output_dir .. "/%{prj.name}")
     objdir("../obj/" .. output_dir .. "/%{prj.name}")
 
-    links { "GLFW", "GLM", "Assimp" }
+    links { "GLFW", "GLM", "assimp" }
 
     includedirs {
         "Vendor/glfw/include",
         "Vendor/glm",
         "Vendor/stb",
-        "Vendor/vma/",
-        "Vendor/assimp/include"
+        "Vendor/vma/", "Vendor/assimp/include"
     }
 
     files {
@@ -67,16 +62,17 @@ project "VulkanCore"
 
         -- make sure that you have VULKAN_SDK environment variable set! (for ex. C:/VulkanSDK/1.3.250.0/x86_64)
         includedirs {
-            "$(VULKAN_SDK)/Include"
+            "$(VULKAN_SDK)/Include",
+            "$(VK_SDK_PATH)/Include"
         }
 
         libdirs {
-            "$(VULKAN_SDK)/Lib"
+            "$(VULKAN_SDK)/Lib",
+            "$(VK_SDK_PATH)/Lib"
         }
 
-        links {
-            "$(VULKAN_SDK)/Lib/vulkan-1.lib"
-        }
+        links { "vulkan-1", "shaderc_combined" }
+
 
         defines { "_WIN32" }
 
@@ -90,8 +86,8 @@ project "VulkanCore"
 
 
     filter { "configurations:Debug", "platforms:x64" }
-        buildoptions { "/MDd" }
+        buildoptions { "/MTd" }
 
     filter { "configurations:Release", "platforms:Windows-x64" }
-        buildoptions { "/MD" }
+        buildoptions { "/MT" }
 

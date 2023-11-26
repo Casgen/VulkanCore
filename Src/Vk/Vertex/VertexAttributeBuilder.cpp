@@ -1,4 +1,5 @@
 #include "VertexAttributeBuilder.h"
+#include "../../Log/Log.h"
 
 namespace VkCore
 {

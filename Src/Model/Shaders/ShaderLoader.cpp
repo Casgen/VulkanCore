@@ -1,8 +1,4 @@
-#include <algorithm>
-#include <cstdint>
-#include <cstring>
 #include <filesystem>
-#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -11,7 +7,6 @@
 #include "ShaderData.h"
 #include "ShaderLoader.h"
 #include "../../FileUtils.h"
-#include "glm/common.hpp"
 #include "shaderc/shaderc.h"
 #include "shaderc/shaderc.hpp"
 #include "../../Log/Log.h"

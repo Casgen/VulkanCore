@@ -1,8 +1,5 @@
 #pragma once
 
-#include <memory>
-
-
 #include "Allocator/NullAllocatorService.h"
 
 namespace VkCore

@@ -3,14 +3,9 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include <tuple>
 
 #include "PhysicalDevice.h"
 #include "vulkan/vulkan.hpp"
-#include "vulkan/vulkan_core.h"
-#include "vulkan/vulkan_enums.hpp"
-#include "vulkan/vulkan_handles.hpp"
-#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {

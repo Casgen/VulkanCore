@@ -5,7 +5,6 @@
 
 #include "vulkan/vulkan.hpp"
 #include <shaderc/shaderc.hpp>
-#include "ShaderType.h"
 #include "ShaderData.h"
 #include "vulkan/vulkan_enums.hpp"
 

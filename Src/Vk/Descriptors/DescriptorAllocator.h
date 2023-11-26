@@ -5,9 +5,6 @@
 
 #include "../Devices/Device.h"
 #include "vulkan/vulkan.hpp"
-#include "vulkan/vulkan_enums.hpp"
-#include "vulkan/vulkan_handles.hpp"
-#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {

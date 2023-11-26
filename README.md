@@ -4,8 +4,15 @@ This repo serves as a framework for working with Vulkan and faster development.
 
 ## Prerequisites
 
+### Linux
 Make sure you have installed these libraries:
 - Vulkan SDK (or Vulkan `libvulkan-dev` if you are on Ubuntu on Linux Mint)
+- Assimp
+
+```shell
+$ sudo apt install libassimp-dev
+```
+
 - Bear (This is applicable to developers who want to use clangs `compile_commands.json`)
 
 Also setup your own `$VULKAN_SDK` Environment variable where the path will point to the `1.X.X.X/x86_64` (for ex. `/home/username/Dev/VulkanSDK/1.X.X.X/x86_64`) dir on Linux or

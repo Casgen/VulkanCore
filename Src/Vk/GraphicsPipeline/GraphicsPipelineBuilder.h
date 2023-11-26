@@ -1,19 +1,13 @@
 #pragma once
 
 #include <cstdint>
-#include <map>
 #include <vector>
 
 #include "vulkan/vulkan.hpp"
-#include "vulkan/vulkan_core.h"
-#include "vulkan/vulkan_enums.hpp"
-#include "vulkan/vulkan_handles.hpp"
-#include "vulkan/vulkan_structs.hpp"
 
 #include "../Devices/Device.h"
 #include "../../Model/Shaders/ShaderData.h"
 #include "../Vertex/VertexAttributeBuilder.h"
-#include "../Descriptors/DescriptorBuilder.h"
 
 namespace VkCore
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "RenderPass.h"
-#include "Swapchain.h"
+#include "Devices/Device.h"
 
 namespace VkCore
 {

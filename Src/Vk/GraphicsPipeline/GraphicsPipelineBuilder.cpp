@@ -1,16 +1,12 @@
-#include "GraphicsPipelineBuilder.h"
-#include "glm/fwd.hpp"
-#include "vulkan/vulkan.hpp"
-#include "vulkan/vulkan_core.h"
-#include "vulkan/vulkan_enums.hpp"
-#include "vulkan/vulkan_handles.hpp"
-#include "vulkan/vulkan_structs.hpp"
-
-#include "../../Log/Log.h"
 #include <cstdint>
 #include <stdexcept>
 #include "glm/vec4.hpp"
 #include "glm/vec2.hpp"
+
+#include "GraphicsPipelineBuilder.h"
+#include "glm/fwd.hpp"
+#include "vulkan/vulkan.hpp"
+#include "../../Log/Log.h"
 #include "../Utils.h"
 
 namespace VkCore
