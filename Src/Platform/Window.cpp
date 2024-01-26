@@ -25,7 +25,7 @@ namespace VkCore
             throw std::runtime_error("GLFW couldn't be initialized!");
         }
 
-        if (!glfwVulkanSupported())
+        if (glfwVulkanSupported() != GLFW_TRUE)
         {
             LOG(Window, Fatal, "GLFW window can not be created! Vulkan is not supported!")
             throw std::runtime_error("GLFW window can not be created! Vulkan is not supported!");

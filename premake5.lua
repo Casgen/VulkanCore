@@ -17,10 +17,11 @@ project "VulkanCore"
     links { "GLFW", "GLM", "assimp" }
 
     includedirs {
-        "Vendor/glfw/include",
-        "Vendor/glm",
-        "Vendor/stb",
-        "Vendor/vma/", "Vendor/assimp/include"
+        "Vendor/glfw/include/",
+        "Vendor/glm/",
+        "Vendor/stb/",
+        "Vendor/vma/",
+        "Vendor/assimp/include/"
     }
 
     files {

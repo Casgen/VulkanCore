@@ -1,7 +1,5 @@
 #include <cstdint>
 #include <memory>
-#include "glm/fwd.hpp"
-#include "vulkan/vulkan.hpp"
 
 #include "BaseApplication.h"
 #include "GLFW/glfw3.h"
@@ -10,8 +8,6 @@
 #include "../Vk/Utils.h"
 #include "../Vk/Services/Allocator/VmaAllocatorService.h"
 #include "../Vk/Services/ServiceLocator.h"
-#include "../FileUtils.h"
-#include "../Model/Shaders/ShaderLoader.h"
 
 namespace VkCore
 {
@@ -20,9 +16,9 @@ namespace VkCore
         : m_WinWidth(width), m_WinHeight(height), m_Title(title)
     {
         s_Instance = this;
+
         Logger::SetSeverityFilter(ESeverity::Verbose);
     }
-
 
     void BaseApplication::InitVulkan()
     {
@@ -46,12 +42,9 @@ namespace VkCore
         PostInitVulkan();
     }
 
-
     void BaseApplication::Run()
     {
-        PreInitVulkan();
         InitVulkan();
-        PreInitVulkan();
         Loop();
         PreShutdown();
         Shutdown();
@@ -143,6 +136,11 @@ namespace VkCore
     {
         VmaAllocatorService* allocationService = new VmaAllocatorService(m_Device, m_PhysicalDevice, m_Instance);
         ServiceLocator::ProvideAllocatorService(allocationService);
+    }
+
+    void BaseApplication::AddDeviceExtension(const char* extension)
+    {
+        m_DeviceExtensions.emplace_back(extension);
     }
 
 } // namespace VkCore

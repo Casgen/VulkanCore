@@ -34,7 +34,6 @@ namespace VkCore
         DescriptorBuilder(std::unique_ptr<DescriptorLayoutCache> layoutCache,
                           std::unique_ptr<DescriptorAllocator> allocator);
 
-        template <typename T = Buffer>
         DescriptorBuilder& BindBuffer(uint32_t binding, const vk::DescriptorBufferInfo& bufferInfo,
                                       vk::DescriptorType type, vk::ShaderStageFlags stageFlags)
         {
@@ -59,7 +58,6 @@ namespace VkCore
          * @param stageFlags - describes which shader stage should the buffer be bound to. (Where you will be using
          * it)
          */
-        template <typename T = Buffer>
         DescriptorBuilder& BindBuffer(uint32_t binding, const Buffer& buffer, vk::DescriptorType descriptorType,
                                       vk::ShaderStageFlags stageFlags)
         {

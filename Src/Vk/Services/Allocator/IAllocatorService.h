@@ -2,6 +2,7 @@
 
 #include "../../Buffers/Buffer.h"
 #include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {
@@ -30,7 +31,20 @@ namespace VkCore
          */
         virtual VkBuffer CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
                                       VmaAllocationInfo* outAllocationInfo = nullptr) = 0;
+        /**
+         * @brief Allocates and creates a new VkImage.
+         * @param data - pointer to the data
+         * @param size - size of the data
+         * @param createInfo
+         * @param outAllocation
+         * #param outAlloationInfo - optional
+         */
+        virtual VkImage CreateImage(const void* data, const VkDeviceSize size, const vk::ImageCreateInfo& createInfo,
+                                    const VmaAllocationCreateInfo& allocCreateInfo, VmaAllocation& outAllocation,
+                                    VmaAllocationInfo* outAllocationInfo = nullptr) = 0;
 
+        virtual void CopyBufferToImage(const VkImage& image, const VkBuffer& srcBuffer, const VkDeviceSize size,
+                                       const vk::Extent2D& resolution) = 0;
         /**
          * Destroys the buffer and frees the memory
          * @param buffer - buffer to destroy
@@ -49,7 +63,8 @@ namespace VkCore
         virtual void CopyBuffer(const VkBuffer& srcBuffer, const VkBuffer& dstBuffer, const size_t size,
                                 const uint32_t srcOffset = 0, const uint32_t dstOffset = 0) = 0;
         /**
-         * @brief Maps the buffer memory and returns back a pointer to the VkBuffer memory. It can be used for updating the data
+         * @brief Maps the buffer memory and returns back a pointer to the VkBuffer memory. It can be used for updating
+         * the data
          */
         virtual void MapMemory(const VmaAllocation& allocation, void* mappedPtr) = 0;
 

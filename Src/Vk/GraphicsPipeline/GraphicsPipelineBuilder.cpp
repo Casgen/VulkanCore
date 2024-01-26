@@ -8,6 +8,8 @@
 #include "vulkan/vulkan.hpp"
 #include "../../Log/Log.h"
 #include "../Utils.h"
+#include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_enums.hpp"
 
 namespace VkCore
 {
@@ -237,7 +239,7 @@ namespace VkCore
     }
 
     GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddDescriptorLayout(
-        const std::vector<vk::DescriptorSetLayout>& layouts)
+        const std::vector<vk::DescriptorSetLayout> layouts)
     {
         for (const auto& layout : layouts)
         {
@@ -247,7 +249,7 @@ namespace VkCore
         return *this;
     }
 
-    GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddDescriptorLayout(const vk::DescriptorSetLayout& layout)
+    GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddDescriptorLayout(const vk::DescriptorSetLayout layout)
     {
         m_DescriptorSetLayouts.emplace_back(layout);
         return *this;
@@ -290,14 +292,6 @@ namespace VkCore
 
         vk::PipelineVertexInputStateCreateInfo vertexInputState{};
 
-        if (m_VertexInputAttributes.size() == 0)
-        {
-            vertexInputState.setVertexBindingDescriptionCount(0);
-            vertexInputState.setVertexAttributeDescriptionCount(0);
-            vertexInputState.pVertexBindingDescriptions = nullptr;
-            vertexInputState.pVertexAttributeDescriptions = nullptr;
-        }
-
         vertexInputState.setVertexBindingDescriptions(m_VertexInputBinding);
         vertexInputState.setVertexAttributeDescriptions(m_VertexInputAttributes);
 
@@ -337,8 +331,14 @@ namespace VkCore
             .setPMultisampleState(&m_MultisampleCreateInfo)
             .setStageCount(m_ShaderStageCreateInfos.size())
             .setPDepthStencilState(nullptr)
-            .setPRasterizationState(&m_RasterizationInfo)
-            .setPVertexInputState(&vertexInputState)
+            .setPRasterizationState(&m_RasterizationInfo);
+
+        if (m_VertexInputAttributes.size() == 0)
+            m_PipelineCreateInfo.setPVertexInputState(nullptr);
+        else
+            m_PipelineCreateInfo.setPVertexInputState(&vertexInputState);
+
+        m_PipelineCreateInfo
             .setPInputAssemblyState(&m_VertexInputAssembly)
             // These member variables are for creating a derivative of this pipeline. Won't be used here.
             .setBasePipelineIndex(-1)
@@ -368,19 +368,74 @@ namespace VkCore
 
         if (m_ShaderStageCreateInfos.size() < 2)
         {
-            const char* errorMsg =
-                "Not enough shaders provided! There has to be atleast a fragment and a vertex shader!";
-            LOG(Vulkan, Fatal, errorMsg)
-            throw std::runtime_error(errorMsg);
+
+            if (m_IsMeshShading)
+            {
+
+                const char* errorMsg =
+                    "Not enough shaders provided! There has to be atleast a fragment and a mesh shader!";
+                LOG(Vulkan, Fatal, errorMsg)
+                throw std::runtime_error(errorMsg);
+            }
+            else
+            {
+
+                const char* errorMsg =
+                    "Not enough shaders provided! There has to be atleast a fragment and a vertex shader!";
+                LOG(Vulkan, Fatal, errorMsg)
+                throw std::runtime_error(errorMsg);
+            }
         }
 
-        bool isVertexStagePresent, isFragmentStagePresent = false;
-        int32_t stageBitfield = 0;
+        bool isFragmentStagePresent = false;
+        uint32_t stageBitfield = 0;
+
+        if (m_IsMeshShading)
+        {
+
+            bool isMeshStagePresent = false;
+
+            for (const auto& info : m_ShaderStageCreateInfos)
+            {
+
+                uint32_t stage = static_cast<uint32_t>(info.stage);
+
+                isMeshStagePresent |= stage & VK_SHADER_STAGE_MESH_BIT_EXT;
+                isFragmentStagePresent |= stage & VK_SHADER_STAGE_FRAGMENT_BIT;
+
+                if (stageBitfield & stage)
+                {
+                    const char* errorMsg = "2 or more shaders of the same type were provided!";
+                    LOG(Vulkan, Fatal, errorMsg)
+                    throw std::runtime_error(errorMsg);
+                }
+
+                stageBitfield |= stage;
+            }
+
+            if (!isFragmentStagePresent)
+            {
+                const char* errorMsg = "Failed to create the pipeline! Fragment shader not present!";
+                LOG(Vulkan, Fatal, errorMsg)
+                throw std::runtime_error(errorMsg);
+            }
+
+            if (!isMeshStagePresent)
+            {
+                const char* errorMsg = "Failed to create the pipeline! Mesh shader not present!";
+                LOG(Vulkan, Fatal, errorMsg)
+                throw std::runtime_error(errorMsg);
+            }
+
+            return;
+        }
+
+        bool isVertexStagePresent = false;
 
         for (const auto& info : m_ShaderStageCreateInfos)
         {
 
-            int32_t stage = static_cast<int32_t>(info.stage);
+            uint32_t stage = static_cast<uint32_t>(info.stage);
 
             isVertexStagePresent |= stage & VK_SHADER_STAGE_VERTEX_BIT;
             isFragmentStagePresent |= stage & VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -410,13 +465,13 @@ namespace VkCore
         }
     }
 
-    void GraphicsPipelineBuilder::ValidateVertexInfo()
+    bool GraphicsPipelineBuilder::ValidateVertexInfo()
     {
         if (m_VertexInputAttributes.size() == 0)
         {
             LOG(Vulkan, Warning,
                 "No input attributes defined! Setting input binding descriptions and attribute description as blank!")
-            return;
+            return false;
         }
 
         uint32_t actualBinding = m_VertexInputBinding.binding;
@@ -430,6 +485,7 @@ namespace VkCore
                      "Vulkan input attribute with location %d and binding %d doesn't correspond with the binding in "
                      "the vertex input binding %d!",
                      m_VertexInputAttributes[i].location, m_VertexInputAttributes[i].binding, actualBinding)
+                return false;
             }
 
             expectedLocationCount += i;
@@ -440,7 +496,10 @@ namespace VkCore
         {
             LOG(Vulkan, Warning,
                 "Locations are not incrementing correctly! Some index/indices are missing or set incorrectly!")
+            return true;
         }
+
+        return true;
     }
 
     void GraphicsPipelineBuilder::ValidateViewportInfo()

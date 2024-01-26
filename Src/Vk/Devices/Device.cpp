@@ -1,4 +1,6 @@
+#include <algorithm>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <stdexcept>
 #include <sys/types.h>
@@ -10,6 +12,10 @@
 #include "PhysicalDevice.h"
 #include "../Swapchain.h"
 #include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_handles.hpp"
+#include "vulkan/vulkan_hpp_macros.hpp"
+#include "vulkan/vulkan_structs.hpp"
 
 static std::vector<const char*> layerExtensions{
 #ifdef DEBUG
@@ -24,7 +30,7 @@ namespace VkCore
     {
     }
 
-    Device::Device(const PhysicalDevice& physicalDevice, const std::vector<const char*>& deviceExtensions)
+    Device::Device(const PhysicalDevice& physicalDevice, std::vector<const char*> deviceExtensions)
     {
 
         QueueFamilyIndices indices = physicalDevice.GetQueueFamilyIndices();
@@ -56,11 +62,44 @@ namespace VkCore
 
         TRY_CATCH_BEGIN()
 
+        vk::PhysicalDeviceFeatures2 features2 = physicalDevice.GetPhysicalDeviceFeatures2();
+
+        vk::PhysicalDeviceMeshShaderFeaturesNV meshShaderFeatures(true, true);
+
+        vk::PhysicalDeviceVulkan12Features vulkan12Features{};
+        vulkan12Features.setBufferDeviceAddress(true);
+        vulkan12Features.setPNext(&meshShaderFeatures);
+
+        vk::PhysicalDeviceFeatures2 deviceFeatures2{};
+        deviceFeatures2.setPNext(&vulkan12Features);
+
+        // Enable Device Buffer Address
+
+        auto it = std::find_if(deviceExtensions.begin(), deviceExtensions.end(), [&](const char* const& item) {
+            return strcmp(item, VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) == 0;
+        });
+
+        if (it != deviceExtensions.end())
+            deviceExtensions.erase(it);
+
         vk::DeviceCreateInfo deviceCreateInfo;
 
         deviceCreateInfo.setPEnabledExtensionNames(deviceExtensions)
             .setQueueCreateInfos(queueCreateInfos)
-            .setPEnabledLayerNames(layerExtensions);
+            .setPEnabledLayerNames(layerExtensions)
+            .setPNext(&meshShaderFeatures);
+
+
+        for (auto& ext : deviceExtensions)
+        {
+
+            if (strcmp(ext, VK_NV_MESH_SHADER_EXTENSION_NAME) == 0 ||
+                strcmp(ext, VK_EXT_MESH_SHADER_EXTENSION_NAME) == 0)
+            {
+                deviceCreateInfo.setPNext(&meshShaderFeatures);
+                break;
+            }
+        }
 
         m_Device = physicalDevice.CreateDevice(deviceCreateInfo);
 
@@ -279,6 +318,48 @@ namespace VkCore
         m_Device.updateDescriptorSets(writes, copies);
     }
 
+    vk::CommandBuffer Device::BeginSingleTimeCommands(vk::CommandPool& outCmdPool) const
+    {
+        vk::CommandPoolCreateInfo poolInfo{};
+        poolInfo.flags = vk::CommandPoolCreateFlagBits::eTransient;
+        poolInfo.queueFamilyIndex = m_QueueFamilyIndices.m_GraphicsFamily.value();
+
+        vk::CommandPool commandPool;
+        vk::CommandBuffer commandBuffer;
+
+        TRY_CATCH_BEGIN()
+
+        commandPool = m_Device.createCommandPool(poolInfo);
+
+        vk::CommandBufferAllocateInfo allocInfo{commandPool, vk::CommandBufferLevel::ePrimary, 1};
+
+        commandBuffer = m_Device.allocateCommandBuffers(allocInfo)[0];
+
+        TRY_CATCH_END()
+
+        vk::CommandBufferBeginInfo beginInfo{};
+        beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+
+        commandBuffer.begin(beginInfo);
+
+        return commandBuffer;
+    }
+
+    void Device::EndSingleTimeCommands(const vk::CommandBuffer& cmdBuffer, const vk::CommandPool& cmdPool) const
+    {
+        cmdBuffer.end();
+
+        vk::SubmitInfo submitInfo{};
+        submitInfo.setCommandBuffers(cmdBuffer);
+
+        m_GraphicsQueue.submit(submitInfo);
+        m_GraphicsQueue.waitIdle();
+
+        // Don't forget to free the Command buffer after it is done copying!
+        m_Device.freeCommandBuffers(cmdPool, cmdBuffer);
+        m_Device.destroyCommandPool(cmdPool);
+    }
+
     void Device::InitQueues(const QueueFamilyIndices& indices)
     {
         if (!indices.IsComplete())
@@ -317,6 +398,8 @@ namespace VkCore
         {
             LOG(Vulkan, Warning, "Couldn't find the transfer family queue! Skipped creation of the compute queue.")
         }
+
+        m_QueueFamilyIndices = indices;
 
         LOG(Vulkan, Verbose, "Queues done initializing...")
     }

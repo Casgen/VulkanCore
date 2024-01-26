@@ -3,6 +3,7 @@
 #include "vulkan/vulkan.hpp"
 #include "../QueueFamilyIndices.h"
 #include "../SwapChainSupportDetails.h"
+#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {
@@ -44,6 +45,8 @@ namespace VkCore
          * @param surface
          */
         static QueueFamilyIndices FindQueueFamilyIndices(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface);
+
+        vk::PhysicalDeviceFeatures2 GetPhysicalDeviceFeatures2() const;
 
 
         // ------------ GETTERS ------------

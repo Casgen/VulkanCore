@@ -30,6 +30,9 @@ namespace VkCore
         static std::vector<VkCore::ShaderData> LoadClassicShaders(const std::filesystem::path& path,
                                                                   const bool isOptimized = true);
 
+        static std::vector<VkCore::ShaderData> LoadMeshShaders(const std::filesystem::path& path,
+                                                                  const bool isOptimized = true);
+
 
         static const char* ShadercCompilationStatusToString(shaderc_compilation_status status);
 
@@ -44,6 +47,8 @@ namespace VkCore
          */
         static VkCore::ShaderData LoadClassicShader(const std::filesystem::path& path, const bool isOptimized = true);
 
+        static VkCore::ShaderData LoadMeshShader(const std::filesystem::path& path, const bool isOptimized = true);
+
         /**
          * @brief reads the given filename, obtains its file extension and deteremines the shader kind (vertex,
          * fragment, geometry etc.)
@@ -55,9 +60,17 @@ namespace VkCore
          * UPDATING: Watch out for new types of shaders!, if any of them are added by vulkan or shaderc, it has to be
          * implemented further to recognize the new ones!
          * @param shaderKind - A shaderc shader kind enum to deduce the stage flag
-         * @param hasNvidiaBasedRT - Determines whether to return a ray tracing
          */
         static vk::ShaderStageFlagBits ShaderKindToClassicShaderStageFlag(const shaderc_shader_kind shaderKind);
+
+        /**
+         * @brief converts the shaderc_shader_kind enum to vk::ShaderStageFlags for usage in the graphics pipeline.
+         * UPDATING: Watch out for new types of shaders!, if any of them are added by vulkan or shaderc, it has to be
+         * implemented further to recognize the new ones!
+         * @param shaderKind - A shaderc shader kind enum to deduce the stage flag
+         * @param isNvExtension - Determines whether to return a ray tracing
+         */
+        static vk::ShaderStageFlagBits ShaderKindToMeshShaderStageFlag(const shaderc_shader_kind shaderKind, bool isNvExtension);
 
       private:
         /**
@@ -84,6 +97,8 @@ namespace VkCore
             {"comp", shaderc_compute_shader},
             {"mesh", shaderc_mesh_shader},
             {"task", shaderc_task_shader},
+            {"nv.mesh", shaderc_task_shader},
+            {"nv.task", shaderc_mesh_shader},
         };
     };
 

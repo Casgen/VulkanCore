@@ -1,8 +1,17 @@
-namespace VkCore {
+#pragma once
 
-    class VertexBuffer {
+#include "Buffer.h"
 
-        
+namespace VkCore
+{
+
+    class VertexBuffer : public Buffer
+    {
+
+      public:
+        VertexBuffer() : Buffer(vk::BufferUsageFlagBits::eVertexBuffer) {
+            
+        }
 
     };
-}
+} // namespace VkCore

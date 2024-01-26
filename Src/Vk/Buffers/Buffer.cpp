@@ -2,6 +2,7 @@
 #include <stdexcept>
 
 #include "Buffer.h"
+#include "vk_mem_alloc.h"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include "../Services/ServiceLocator.h"

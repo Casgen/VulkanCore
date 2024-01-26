@@ -6,6 +6,8 @@
 #include "IAllocatorService.h"
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_structs.hpp"
+#include "../../Texture/ImageData.h"
 
 namespace VkCore
 {
@@ -19,7 +21,6 @@ namespace VkCore
 
         /**
          * @brief Allocates and creates a new buffer.
-         * @param data - pointer to the data.
          * @param bufferInfo - Struct containg information for creating a buffer
          * @param outAllocation - Output VmaAllocation struct.
          * @param outAllocationInfo - Optional output VmaAllocationInfo struct.
@@ -27,6 +28,18 @@ namespace VkCore
          */
         VkBuffer CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
                               VmaAllocationInfo* outAllocationInfo = nullptr) override;
+
+        /**
+         * @brief Allocates and creates a new VkImage.
+         * @param data - pointer to the data
+         * @param size - size of the data
+         * @param createInfo
+         * @param outAllocation
+         * #param outAlloationInfo - optional
+         */
+        VkImage CreateImage(const void* data, const VkDeviceSize size, const vk::ImageCreateInfo& createInfo,
+                            const VmaAllocationCreateInfo& allocCreateInfo, VmaAllocation& outAllocation,
+                            VmaAllocationInfo* outAllocationInfo = nullptr) override;
         /**
          * @brief Copies the data from the source buffer to the destination buffer. A Command buffer is used to transfer
          * the data with a transfer queue.
@@ -39,6 +52,9 @@ namespace VkCore
         void CopyBuffer(const VkBuffer& srcBuffer, const VkBuffer& dstBuffer, const size_t size,
                         const uint32_t srcOffset = 0, const uint32_t dstOffset = 0) override;
 
+        void CopyBufferToImage(const VkImage& image, const VkBuffer& srcBuffer, const VkDeviceSize size,
+                               const vk::Extent2D& resolution) override;
+
         /**
          *  @brief Allocated a buffer onto the GPU device, making it only writable/readable for the GPU. It cannot be
          *  accessed by the CPU!
@@ -49,7 +65,8 @@ namespace VkCore
                                    VmaAllocationInfo* allocationInfo) override;
 
         /**
-         * @brief Maps the buffer memory and returns back a pointer to the VkBuffer memory. It can be used for updating the data
+         * @brief Maps the buffer memory and returns back a pointer to the VkBuffer memory. It can be used for updating
+         * the data
          */
         void MapMemory(const VmaAllocation& allocation, void* mappedPtr) override;
 

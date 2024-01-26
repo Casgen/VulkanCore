@@ -142,7 +142,8 @@ namespace VkCore
 
             std::string extension = pathEntry.extension().string();
 
-            if (extension == ".mesh" || extension == ".task") {
+            if (extension == ".mesh" || extension == ".task")
+            {
                 LOG(Vulkan, Warning, "Found a task or mesh shader! Skipping!")
                 continue;
             }
@@ -161,6 +162,110 @@ namespace VkCore
         {
             LOGF(Shader, Warning,
                  "Too many shaders loaded! Are there any shaders that are duplicate?\n\tGiven path: %s",
+                 path.string().data())
+            return std::move(modulesMap);
+        }
+
+        if (modulesMap.size() == 0)
+        {
+            LOGF(Shader, Error, "No shader modules were loaded! Given path: %s", path.string().data())
+        }
+
+        return {};
+    }
+
+    std::vector<VkCore::ShaderData> ShaderLoader::LoadMeshShaders(const std::filesystem::path& path,
+                                                                  const bool isOptimized)
+    {
+        std::filesystem::path relativePath = std::filesystem::current_path() / path;
+
+        if (!std::filesystem::exists(relativePath))
+        {
+
+            LOGF(Shader, Error,
+                 "Failed to compile shaders! The given file system path doesn't exist! given "
+                 "path: %s\n",
+                 relativePath.string().data())
+            return {};
+        }
+
+        if (!std::filesystem::is_directory(relativePath))
+        {
+
+            LOGF(Shader, Error,
+                 "Failed to compile shaders! The given file system path is not a directory or doesn't exist! given "
+                 "path: %s\n",
+                 relativePath.string().data())
+            return {};
+        }
+
+        shaderc::Compiler compiler;
+        shaderc::CompileOptions compileOptions;
+
+        if (isOptimized)
+        {
+            compileOptions.SetOptimizationLevel(shaderc_optimization_level_size);
+        }
+
+        std::vector<ShaderData> modulesMap;
+
+        for (const auto& dirEntry : std::filesystem::directory_iterator(relativePath))
+        {
+            std::filesystem::path pathEntry = dirEntry.path();
+
+            std::string extension = pathEntry.extension().string();
+            bool isNVExtension = pathEntry.string().find(".nv.") != -1;
+
+            if (extension == ".mesh" || extension == ".task" || extension == ".frag")
+            {
+                LOGF(Shader, Info, "Found a file: %s", pathEntry.string().data())
+
+                std::vector<char> data = FileUtils::ReadFile(pathEntry.string());
+
+                shaderc_shader_kind shaderKind = DetermineShaderType(pathEntry.string());
+
+                shaderc::SpvCompilationResult result =
+                    compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data());
+
+                if (result.GetCompilationStatus() != shaderc_compilation_status_success)
+                {
+                    std::string errorMsg = "Failed to compile a shader!\nGiven file: " + path.string() +
+                                           ",\nCompilation status " +
+                                           ShadercCompilationStatusToString(result.GetCompilationStatus());
+
+                    LOGF(Shader, Fatal,
+                         "Failed to compile a shader!\n\tGiven file: %s\n\tCompilation status: %s\n\tNumber of errors: "
+                         "%d "
+                         "\n\tError message: %s \n\t Num of warnings: %d\n",
+                         path.string().data(), ShadercCompilationStatusToString(result.GetCompilationStatus()),
+                         result.GetNumErrors(), result.GetErrorMessage().data(), result.GetNumWarnings())
+
+                    throw std::runtime_error(errorMsg);
+                }
+
+                LOGF(Shader, Info, "Shader compilation was successful!\n\tGiven file: %s\n\tNum of warnings: %d\n",
+                     path.string().data(), result.GetNumWarnings())
+
+                ShaderData shaderData;
+                shaderData.m_Data = {result.cbegin(), result.cend()};
+                shaderData.m_StageFlags = ShaderKindToMeshShaderStageFlag(shaderKind, isNVExtension);
+
+                modulesMap.emplace_back(shaderData);
+
+                continue;
+            }
+
+            LOG(Vulkan, Warning, "Found a task or mesh shader! Skipping!")
+        }
+
+        if (modulesMap.size() <= 3)
+        {
+            return std::move(modulesMap);
+        }
+
+        if (modulesMap.size() > 3)
+        {
+            LOGF(Shader, Warning, "Too many shaders loaded! Are there any duplicates that exist?\n\tGiven path: %s",
                  path.string().data())
             return std::move(modulesMap);
         }
@@ -281,17 +386,17 @@ namespace VkCore
             break;
 
         case shaderc_task_shader:
-            return vk::ShaderStageFlagBits::eTaskEXT;
+            return vk::ShaderStageFlagBits::eTaskNV;
             break;
         case shaderc_mesh_shader:
-            return vk::ShaderStageFlagBits::eMeshEXT;
+            return vk::ShaderStageFlagBits::eMeshNV;
             break;
 
         case shaderc_glsl_default_task_shader:
-            return vk::ShaderStageFlagBits::eTaskEXT;
+            return vk::ShaderStageFlagBits::eTaskNV;
             break;
         case shaderc_glsl_default_mesh_shader:
-            return vk::ShaderStageFlagBits::eMeshEXT;
+            return vk::ShaderStageFlagBits::eMeshNV;
             break;
         default: {
 
@@ -302,6 +407,46 @@ namespace VkCore
             break;
         }
         }
+    }
+
+    vk::ShaderStageFlagBits ShaderLoader::ShaderKindToMeshShaderStageFlag(const shaderc_shader_kind shaderKind,
+                                                                          bool isNvExtension)
+    {
+
+        switch (shaderKind)
+        {
+        case shaderc_compute_shader:
+            return vk::ShaderStageFlagBits::eCompute;
+        case shaderc_fragment_shader:
+            return vk::ShaderStageFlagBits::eFragment;
+        }
+
+        if (isNvExtension)
+        {
+
+            switch (shaderKind)
+            {
+            case shaderc_task_shader:
+                return vk::ShaderStageFlagBits::eTaskNV;
+            case shaderc_mesh_shader:
+                return vk::ShaderStageFlagBits::eMeshNV;
+            }
+        }
+
+        switch (shaderKind)
+        {
+        case shaderc_glsl_default_task_shader:
+            return vk::ShaderStageFlagBits::eTaskNV;
+        case shaderc_glsl_default_mesh_shader:
+            return vk::ShaderStageFlagBits::eMeshNV;
+        }
+
+        LOG(Shader, Error,
+            "The given shader kind couldn't be mapped to the vulkan shader stage flag! returning "
+            "vk::ShaderStageFlagBits::eAll")
+        throw std::runtime_error("The given shader kind couldn't be mapped to the vulkan shader stage flag! returning "
+                                 "vk::ShaderStageFlagBits::eAll");
+        return vk::ShaderStageFlagBits::eAll;
     }
 
 } // namespace VkCore

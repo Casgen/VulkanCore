@@ -1,39 +1,37 @@
 #pragma once
 
-#include <chrono>
 #include <cstdint>
-#include <mutex>
-#include <string>
+#include <fstream>
 
-#define TRY_CATCH_BEGIN() try {
+#define TRY_CATCH_BEGIN()                                                                                              \
+    try                                                                                                                \
+    {
 
-#define TRY_CATCH_END() }\
-catch (const vk::SystemError& err)\
-{\
-    Logger::Print(ECategory::SystemError, ESeverity::Error, err.what());\
-    exit(-1);\
-}\
-catch (std::exception& err)\
-{\
-    Logger::Print(ECategory::Exception, ESeverity::Error, err.what());\
-    exit(-1);\
-}\
-catch (...)\
-{\
-    Logger::Print(ECategory::Unknown, ESeverity::Error, "Unknown error!");\
-    exit(-1);\
-}\
-
-
-
+#define TRY_CATCH_END()                                                                                                \
+    }                                                                                                                  \
+    catch (const vk::SystemError& err)                                                                                 \
+    {                                                                                                                  \
+        Logger::GetLogger()->Logger::Print(ECategory::SystemError, ESeverity::Error, err.what());                                           \
+        exit(-1);                                                                                                      \
+    }                                                                                                                  \
+    catch (std::exception & err)                                                                                       \
+    {                                                                                                                  \
+        Logger::GetLogger()->Logger::Print(ECategory::Exception, ESeverity::Error, err.what());                                             \
+        exit(-1);                                                                                                      \
+    }                                                                                                                  \
+    catch (...)                                                                                                        \
+    {                                                                                                                  \
+        Logger::GetLogger()->Logger::Print(ECategory::Unknown, ESeverity::Error, "Unknown error!");                                         \
+        exit(-1);                                                                                                      \
+    }
 
 enum class ESeverity : uint32_t
 {
-    Verbose     = 0x00000001,
-    Info        = 0x00000010,
-    Warning     = 0x00000100,
-    Error       = 0x00001000,
-    Fatal       = 0x00010000,
+    Verbose = 0x00000001,
+    Info = 0x00000010,
+    Warning = 0x00000100,
+    Error = 0x00001000,
+    Fatal = 0x00010000,
 };
 
 enum class ECategory : uint8_t
@@ -59,14 +57,15 @@ enum class ECategory : uint8_t
 class Logger
 {
   public:
-
     Logger(Logger& other) = delete;
+    Logger(Logger&& other) = delete;
     ~Logger() = delete;
 
-    static void Printf(const ECategory& category, const ESeverity& severity, const char* format, ...);
-    static void Print(const ECategory& category, const ESeverity& severity, const char* message);
+    void Printf(const ECategory& category, const ESeverity& severity, const char* format, ...);
+    void Print(const ECategory& category, const ESeverity& severity, const char* message);
 
     void operator=(const Logger& other) = delete;
+    void operator=(const Logger&& other) = delete;
 
     /**
      * @brief Sets a filter to only show logs from a certain severity level
@@ -75,16 +74,28 @@ class Logger
      */
     static void SetSeverityFilter(const ESeverity& severity);
 
+    /**
+     * Obtains a Logger instance
+     */
+    static Logger* GetLogger();
+
   private:
     inline static ESeverity m_Filter = ESeverity::Info;
+
+    Logger();
+
+    FILE* outputLogFile;
+
+    inline static Logger* m_Logger = nullptr;
 
     static const char* EvaluateSeverityString(ESeverity severity);
     static const char* EvaluateCategoryString(ECategory category);
 };
 
 #ifdef DEBUG
-#define LOGF(Category, Severity, Format, ...) Logger::Printf(ECategory::Category, ESeverity::Severity, Format, __VA_ARGS__);
-#define LOG(Category, Severity, Format) Logger::Print(ECategory::Category, ESeverity::Severity, Format);
+    #define LOGF(Category, Severity, Format, ...)                                                                          \
+Logger::GetLogger()->Printf(ECategory::Category, ESeverity::Severity, Format, __VA_ARGS__);
+    #define LOG(Category, Severity, Format) Logger::GetLogger()->Print(ECategory::Category, ESeverity::Severity, Format);
 #else
 #define LOGF(Category, Severity, Format, ...)
 #define LOG(Category, Severity, Format)

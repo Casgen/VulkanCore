@@ -4,6 +4,7 @@
 
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_handles.hpp"
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
@@ -15,8 +16,7 @@ namespace VkCore
     {
       public:
         /**
-         * @brief Creates a new Vulkan Instance
-         * @param appName arbitrary application name
+         * @brief Creates a new Vulkan Instance @param appName arbitrary application name
          * @param vkApiVersion Defines the Vulkan API version which will be used for creation. Use with
          * VK_API_VERSION_1_X
          * @param enableValidationLayer Enables validation layers for debugging. This way everything that Vulkan does
@@ -67,6 +67,7 @@ namespace VkCore
         static void CheckVkResult(VkResult result);
 
         inline static std::vector<const char*> m_ValidationLayers = {"VK_LAYER_KHRONOS_validation"};
+
     };
 
 } // namespace VkCore

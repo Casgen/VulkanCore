@@ -53,6 +53,8 @@ namespace VkCore
         void CreateDevices();
         void CreateServices();
 
+        void AddDeviceExtension(const char* extension);
+
       protected:
         std::vector<const char*> m_DeviceExtensions = {VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
                                                        VK_KHR_SWAPCHAIN_EXTENSION_NAME};

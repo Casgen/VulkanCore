@@ -14,12 +14,13 @@ namespace VkCore
     class GraphicsPipelineBuilder
     {
       public:
-        GraphicsPipelineBuilder()
+        GraphicsPipelineBuilder(bool isMeshShading = false) : m_IsMeshShading(isMeshShading)
         {
             Init();
         }
 
-        GraphicsPipelineBuilder(const Device& device) : m_Device(device)
+        GraphicsPipelineBuilder(const Device& device, bool isMeshShading = false)
+            : m_Device(device), m_IsMeshShading(isMeshShading)
         {
             Init();
         }
@@ -151,8 +152,6 @@ namespace VkCore
          * */
         GraphicsPipelineBuilder& SetLineWidth(const float lineWidth = 1.0f);
 
-
-
         // ------------------ BLENDING ----------------------
 
         /**
@@ -175,24 +174,22 @@ namespace VkCore
         GraphicsPipelineBuilder& AddBlendAttachment(const vk::PipelineColorBlendAttachmentState blendAttachment);
 
         /**
-         * @brief Adds a color blend attachment state which is automatically disables blending. This is required to do for every
-         * attchment in the Render Pass!
+         * @brief Adds a color blend attachment state which is automatically disables blending. This is required to do
+         * for every attchment in the Render Pass!
          */
         GraphicsPipelineBuilder& AddDisabledBlendAttachment();
-
-
 
         // ---------------------- PIPELINE LAYOUT -------------------------
 
         /**
          * @brief Appends the given descriptor set layouts.
          */
-        GraphicsPipelineBuilder& AddDescriptorLayout(const std::vector<vk::DescriptorSetLayout>& layouts);
+        GraphicsPipelineBuilder& AddDescriptorLayout(const std::vector<vk::DescriptorSetLayout> layouts);
 
         /**
          * @brief Appends the given descriptor set layout.
          */
-        GraphicsPipelineBuilder& AddDescriptorLayout(const vk::DescriptorSetLayout& layout);
+        GraphicsPipelineBuilder& AddDescriptorLayout(const vk::DescriptorSetLayout layout);
 
         /**
          * @brief Sets the descriptor set layouts. Note that this will discard the previously set layouts!
@@ -203,8 +200,6 @@ namespace VkCore
 
         GraphicsPipelineBuilder& BindRenderPass(const vk::RenderPass& renderPass);
 
-
-
         /**
          * @brief Gathers all the data, sets all the necessary pipeline states and creates a new graphics pipeline.
          * @return Vulkan pipeline object;
@@ -212,7 +207,8 @@ namespace VkCore
         vk::Pipeline Build();
 
         /**
-         * @brief Gathers all the data, sets all the necessary pipeline states and layots and builds a new graphics pipeline and its layout.
+         * @brief Gathers all the data, sets all the necessary pipeline states and layots and builds a new graphics
+         * pipeline and its layout.
          * @return Vulkan pipeline object;
          */
         vk::Pipeline Build(vk::PipelineLayout& pipelineLayout);
@@ -225,7 +221,7 @@ namespace VkCore
         void Init();
 
         void ValidateShaderInfo();
-        void ValidateVertexInfo();
+        bool ValidateVertexInfo();
         void ValidateViewportInfo();
 
         Device m_Device;
@@ -253,6 +249,8 @@ namespace VkCore
 
         std::vector<vk::DescriptorSetLayout> m_DescriptorSetLayouts{};
         std::vector<vk::PushConstantRange> m_PushConstantRanges{};
+
+        bool m_IsMeshShading;
     };
 
 } // namespace VkCore

@@ -128,7 +128,7 @@ namespace VkCore
     }
 
     template <>
-    inline vk::Format VertexAttributeBuilder::GetFormat<unsigned char>(uint32_t count)
+    inline vk::Format VertexAttributeBuilder::GetFormat<char>(uint32_t count)
     {
         switch (count)
         {

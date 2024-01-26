@@ -1,7 +1,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <iterator>
 
 #include <stdexcept>
 #include "vulkan/vulkan.hpp"
@@ -11,9 +10,10 @@
 #include "../../../Log/Log.h"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_handles.hpp"
+#include "vulkan/vulkan_structs.hpp"
 
 // Include it always all the way down!
-#include <string>
 #include <vk_mem_alloc.h>
 
 namespace VkCore
@@ -60,46 +60,40 @@ namespace VkCore
                                          const uint32_t srcOffset, const uint32_t dstOffset)
     {
         // Create a Transient pool only for this transfer command.
-        vk::CommandPoolCreateInfo poolInfo{};
-        poolInfo.flags = vk::CommandPoolCreateFlagBits::eTransient;
-        poolInfo.queueFamilyIndex = m_PhysicalDevice.GetQueueFamilyIndices().m_GraphicsFamily.value();
+        vk::CommandPool cmdPool;
+        vk::CommandBuffer cmdBuffer = m_Device.BeginSingleTimeCommands(cmdPool);
 
-        vk::CommandPool commandPool;
-        vk::CommandBuffer commandBuffer;
+        vk::BufferCopy copyRegion{srcOffset, dstOffset, size};
 
-        TRY_CATCH_BEGIN()
+        cmdBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 
-        commandPool = m_Device.CreateCommandPool(poolInfo);
+        m_Device.EndSingleTimeCommands(cmdBuffer, cmdPool);
+    }
 
-        vk::CommandBufferAllocateInfo allocInfo{commandPool, vk::CommandBufferLevel::ePrimary, 1};
+    void VmaAllocatorService::CopyBufferToImage(const VkImage& image, const VkBuffer& srcBuffer,
+                                                const VkDeviceSize size, const vk::Extent2D& resolution)
+    {
+        // Create a Transient pool only for this transfer command.
+        vk::CommandPool cmdPool;
+        vk::CommandBuffer cmdBuffer = m_Device.BeginSingleTimeCommands(cmdPool);
 
-        commandBuffer = m_Device.AllocateCommandBuffers(allocInfo)[0];
+        vk::BufferImageCopy copyRegion{};
+        copyRegion.bufferOffset = 0;
+        copyRegion.bufferRowLength = 0;
+        copyRegion.bufferImageHeight = 0;
 
-        TRY_CATCH_END()
+        copyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+        copyRegion.imageSubresource.mipLevel = 0;
+        copyRegion.imageSubresource.baseArrayLayer = 0;
+        copyRegion.imageSubresource.layerCount = 1;
 
-        // Start the command
-        vk::CommandBufferBeginInfo beginInfo{};
-        beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+        copyRegion.imageOffset = vk::Offset3D{0, 0, 0};
+        copyRegion.imageExtent = vk::Extent3D{resolution.width, resolution.height, 0};
 
-        commandBuffer.begin(beginInfo);
+        cmdBuffer.copyBufferToImage(srcBuffer, image, vk::ImageLayout::eTransferDstOptimal, 1, &copyRegion);
 
-        {
-            vk::BufferCopy copyRegion{srcOffset, dstOffset, size};
+        m_Device.EndSingleTimeCommands(cmdBuffer, cmdPool);
 
-            commandBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
-        }
-
-        commandBuffer.end();
-
-        vk::SubmitInfo submitInfo{};
-        submitInfo.setCommandBuffers(commandBuffer);
-
-        m_Device.GetGraphicsQueue().submit(submitInfo);
-        m_Device.GetGraphicsQueue().waitIdle();
-
-        // Don't forget to free the Command buffer after it is done copying!
-        m_Device.FreeCommandBuffer(commandPool, commandBuffer);
-        m_Device.DestroyCommandPool(commandPool);
     }
 
     VkBuffer VmaAllocatorService::CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
@@ -155,6 +149,37 @@ namespace VkCore
         Utils::CheckVkResult(result);
 
         return handle;
+    }
+
+    VkImage VmaAllocatorService::CreateImage(const void* data, const VkDeviceSize size,
+                                             const vk::ImageCreateInfo& createInfo,
+                                             const VmaAllocationCreateInfo& allocCreateInfo,
+                                             VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo)
+    {
+        if (size <= 0)
+        {
+            LOGF(Vulkan, Fatal,
+                 "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d", size)
+            throw std::runtime_error("Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)!");
+        }
+
+        if (data == nullptr)
+        {
+            const char* errorMsg = "Couldn't allocate buffer on the GPU! Pointer to the data is nullptr!";
+            LOG(Vulkan, Fatal, errorMsg)
+            throw std::runtime_error(errorMsg);
+        }
+
+        VkImage image = VK_NULL_HANDLE;
+
+        TRY_CATCH_BEGIN()
+
+        vmaCreateImage(m_VmaAllocator, reinterpret_cast<const VkImageCreateInfo*>(&createInfo), &allocCreateInfo,
+                       &image, &outAllocation, outAllocationInfo);
+
+        TRY_CATCH_END()
+
+        return image;
     }
 
     VkBuffer VmaAllocatorService::CreateBufferOnGpu(const void* data, const Buffer::BufferInfo bufferInfo,
@@ -242,4 +267,5 @@ namespace VkCore
     {
         vmaUnmapMemory(m_VmaAllocator, allocation);
     }
+
 } // namespace VkCore

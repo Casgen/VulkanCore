@@ -28,7 +28,7 @@ namespace VkCore
         static void ProvideAllocatorService(IAllocatorService* service);
 
       private:
-        inline static IAllocatorService* m_AllocatorService;
+        inline static IAllocatorService* m_AllocatorService = new NullAllocatorService();
         inline static NullAllocatorService m_NullAllocatorService;
     };
 } // namespace VkCore

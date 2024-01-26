@@ -5,7 +5,13 @@
 #include <iostream>
 
 #include "../Log/Log.h"
+#include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_hpp_macros.hpp"
 #include "Utils.h"
+
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 namespace VkCore
 {
@@ -42,7 +48,6 @@ namespace VkCore
         instanceCreateInfo.setPEnabledExtensionNames(instanceExtensions);
 
 #if DEBUG
-
         vk::DebugUtilsMessengerCreateInfoEXT debugCreateInfo = PopulateDebugMessengerCreateInfo();
 
         if (CheckValidationLayerSupport())
@@ -52,11 +57,18 @@ namespace VkCore
         }
 #endif
 
+        // PFN_vkCmdDrawMeshTasksNV vkCmdDrawMeshTasksNV = vkGetDeviceProcAddr(VkDevice device, const char *pName)
+
         vk::Instance instance;
 
         try
         {
             instance = vk::createInstance(instanceCreateInfo);
+
+            vk::DispatchLoaderDynamic dli{};
+            dli.init();
+            dli.init(instance);
+
         }
         catch (const vk::SystemError& err)
         {
@@ -101,7 +113,7 @@ namespace VkCore
 
         const ESeverity severity = static_cast<ESeverity>(messageSeverity);
 
-        Logger::Print(category, severity, pCallbackData->pMessage);
+        Logger::GetLogger()->Print(category, severity, pCallbackData->pMessage);
 
         return VK_FALSE;
     }
@@ -148,10 +160,10 @@ namespace VkCore
                     layerFound = true;
                     break;
                 }
-                
             }
 
-            if (!layerFound) {
+            if (!layerFound)
+            {
                 return false;
             }
         }
@@ -178,6 +190,7 @@ namespace VkCore
                 abort();
         }
     }
+
 
 } // namespace VkCore
 

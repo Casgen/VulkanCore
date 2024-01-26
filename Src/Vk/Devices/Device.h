@@ -17,7 +17,7 @@ namespace VkCore
         Device();
 
         Device(const PhysicalDevice& physicalDevice,
-               const std::vector<const char*>& deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME});
+               const std::vector<const char*> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME});
 
         /**
          * @brief Initializes a Swapchain Object. THIS HAS TO BE CALLED AFTER CREATING A LOGICAL DEVICE!
@@ -45,9 +45,7 @@ namespace VkCore
         void DestroyImageView(const vk::ImageView& imageView);
         void DestroySwapchain(const vk::SwapchainKHR& swapchain);
         void DestroyDescriptorPool(const vk::DescriptorPool& pool);
-        void DestroyDescriptorSetLayout(const vk::DescriptorSetLayout& layout);
-        void DestroyShaderModule(const vk::ShaderModule& module);
-        void DestroyCommandPool(const vk::CommandPool& commandPool);
+        void DestroyDescriptorSetLayout(const vk::DescriptorSetLayout& layout); void DestroyShaderModule(const vk::ShaderModule& module); void DestroyCommandPool(const vk::CommandPool& commandPool);
         void Destroy();
 
         // ------------ GETTERS ------------
@@ -93,9 +91,14 @@ namespace VkCore
 
         void ResetDescriptorPool(const vk::DescriptorPool& pool, const vk::DescriptorPoolResetFlags& resetFlags =
                                                                      vk::Flags<vk::DescriptorPoolResetFlagBits>(0));
+
+
         void UpdateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes);
         void UpdateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes,
                                   std::vector<vk::CopyDescriptorSet>& copies);
+
+        vk::CommandBuffer BeginSingleTimeCommands(vk::CommandPool& outCmdPool) const;
+        void EndSingleTimeCommands(const vk::CommandBuffer& cmdBuffer, const vk::CommandPool& cmdPool) const;
 
         /**
          * Initializes all the queues which can be made (Inits the vk::Queue objects)
@@ -114,6 +117,8 @@ namespace VkCore
 
       private:
         std::shared_ptr<Swapchain> m_Swapchain;
+
+        QueueFamilyIndices m_QueueFamilyIndices;
         vk::Device m_Device;
 
         vk::Queue m_GraphicsQueue;

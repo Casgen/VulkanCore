@@ -1,12 +1,15 @@
 #include "Log.h"
-#include <chrono>
 #include <cstdarg>
 #include <cstdio>
-#include <cstdlib>
-#include <ctime>
 #include <iostream>
-#include <mutex>
 #include <string>
+
+Logger::Logger() {
+    outputLogFile = fopen("Log.txt", "a+");
+    
+    fprintf(outputLogFile, "Logger Initialized: \n\n");
+    fflush(outputLogFile);
+}
 
 void Logger::Printf(const ECategory& category, const ESeverity& severity, const char* format, ...)
 {
@@ -18,21 +21,38 @@ void Logger::Printf(const ECategory& category, const ESeverity& severity, const 
 
     // auto timeStamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
-    std::cout << "Log: [" << severityString << " | " << categoryString << "] Description: ";
+    printf("Log: [%s | %s] Description: ", severityString, categoryString);
+    fprintf(outputLogFile,"Log: [%s | %s] Description: ", severityString, categoryString);
+
+
 
     va_list argptr;
     va_start(argptr, format);
 
+    // the va_arg pointer has to be copied, because in the first vprintf function it invalidates the pointer.
+    va_list argptrFile;
+    va_copy(argptrFile, argptr);
+
     if (severity >= ESeverity::Error)
     {
         vfprintf(stderr, format, argptr);
+        vfprintf(outputLogFile, format, argptrFile);
     }
     else
     {
         vfprintf(stdout, format, argptr);
+        vfprintf(outputLogFile, format, argptrFile);
     }
-    va_end(argptr);
+
+    fprintf(outputLogFile, "\n");
+    fflush(outputLogFile);
+
     printf("\n");
+
+
+    va_end(argptr);
+    va_end(argptrFile);
+
 }
 
 void Logger::Print(const ECategory& category, const ESeverity& severity, const char* message)
@@ -43,14 +63,23 @@ void Logger::Print(const ECategory& category, const ESeverity& severity, const c
     const char* severityString = EvaluateSeverityString(severity);
     const char* categoryString = EvaluateCategoryString(category);
 
-    // auto timeStamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-
     printf("Log: [%s | %s] Description: %s\n", severityString, categoryString, message);
+    fprintf(outputLogFile,"Log: [%s | %s] Description: %s\n", severityString, categoryString, message);
+    fflush(outputLogFile);
 }
 
 void Logger::SetSeverityFilter(const ESeverity& severity)
 {
     m_Filter = severity;
+}
+Logger* Logger::GetLogger() {
+
+    if (m_Logger == nullptr) {
+        m_Logger = new Logger();
+    }
+
+    return m_Logger;
+
 }
 
 const char* Logger::EvaluateSeverityString(ESeverity severity)

@@ -4,6 +4,7 @@
 #include "../SwapChainSupportDetails.h"
 #include "vulkan/vulkan_structs.hpp"
 #include <algorithm>
+#include <stdexcept>
 
 namespace VkCore
 {
@@ -18,27 +19,41 @@ namespace VkCore
             LOG(Vulkan, Fatal, "None of the physical devices support Vulkan!");
         }
 
+#if DEBUG
+        for (const char* ext : requiredExtensions)
+        {
+            LOGF(Vulkan, Verbose, "Required Extension - %s", ext)
+        }
+#endif
+
         for (const auto& device : physicalDevices)
         {
+            vk::PhysicalDeviceProperties deviceProperties = device.getProperties();
+
+            LOGF(Vulkan, Verbose, "Testing device %s", deviceProperties.deviceName.data())
 
             // Define it beforehand, so the next operations can be done.
             QueueFamilyIndices indices = FindQueueFamilyIndices(device, surface);
 
             bool extensionsSupported = CheckDeviceExtensionSupport(device, requiredExtensions);
 
+
             bool swapChainAdequate = false;
             SwapChainSupportDetails swapChainSupport;
 
-            if (extensionsSupported)
+            if (!extensionsSupported)
             {
-                swapChainSupport = QuerySwapChainSupport(device, surface);
-                swapChainAdequate =
-                    !swapChainSupport.m_SurfaceFormats.empty() && !swapChainSupport.m_PresentModes.empty();
+                LOGF(Vulkan, Verbose, "Device %s does not support the extensions!", deviceProperties.deviceName.data())
+                continue;
             }
 
-            if (indices.IsComplete() && extensionsSupported && swapChainAdequate)
+            LOGF(Vulkan, Verbose, "Device %s does support the extensions!", deviceProperties.deviceName.data())
+
+            swapChainSupport = QuerySwapChainSupport(device, surface);
+            swapChainAdequate = !swapChainSupport.m_SurfaceFormats.empty() && !swapChainSupport.m_PresentModes.empty();
+
+            if (indices.IsComplete() && swapChainAdequate)
             {
-                vk::PhysicalDeviceProperties deviceProperties = device.getProperties();
 
                 LOGF(Vulkan, Info, "Suitable physical device has been found. Using %s",
                      deviceProperties.deviceName.data())
@@ -46,9 +61,17 @@ namespace VkCore
                 m_QueueFamilyIndices = indices;
                 m_PhysicalDevice = device;
                 m_SwapChainDetails = swapChainSupport;
-                break;
+                return;
             }
+
+            LOGF(Vulkan, Verbose,
+                 "Device %s is not either swap chain adequate or the graphics family indices are not complete!",
+                 deviceProperties.deviceName.data())
         }
+
+        const char* errMsg = "No suitable device has been found!";
+        LOG(Vulkan, Info, errMsg);
+        throw std::runtime_error(errMsg);
     }
 
     bool PhysicalDevice::CheckDeviceExtensionSupport(const vk::PhysicalDevice& physicalDevice,
@@ -59,17 +82,18 @@ namespace VkCore
 
         for (const auto& property : extensionProperties)
         {
-            if (requiredExtensions.empty()) break;
+            if (requiredExtensions.empty())
+                break;
 
-            auto it = std::find_if(requiredExtensions.begin(), requiredExtensions.end(), [&](const char* const& item) {
-                return strcmp(item, property.extensionName) == 0;
-            });
+            auto it = std::find_if(requiredExtensions.begin(), requiredExtensions.end(),
+                                   [&](const char* const& item) { return strcmp(item, property.extensionName) == 0; });
 
-            if (it != requiredExtensions.end()) {
+            if (it != requiredExtensions.end())
+            {
+                LOGF(Vulkan, Verbose, "Required Extension %s was found", *it)
                 requiredExtensions.erase(it);
             }
         }
-
 
         return requiredExtensions.empty();
     }
@@ -177,6 +201,11 @@ namespace VkCore
         }
 
         return indices;
+    }
+
+    vk::PhysicalDeviceFeatures2 PhysicalDevice::GetPhysicalDeviceFeatures2() const
+    {
+        return m_PhysicalDevice.getFeatures2();
     }
 
 } // namespace VkCore
