@@ -8,10 +8,10 @@ Camera::Camera(const glm::vec3& position, const glm::vec3 lookAt, const float as
     : m_Position(position), m_AspectRatio(aspectRatio)
 {
     m_ProjectionMat = glm::perspective(45.0f, aspectRatio, .001f, 50.f);
-    m_BackVector = glm::normalize(position - lookAt);
-    m_UpVector = glm::vec3(0.f, -1.f, 0.f);
-    m_SideVector = glm::cross(m_UpVector, m_BackVector);
-    m_ViewMat = glm::lookAt(position, lookAt, m_UpVector);
+    m_FwdVector = glm::normalize(lookAt - position);
+    m_UpVector = glm::vec3(0.f, 1.f, 0.f);
+    m_SideVector = glm::cross(m_UpVector, m_FwdVector);
+    m_ViewMat = glm::lookTo(position, m_FwdVector, m_UpVector);
 }
 
 void Camera::Update()
@@ -28,8 +28,8 @@ void Camera::Update()
         m_CurrentMovingDir += glm::vec3(0.f, 1.f, 0.f) * (float)m_MovingBitField.isUp;   // For Upward movement
         m_CurrentMovingDir -= glm::vec3(0.f, 1.f, 0.f) * (float)m_MovingBitField.isDown; // For Downward movement
 
-        m_CurrentMovingDir += m_BackVector * (float)m_MovingBitField.isFwd;  // For Forward movement
-        m_CurrentMovingDir -= m_BackVector * (float)m_MovingBitField.isBack; // For Backward movement
+        m_CurrentMovingDir += m_FwdVector * (float)m_MovingBitField.isFwd;  // For Forward movement
+        m_CurrentMovingDir -= m_FwdVector * (float)m_MovingBitField.isBack; // For Backward movement
     }
     else
     {
@@ -37,7 +37,7 @@ void Camera::Update()
     }
 
     m_Position += -m_CurrentMovingDir * m_CurrAcceleration;
-    m_ViewMat = glm::lookTo(m_Position, -m_BackVector, m_UpVector);
+    m_ViewMat = glm::lookTo(m_Position, -m_FwdVector, m_UpVector);
     UpdateVectors();
 }
 
@@ -83,27 +83,27 @@ void Camera::AddMovementSpeed(const float value)
 
 void Camera::Yaw(const float step)
 {
-    m_Azimuth = m_Azimuth + (-step) * m_RotationSpeed;
+    m_Azimuth = m_Azimuth + (step) * m_RotationSpeed;
     UpdateVectors();
 }
 
 void Camera::Pitch(const float step)
 {
-    float newZenith = (this->m_Zenith + (float)step * m_RotationSpeed);
+    float newZenith = (this->m_Zenith + -(float)step * m_RotationSpeed);
 
     this->m_Zenith = glm::clamp(newZenith, -(glm::pi<float>() / 2), (glm::pi<float>() / 2));
     UpdateVectors();
-    m_ViewMat = glm::lookTo(m_Position, m_BackVector, m_UpVector);
+    m_ViewMat = glm::lookTo(m_Position, m_FwdVector, m_UpVector);
 }
 
 void Camera::UpdateVectors()
 {
-    m_BackVector = glm::vec3(sin(this->m_Azimuth) * cos(this->m_Zenith), sin(this->m_Zenith),
-                             -cos(this->m_Azimuth) * cos(this->m_Zenith));
+    m_FwdVector = glm::vec3(sin(this->m_Azimuth) * cos(this->m_Zenith), sin(this->m_Zenith),
+                            -cos(this->m_Azimuth) * cos(this->m_Zenith));
 
-    m_UpVector = glm::vec3(0,-1.f,0.f);
+    m_UpVector = glm::vec3(0, 1.f, 0.f);
 
-    m_SideVector = glm::cross(m_UpVector, m_BackVector);
+    m_SideVector = glm::cross(m_UpVector, m_FwdVector);
 }
 
 void Camera::RecreateProjection(const int width, const int height)

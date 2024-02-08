@@ -48,7 +48,7 @@ class Camera
     void SetMovementSpeed(const float value);
 
     /** 
-     * adds the movement speed by the given value. The value is also being clamped to the Max movement speed and 0.f
+     * adds the movement speed by the given value. The value is also being clamped to the Max and min movement IncMovementSpeed
      */
     void AddMovementSpeed(const float value);
 
@@ -81,7 +81,7 @@ class Camera
   private:
     // Vectors of a Camera
     glm::vec3 m_Position;
-    glm::vec3 m_BackVector, m_SideVector, m_UpVector;
+    glm::vec3 m_FwdVector, m_SideVector, m_UpVector;
 
     // Camera Matrices
     glm::mat4 m_ViewMat;

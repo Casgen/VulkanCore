@@ -435,10 +435,10 @@ namespace VkCore
 
         switch (shaderKind)
         {
-        case shaderc_glsl_default_task_shader:
-            return vk::ShaderStageFlagBits::eTaskNV;
-        case shaderc_glsl_default_mesh_shader:
-            return vk::ShaderStageFlagBits::eMeshNV;
+        case shaderc_task_shader:
+            return vk::ShaderStageFlagBits::eTaskEXT;
+        case shaderc_mesh_shader:
+            return vk::ShaderStageFlagBits::eMeshEXT;
         }
 
         LOG(Shader, Error,
