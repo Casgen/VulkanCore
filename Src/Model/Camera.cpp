@@ -9,7 +9,7 @@
 #include <ostream>
 
 Camera::Camera(const glm::vec3& position, const glm::vec3 lookAt, const float aspectRatio)
-    : m_Position(position), m_AspectRatio(aspectRatio), m_Zenith(0.f), m_Azimuth(0.f)
+    : m_Position(position), m_AspectRatio(aspectRatio)
 {
     m_ProjectionMat = glm::perspective(45.0f, aspectRatio, .001f, 50.f);
     m_FwdVector = glm::normalize(position - lookAt);

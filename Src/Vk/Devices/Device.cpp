@@ -324,14 +324,13 @@ namespace VkCore
         poolInfo.flags = vk::CommandPoolCreateFlagBits::eTransient;
         poolInfo.queueFamilyIndex = m_QueueFamilyIndices.m_GraphicsFamily.value();
 
-        vk::CommandPool commandPool;
         vk::CommandBuffer commandBuffer;
 
         TRY_CATCH_BEGIN()
 
-        commandPool = m_Device.createCommandPool(poolInfo);
+        outCmdPool = m_Device.createCommandPool(poolInfo);
 
-        vk::CommandBufferAllocateInfo allocInfo{commandPool, vk::CommandBufferLevel::ePrimary, 1};
+        vk::CommandBufferAllocateInfo allocInfo{outCmdPool, vk::CommandBufferLevel::ePrimary, 1};
 
         commandBuffer = m_Device.allocateCommandBuffers(allocInfo)[0];
 
