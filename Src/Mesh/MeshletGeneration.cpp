@@ -13,9 +13,8 @@ std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts,
     Meshlet meshlet;
 
     std::vector<Meshlet> meshlets;
-    std::unordered_map<uint32_t, glm::vec3> vertex_accu;
 
-    std::vector<uint32_t> index_stack;
+    std::vector<uint32_t> index_stack, vertex_stack;
 
     index_stack.reserve(maxIndices);
 
@@ -32,35 +31,41 @@ std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts,
         {
             triangleCount += uint32_t((i + 1) % 3 == 0);
 
-            auto it = vertex_accu.find(indices[i]);
+            bool isVertexPresent = false;
 
-            if (it == vertex_accu.end())
+            for (uint32_t j = 0; j < vertex_stack.size(); j++) {
+                isVertexPresent = indices[i] == vertex_stack[j];
+                if (isVertexPresent)
+                    break;
+            }
+
+            if (!isVertexPresent)
             {
-                if (maxVerts <= vertex_accu.size())
+                if (maxVerts <= vertex_stack.size())
                     break;
 
-                vertex_accu[indices[i]] = positions[indices[i]];
+                vertex_stack.emplace_back(indices[i]);
             }
 
             index_stack.push_back(indices[i]);
         }
 
-        assert(maxVerts >= vertex_accu.size());
+        assert(maxVerts >= vertex_stack.size());
 
         uint32_t i = 0;
 
-        for (auto& vert : vertex_accu)
+        for (auto& vert : vertex_stack)
         {
-            meshlet.vertices[i] = vert.first;
+            meshlet.vertices[i] = vert;
+            i++;
         }
 
         assert(maxIndices >= index_stack.size());
 
-        meshlet.vertexCount = vertex_accu.size();
+        meshlet.vertexCount = vertex_stack.size();
 
         for (uint32_t i = 0; i < triangleCount * 3; i++)
         {
-
             meshlet.indices[i] = index_stack[i];
         }
 
@@ -69,7 +74,7 @@ std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts,
         meshlets.push_back(meshlet);
 
         index_stack.clear();
-        vertex_accu.clear();
+        vertex_stack.clear();
 
         offset += triangleCount * 3;
     }
