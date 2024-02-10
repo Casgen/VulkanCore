@@ -8,6 +8,7 @@
 #include "../Devices/Device.h"
 #include "../../Model/Shaders/ShaderData.h"
 #include "../Vertex/VertexAttributeBuilder.h"
+#include "vulkan/vulkan_enums.hpp"
 
 namespace VkCore
 {
@@ -145,6 +146,9 @@ namespace VkCore
          * forming polygons (Counter clockwise or clockwise). By default it is set to Clockwise.
          */
         GraphicsPipelineBuilder& FrontFaceDirection(const vk::FrontFace frontFace);
+
+
+        GraphicsPipelineBuilder& SetCullMode(const vk::CullModeFlags cullMode);
 
         /**
          * @brief Sets the thickness of the lines when Polygons are drawn with lines. By default it is

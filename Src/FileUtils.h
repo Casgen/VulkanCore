@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <vector>
 #include <string>
 
@@ -12,6 +13,8 @@ class FileUtils
 
 public:
     static std::vector<char> ReadFile(const std::string& filename);
+
+    static char* ReadFileC(const char* filename, size_t& size);
 
     static VkCore::ImageData ReadImage(const std::string& filename, unsigned int desiredChannels = STBI_rgb_alpha);
 

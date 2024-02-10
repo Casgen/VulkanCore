@@ -187,6 +187,12 @@ namespace VkCore
         return *this;
     }
 
+    GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetCullMode(const vk::CullModeFlags cullMode)
+    {
+        m_RasterizationInfo.setCullMode(cullMode);
+        return *this;
+    }
+
     GraphicsPipelineBuilder& GraphicsPipelineBuilder::EnableDepthBias(const bool isEnabled)
     {
         m_RasterizationInfo.setDepthBiasEnable(true);

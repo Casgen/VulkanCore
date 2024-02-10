@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <filesystem>
 #include <sstream>
 #include <stdexcept>
@@ -31,13 +32,13 @@ namespace VkCore
     ShaderData ShaderLoader::LoadClassicShader(const std::filesystem::path& path, const shaderc::Compiler& compiler,
                                                const shaderc::CompileOptions& compileOptions)
     {
-
-        std::vector<char> data = FileUtils::ReadFile(path.string());
+        size_t fileSize = 0;
+        char* data = FileUtils::ReadFileC(path.string().data(), fileSize);
 
         shaderc_shader_kind shaderKind = DetermineShaderType(path.string());
 
         shaderc::SpvCompilationResult result =
-            compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data());
+            compiler.CompileGlslToSpv(data, shaderKind, path.stem().string().data());
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success)
         {
@@ -60,6 +61,8 @@ namespace VkCore
         ShaderData shaderData;
         shaderData.m_Data = {result.cbegin(), result.cend()};
         shaderData.m_StageFlags = ShaderKindToClassicShaderStageFlag(shaderKind);
+
+        delete[] data;
 
         return shaderData;
     }
@@ -219,13 +222,14 @@ namespace VkCore
             if (extension == ".mesh" || extension == ".task" || extension == ".frag")
             {
                 LOGF(Shader, Info, "Found a file: %s", pathEntry.string().data())
-
-                std::vector<char> data = FileUtils::ReadFile(pathEntry.string());
+                    
+                size_t fileSize = 0;
+                char* data = FileUtils::ReadFileC(pathEntry.string().data(), fileSize);
 
                 shaderc_shader_kind shaderKind = DetermineShaderType(pathEntry.string());
 
                 shaderc::SpvCompilationResult result =
-                    compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data());
+                    compiler.CompileGlslToSpv(data, shaderKind, path.stem().string().data());
 
                 if (result.GetCompilationStatus() != shaderc_compilation_status_success)
                 {
@@ -251,6 +255,8 @@ namespace VkCore
                 shaderData.m_StageFlags = ShaderKindToMeshShaderStageFlag(shaderKind, isNVExtension);
 
                 modulesMap.emplace_back(shaderData);
+
+                delete[] data;
 
                 continue;
             }

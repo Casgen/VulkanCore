@@ -6,8 +6,7 @@
 #include <unordered_map>
 
 std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts, uint32_t maxIndices,
-                                                              const std::vector<uint32_t> indices,
-                                                              const std::vector<glm::vec3> positions)
+                                                              const std::vector<uint32_t> indices)
 {
 
     Meshlet meshlet;
@@ -80,60 +79,4 @@ std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts,
     }
 
     return meshlets;
-
-    // for offset: u32 = 0; offset < u32(len(indices)); {
-    //
-    //        meshlet = Meshlet{}
-    //
-    //        offset_end := min(offset + max_indices, u32(len(indices)))
-    //
-    // 	indices_slice := indices[offset:offset_end]
-    //
-    // 	triangle_count: u32 = 0
-    //
-    // 	for index, i in indices_slice {
-    //
-    // 		triangle_count += u32((i + 1) % 3) == 0 ? 1 : 0
-    //
-    // 		_, ok := vertex_accu[index]
-    //
-    // 		if !ok {
-    // 			if max_verts <= u32(len(vertex_accu)) {
-    // 				break
-    // 			}
-    // 			vertex_accu[index] = vertices[index]
-    // 		}
-    //
-    // 		append(&index_stack, index)
-    // 	}
-    //
-    // 	vert_index: u32 = 0
-    // 	for key, _ in vertex_accu {
-    //
-    // 		if vert_index >= max_verts {
-    // 			break
-    // 		}
-    //
-    // 		meshlet.vertices[vert_index] = key
-    // 		vert_index += 1
-    // 	}
-    //
-    // 	meshlet.vertex_count = u32(len(vertex_accu))
-    //
-    //        for i in (0..<triangle_count*3) {
-    //            meshlet.indices[i] = index_stack[i]
-    //        }
-    //
-    // 	meshlet.index_count = u32(triangle_count * 3)
-    //
-    // 	append(&meshlets, meshlet)
-    //
-    //        clear(&index_stack)
-    //        clear(&vertex_accu)
-    //
-    //        offset += triangle_count * 3
-    // }
-    //
-    //
-    // return meshlets
 }

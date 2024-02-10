@@ -5,19 +5,17 @@
 #include "glm/ext/scalar_constants.hpp"
 #include "glm/geometric.hpp"
 #include <cstdio>
-#include <iostream>
-#include <ostream>
 
 Camera::Camera(const glm::vec3& position, const glm::vec3 lookAt, const float aspectRatio)
     : m_Position(position), m_AspectRatio(aspectRatio)
 {
     m_ProjectionMat = glm::perspective(45.0f, aspectRatio, .001f, 50.f);
-    m_FwdVector = glm::normalize(position - lookAt);
+    m_FwdVector = glm::normalize(lookAt - position);
 
     // The up vector is reversed due to the Vulkan Coordinate system having Y-Axis flipped
     m_UpVector = glm::vec3(0.f, -1.f, 0.f);
     m_SideVector = glm::cross(m_UpVector, m_FwdVector);
-    m_ViewMat = glm::lookTo(position, m_FwdVector, m_UpVector);
+    m_ViewMat = glm::lookTo(position, -m_FwdVector, m_UpVector);
 }
 
 void Camera::Update()
@@ -46,13 +44,6 @@ void Camera::Update()
     m_ViewMat = glm::lookTo(m_Position, -m_FwdVector, m_UpVector);
     UpdateVectors();
 
-    // printf("Up - {%.2f, %.2f, %.2f}\n", m_UpVector.x, m_UpVector.y, m_UpVector.z);
-    // printf("Back - {%.2f, %.2f, %.2f}\n", m_FwdVector.x, m_FwdVector.y, m_FwdVector.z);
-    // printf("Side - {%.2f, %.2f, %.2f}\n", m_SideVector.x, m_SideVector.y, m_SideVector.z);
-    // printf("\33[2K\r");
-    //
-
-    std::cout << m_Azimuth << std::endl;
 }
 
 void Camera::SetIsMovingRight(const bool value)
@@ -97,7 +88,7 @@ void Camera::AddMovementSpeed(const float value)
 
 void Camera::Yaw(const float step)
 {
-    m_Azimuth = fmod(m_Azimuth + -(step) * m_RotationSpeed, glm::pi<float>() * 2);
+    m_Azimuth = fmod(m_Azimuth + (step) * -m_RotationSpeed, glm::pi<float>() * 2);
     UpdateVectors();
 }
 

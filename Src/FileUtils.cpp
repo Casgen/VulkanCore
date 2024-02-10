@@ -1,4 +1,6 @@
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <stdexcept>
 
@@ -23,6 +25,26 @@ std::vector<char> FileUtils::ReadFile(const std::string& filename)
     return buffer;
 }
 
+char* FileUtils::ReadFileC(const char* filename, size_t& size)
+{
+    FILE* file = fopen(filename, "r");
+
+    if (!file)
+        throw std::runtime_error("Failed to open file!");
+
+    fseek(file, 0, SEEK_END);
+
+    size = ftell(file) + 1;
+    char* data = (char*)calloc(size, sizeof(char));
+
+    fseek(file, 0, SEEK_SET);
+    fread(data, size, 1, file);
+
+    fclose(file);
+
+    return data;
+}
+
 VkCore::ImageData FileUtils::ReadImage(const std::string& filename, unsigned int desiredChannels)
 {
     return ReadImage(filename.data());
@@ -40,7 +62,8 @@ VkCore::ImageData FileUtils::ReadImage(const char* filename, unsigned int desire
     imageData.height = static_cast<uint32_t>(height);
     imageData.channels = static_cast<uint32_t>(channels);
 
-    if (imageData.data == nullptr) {
+    if (imageData.data == nullptr)
+    {
         throw std::runtime_error("Failed to load an image! File doesn't exist or is corrupted!");
     }
 
