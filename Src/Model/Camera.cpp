@@ -9,8 +9,8 @@
 Camera::Camera(const glm::vec3& position, const glm::vec3 lookAt, const float aspectRatio)
     : m_Position(position), m_AspectRatio(aspectRatio)
 {
-    m_ProjectionMat = glm::perspective(45.0f, aspectRatio, .001f, 50.f);
-    m_FwdVector = glm::normalize(lookAt - position);
+    m_ProjectionMat = glm::perspective(45.0f, aspectRatio, .01f, 50.f);
+    m_FwdVector = -glm::normalize(lookAt - position);
 
     // The up vector is reversed due to the Vulkan Coordinate system having Y-Axis flipped
     m_UpVector = glm::vec3(0.f, -1.f, 0.f);
@@ -115,7 +115,7 @@ void Camera::RecreateProjection(const int width, const int height)
 {
     m_AspectRatio = width / static_cast<float>(height);
 
-    m_ProjectionMat = glm::perspective(45.0f, m_AspectRatio, 0.001f, 100.f);
+    m_ProjectionMat = glm::perspective(45.0f, m_AspectRatio, 0.001f, 50.f);
     return;
 }
 

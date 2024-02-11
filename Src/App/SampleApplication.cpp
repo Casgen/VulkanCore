@@ -8,6 +8,7 @@
 #include "../Vk/Swapchain.h"
 #include "../Model/MatrixBuffer.h"
 #include "../Model/Shaders/ShaderLoader.h"
+#include "vulkan/vulkan_enums.hpp"
 
 namespace VkCore
 {
@@ -20,7 +21,7 @@ namespace VkCore
     void SampleApplication::PostInitVulkan()
     {
 
-        m_Camera = Camera({0.f, 0.f, -1.f}, {0.f, 0.f, 0.f}, (float)m_WinWidth / m_WinHeight);
+        m_Camera = Camera({0.f, 0.f, -2.f}, {0.f, 0.f, 0.f}, (float)m_WinWidth / m_WinHeight);
 
         CreateBuffers();
         CreateDescriptorSets();
@@ -38,10 +39,27 @@ namespace VkCore
             -0.5f, -0.5f, 1.f, 0.f, 0.f, .0f, .5f, 0.f, 1.f, 0.f, .5f, -0.5f, 0.f, 0.f, 1.f,
         };
 
-        m_VertexBuffer = Buffer(vk::BufferUsageFlagBits::eVertexBuffer);
-        m_VertexBuffer.InitializeOnGpu(vertices, 60);
+        float cubeVertices[56] = {
+        -1, -1, -1, 1,  1, 0, 0,
+        1, -1, -1, 1,   1, 0, 0,
+        1, -1, 1, 1,    1, 0, 0,
+        -1, -1, 1, 1,   1, 0, 0,
 
-        m_AttributeBuilder.PushAttribute<float>(2).PushAttribute<float>(3).SetBinding(0);
+        -1, 1, -1, 1,   0, 1, 0,
+        1, 1, -1, 1,    0, 1, 0,
+        1, 1, 1, 1,     0, 1, 0,
+        -1, 1, 1, 1,    0, 1, 0,
+    };
+        
+
+        m_VertexBuffer = Buffer(vk::BufferUsageFlagBits::eVertexBuffer);
+        m_VertexBuffer.InitializeOnGpu(cubeVertices, 56 * sizeof(float));
+
+        m_AttributeBuilder.PushAttribute<float>(4).PushAttribute<float>(3).SetBinding(0);
+
+        m_IndexBuffer = Buffer(vk::BufferUsageFlagBits::eIndexBuffer);
+        m_IndexBuffer.InitializeOnGpu(m_CubeIndices.data(), m_CubeIndices.size()*sizeof(uint32_t));
+
 
         for (int i = 0; i < m_Device.GetSwapchain()->GetImageCount(); i++)
         {
@@ -234,10 +252,12 @@ namespace VkCore
                 LOG(Vulkan, Fatal, "Failed to create a Destination buffer!")
             }
 
+            commandBuffer.bindIndexBuffer(m_IndexBuffer.GetVkBuffer(), 0, vk::IndexType::eUint32);
+
             // TODO fix the bugged creationg of VkBuffers
             commandBuffer.bindVertexBuffers(0, {m_VertexBuffer.GetVkBuffer()}, {0});
 
-            commandBuffer.draw(3, 1, 0, 0);
+            commandBuffer.drawIndexed(m_CubeIndices.size(), 1, 0, 0, 0);
 
             commandBuffer.endRenderPass();
         }
