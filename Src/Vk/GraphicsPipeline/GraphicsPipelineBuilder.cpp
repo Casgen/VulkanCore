@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <stdexcept>
 #include "glm/vec4.hpp"
@@ -241,6 +242,7 @@ namespace VkCore
     GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetLineWidth(const float lineWidth)
     {
         m_RasterizationInfo.setLineWidth(lineWidth);
+
         return *this;
     }
 

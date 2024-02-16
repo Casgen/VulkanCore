@@ -57,14 +57,14 @@ namespace VkCore
         Buffer m_VertexBuffer;
         Buffer m_IndexBuffer;
 
-    std::vector<uint32_t> m_CubeIndices = {
-        0, 5, 1,    0, 4, 5,
-        1, 6, 2,    1, 5, 6,
-        2, 6, 7,    2, 7, 3,
-        3, 7, 4,    3, 4, 0,
-        3, 0, 1,    3, 1, 2,
-        7, 5, 4,    7, 6, 5,
-    };
+        std::vector<uint32_t> m_CubeIndices = {
+            0, 5, 1,    0, 4, 5,
+            1, 6, 2,    1, 5, 6,
+            2, 6, 7,    2, 7, 3,
+            3, 7, 4,    3, 4, 0,
+            3, 0, 1,    3, 1, 2,
+            7, 5, 4,    7, 6, 5,
+        };
 
         VkBuffer m_VkBuffer = VK_NULL_HANDLE;
         VmaAllocationInfo m_VertexAllocInfo{};

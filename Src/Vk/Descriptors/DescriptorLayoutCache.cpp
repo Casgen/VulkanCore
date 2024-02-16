@@ -20,6 +20,7 @@ namespace VkCore
     vk::DescriptorSetLayout DescriptorLayoutCache::CreateDescriptorLayout(
         const vk::DescriptorSetLayoutCreateInfo& createInfo)
     {
+
         DescriptorLayoutInfo layoutInfo;
 
         layoutInfo.m_Bindings.reserve(createInfo.bindingCount);
