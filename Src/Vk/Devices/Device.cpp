@@ -14,7 +14,6 @@
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_handles.hpp"
-#include "vulkan/vulkan_hpp_macros.hpp"
 #include "vulkan/vulkan_structs.hpp"
 
 static std::vector<const char*> layerExtensions{

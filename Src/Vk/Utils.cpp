@@ -7,7 +7,6 @@
 #include "../Log/Log.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
-#include "vulkan/vulkan_hpp_macros.hpp"
 #include "Utils.h"
 
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1

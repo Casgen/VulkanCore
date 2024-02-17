@@ -6,3 +6,9 @@ Vendor/*.make
 *.make
 Makefile
 
+.idea/
+.vs/
+
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user

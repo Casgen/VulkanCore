@@ -14,7 +14,7 @@ project "VulkanCore"
     targetdir("../bin/" .. output_dir .. "/%{prj.name}")
     objdir("../obj/" .. output_dir .. "/%{prj.name}")
 
-    links { "GLFW", "GLM", "assimp" }
+    links { "GLFW", "GLM" }
 
     includedirs {
         "Vendor/glfw/include/",
@@ -35,6 +35,7 @@ project "VulkanCore"
         "Vendor/vma/**.hpp",
     }
 
+
     defines {
         "VMA_STATIC_VULKAN_FUNCTIONS"
     }
@@ -52,7 +53,7 @@ project "VulkanCore"
         }
 
         -- On linux, make sure that you have installed libvulkan-dev through your package manager!
-        links { "vulkan", "pthread", "libshaderc_shared"}
+        links { "vulkan", "pthread", "libshaderc_shared", "assimp"}
 
 
         defines {
@@ -69,13 +70,15 @@ project "VulkanCore"
 
         libdirs {
             "$(VULKAN_SDK)/Lib",
-            "$(VK_SDK_PATH)/Lib"
+            "$(VK_SDK_PATH)/Lib",
+            "Vendor/assimp/lib/windows-x64"
         }
 
-        links { "vulkan-1", "shaderc_combined" }
-
+        links { "vulkan-1", "shaderc_combined", "assimp-vc143-mtd" }
 
         defines { "_WIN32" }
+
+        buildoptions { "/MD" }
 
     filter "configurations:Release"
         defines { "NDEBUG" }
@@ -86,9 +89,5 @@ project "VulkanCore"
         symbols "on"
 
 
-    filter { "configurations:Debug", "platforms:x64" }
-        buildoptions { "/MTd" }
 
-    filter { "configurations:Release", "platforms:Windows-x64" }
-        buildoptions { "/MT" }
 
