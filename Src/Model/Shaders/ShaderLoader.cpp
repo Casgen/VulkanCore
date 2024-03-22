@@ -8,6 +8,7 @@
 #include "ShaderData.h"
 #include "ShaderLoader.h"
 #include "../../FileUtils.h"
+#include "shaderc/env.h"
 #include "shaderc/shaderc.h"
 #include "shaderc/shaderc.hpp"
 #include "../../Log/Log.h"
@@ -37,8 +38,7 @@ namespace VkCore
 
         shaderc_shader_kind shaderKind = DetermineShaderType(path.string());
 
-        shaderc::SpvCompilationResult result =
-            compiler.CompileGlslToSpv(data, shaderKind, path.stem().string().data());
+        shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(data, shaderKind, path.stem().string().data());
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success)
         {
@@ -205,10 +205,10 @@ namespace VkCore
         shaderc::Compiler compiler;
         shaderc::CompileOptions compileOptions;
 
-        if (isOptimized)
-        {
-            compileOptions.SetOptimizationLevel(shaderc_optimization_level_size);
-        }
+        // if (isOptimized)
+        // {
+        //     compileOptions.SetOptimizationLevel(shaderc_optimization_level_size);
+        // }
 
         std::vector<ShaderData> modulesMap;
 
@@ -219,17 +219,24 @@ namespace VkCore
             std::string extension = pathEntry.extension().string();
             bool isNVExtension = pathEntry.string().find(".nv.") != -1;
 
+            if (!isNVExtension && extension == ".mesh")
+            {
+                compileOptions.SetTargetSpirv(shaderc_spirv_version_1_5);
+                compileOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+            }
+
             if (extension == ".mesh" || extension == ".task" || extension == ".frag")
             {
                 LOGF(Shader, Info, "Found a file: %s", pathEntry.string().data())
-                    
+
+
                 size_t fileSize = 0;
                 char* data = FileUtils::ReadFileC(pathEntry.string().data(), fileSize);
 
                 shaderc_shader_kind shaderKind = DetermineShaderType(pathEntry.string());
 
                 shaderc::SpvCompilationResult result =
-                    compiler.CompileGlslToSpv(data, shaderKind, path.stem().string().data());
+                    compiler.CompileGlslToSpv(data, shaderKind, path.stem().string().data(), compileOptions);
 
                 if (result.GetCompilationStatus() != shaderc_compilation_status_success)
                 {

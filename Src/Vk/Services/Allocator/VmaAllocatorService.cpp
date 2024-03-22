@@ -3,6 +3,7 @@
 #include <cstring>
 
 #include <stdexcept>
+#include "../../Devices/DeviceManager.h"
 #include "vulkan/vulkan.hpp"
 
 #include "VmaAllocatorService.h"
@@ -18,15 +19,15 @@
 
 namespace VkCore
 {
-    VmaAllocatorService::VmaAllocatorService(Device& device, PhysicalDevice& physicalDevice, vk::Instance& instance)
-        : m_Device(device), m_PhysicalDevice(physicalDevice)
+    VmaAllocatorService::VmaAllocatorService(vk::Instance& instance)
+
     {
         VmaAllocatorCreateInfo createInfo;
 
         // TODO: Refine the API Version definition
         createInfo.vulkanApiVersion = VK_API_VERSION_1_3;
-        createInfo.device = *device;
-        createInfo.physicalDevice = *physicalDevice;
+        createInfo.device = *DeviceManager::GetDevice();
+        createInfo.physicalDevice = *DeviceManager::GetPhysicalDevice();
         createInfo.instance = instance;
         createInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
 
@@ -56,18 +57,24 @@ namespace VkCore
         LOG(Vulkan, Error, errorMsg)
     }
 
+    void VmaAllocatorService::DestroyImage(vk::Image& image, VmaAllocation& allocation)
+    {
+        vmaDestroyImage(m_VmaAllocator, image, allocation);
+
+    }
+
     void VmaAllocatorService::CopyBuffer(const VkBuffer& srcBuffer, const VkBuffer& dstBuffer, const size_t size,
                                          const uint32_t srcOffset, const uint32_t dstOffset)
     {
         // Create a Transient pool only for this transfer command.
         vk::CommandPool cmdPool;
-        vk::CommandBuffer cmdBuffer = m_Device.BeginSingleTimeCommands(cmdPool);
+        vk::CommandBuffer cmdBuffer = DeviceManager::GetDevice().BeginSingleTimeCommands(cmdPool);
 
         vk::BufferCopy copyRegion{srcOffset, dstOffset, size};
 
         cmdBuffer.copyBuffer(srcBuffer, dstBuffer, 1, &copyRegion);
 
-        m_Device.EndSingleTimeCommands(cmdBuffer, cmdPool);
+        DeviceManager::GetDevice().EndSingleTimeCommands(cmdBuffer, cmdPool);
     }
 
     void VmaAllocatorService::CopyBufferToImage(const VkImage& image, const VkBuffer& srcBuffer,
@@ -75,7 +82,7 @@ namespace VkCore
     {
         // Create a Transient pool only for this transfer command.
         vk::CommandPool cmdPool;
-        vk::CommandBuffer cmdBuffer = m_Device.BeginSingleTimeCommands(cmdPool);
+        vk::CommandBuffer cmdBuffer = DeviceManager::GetDevice().BeginSingleTimeCommands(cmdPool);
 
         vk::BufferImageCopy copyRegion{};
         copyRegion.bufferOffset = 0;
@@ -92,8 +99,7 @@ namespace VkCore
 
         cmdBuffer.copyBufferToImage(srcBuffer, image, vk::ImageLayout::eTransferDstOptimal, 1, &copyRegion);
 
-        m_Device.EndSingleTimeCommands(cmdBuffer, cmdPool);
-
+        DeviceManager::GetDevice().EndSingleTimeCommands(cmdBuffer, cmdPool);
     }
 
     VkBuffer VmaAllocatorService::CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
@@ -176,6 +182,45 @@ namespace VkCore
 
         vmaCreateImage(m_VmaAllocator, reinterpret_cast<const VkImageCreateInfo*>(&createInfo), &allocCreateInfo,
                        &image, &outAllocation, outAllocationInfo);
+
+        TRY_CATCH_END()
+
+        return image;
+    }
+
+    VkImage VmaAllocatorService::CreateImage(const uint32_t width, const uint32_t height, const vk::Format format,
+                                             vk::ImageTiling imageTiling, vk::ImageUsageFlags usageFlags,
+                                             const VmaAllocationCreateInfo& allocCreateInfo,
+                                             VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo)
+    {
+        if (width <= 0 || height <= 0)
+        {
+            LOGF(Vulkan, Fatal,
+                 "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given resolution was %dx%d",
+                 width, height)
+            throw std::runtime_error("Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)!");
+        }
+
+        VkImageCreateInfo imageInfo{};
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.extent.width = width;
+        imageInfo.extent.height = height;
+        imageInfo.extent.depth = 1;
+        imageInfo.mipLevels = 1;
+        imageInfo.arrayLayers = 1;
+        imageInfo.tiling = static_cast<VkImageTiling>(imageTiling);
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.usage = static_cast<VkImageUsageFlags>(usageFlags) | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        imageInfo.format = static_cast<VkFormat>(format);
+
+        VkImage image = VK_NULL_HANDLE;
+
+        TRY_CATCH_BEGIN()
+
+        vmaCreateImage(m_VmaAllocator, &imageInfo, &allocCreateInfo, &image, &outAllocation, outAllocationInfo);
 
         TRY_CATCH_END()
 

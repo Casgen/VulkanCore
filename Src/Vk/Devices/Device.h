@@ -6,6 +6,7 @@
 
 #include "PhysicalDevice.h"
 #include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
 {
@@ -42,7 +43,9 @@ namespace VkCore
 
         // ---------- DESTROYERS -----------
 
+        void DestroyRenderPass(const vk::RenderPass& renderPass);
         void DestroyImageView(const vk::ImageView& imageView);
+        void DestroyImage(const vk::Image& image);
         void DestroySwapchain(const vk::SwapchainKHR& swapchain);
         void DestroyDescriptorPool(const vk::DescriptorPool& pool);
         void DestroyDescriptorSetLayout(const vk::DescriptorSetLayout& layout); void DestroyShaderModule(const vk::ShaderModule& module); void DestroyCommandPool(const vk::CommandPool& commandPool);

@@ -37,7 +37,6 @@ namespace VkCore
 
             bool extensionsSupported = CheckDeviceExtensionSupport(device, requiredExtensions);
 
-
             bool swapChainAdequate = false;
             SwapChainSupportDetails swapChainSupport;
 
@@ -135,6 +134,10 @@ namespace VkCore
     QueueFamilyIndices PhysicalDevice::GetQueueFamilyIndices() const
     {
         return m_QueueFamilyIndices;
+    }
+    vk::FormatProperties PhysicalDevice::GetFormatProperties(const vk::Format format) const
+    {
+        return m_PhysicalDevice.getFormatProperties(format);
     }
 
     vk::PhysicalDeviceProperties PhysicalDevice::GetProperties() const

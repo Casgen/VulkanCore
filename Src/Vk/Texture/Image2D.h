@@ -8,11 +8,11 @@
 
 namespace VkCore
 {
-    class Texture2D
+    class Image2D
     {
       public:
-        Texture2D(){};
-        Texture2D(const char* filename);
+        Image2D(){};
+        Image2D(const char* filename);
 
         void InitializeOnTheGpu(const uint32_t mipLevels = 1);
         void TransitionImageLayout(const VkCore::Device& device, const vk::Format format,

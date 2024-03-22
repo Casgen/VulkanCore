@@ -32,7 +32,8 @@ std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts,
 
             bool isVertexPresent = false;
 
-            for (uint32_t j = 0; j < vertex_stack.size(); j++) {
+            for (uint32_t j = 0; j < vertex_stack.size(); j++)
+            {
                 isVertexPresent = indices[i] == vertex_stack[j];
                 if (isVertexPresent)
                     break;
@@ -79,4 +80,28 @@ std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts,
     }
 
     return meshlets;
+}
+
+std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimizedTest(uint32_t maxVerts, uint32_t maxIndices,
+                                                                  const std::vector<uint32_t> indices,
+                                                                  const uint32_t verticesSize)
+{
+    std::vector<Meshlet> meshlets;
+    Meshlet meshlet = {};
+
+    std::vector<uint8_t> vertices(verticesSize, 255);
+
+    uint8_t vertexCount = 0;
+
+    for (uint32_t i = 0; i < indices.size(); i += 3)
+    {
+
+        uint32_t a = indices[i + 1];
+        uint32_t b = indices[i + 2];
+        uint32_t c = indices[i + 3];
+
+        // if (vertexCount > maxVerts) {
+        //     meshlets.emplace_back(_Args &&__args...)
+        // }
+    }
 }

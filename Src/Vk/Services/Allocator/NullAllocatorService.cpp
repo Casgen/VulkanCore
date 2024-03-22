@@ -24,8 +24,24 @@ namespace VkCore
 
         return VK_NULL_HANDLE;
     }
+    VkImage NullAllocatorService::CreateImage(const uint32_t width, const uint32_t height, const vk::Format format,
+                                              vk::ImageTiling imageTiling, vk::ImageUsageFlags usageFlags,
+                                              const VmaAllocationCreateInfo& allocCreateInfo,
+                                              VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo)
+    {
+        LOG(Allocation, Fatal,
+            "Allocation service couldn't be located! Please make sure you have provided an allocation service!")
+
+        return VK_NULL_HANDLE;
+    }
 
     void NullAllocatorService::DestroyBuffer(Buffer& buffer)
+    {
+        LOG(Allocation, Fatal,
+            "Allocation service couldn't be located! Please make sure you have provided an allocation service!")
+    }
+
+    void NullAllocatorService::DestroyImage(vk::Image& image, VmaAllocation& allocation)
     {
         LOG(Allocation, Fatal,
             "Allocation service couldn't be located! Please make sure you have provided an allocation service!")
@@ -39,12 +55,10 @@ namespace VkCore
     }
 
     void NullAllocatorService::CopyBufferToImage(const VkImage& image, const VkBuffer& srcBuffer,
-                                                 const VkDeviceSize size, const vk::Extent2D& resolution)
-    {
+                                                 const VkDeviceSize size, const vk::Extent2D& resolution){
 
         LOG(Allocation, Fatal,
-            "Allocation service couldn't be located! Please make sure you have provided an allocation service!")
-    }
+            "Allocation service couldn't be located! Please make sure you have provided an allocation service!")}
 
     VkBuffer NullAllocatorService::CreateBufferOnGpu(const void* data, const Buffer::BufferInfo bufferInfo,
                                                      VmaAllocation& allocation, VmaAllocationInfo* allocationInfo)

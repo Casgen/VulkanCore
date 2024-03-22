@@ -8,6 +8,8 @@
 #include "../Vk/Utils.h"
 #include "../Vk/Services/Allocator/VmaAllocatorService.h"
 #include "../Vk/Services/ServiceLocator.h"
+#include "../Vk/Devices/DeviceManager.h"
+#include "vulkan/vulkan_core.h"
 
 namespace VkCore
 {
@@ -18,6 +20,9 @@ namespace VkCore
         s_Instance = this;
 
         Logger::SetSeverityFilter(ESeverity::Verbose);
+
+        DeviceManager::AddDeviceExtension(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+        DeviceManager::AddDeviceExtension(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
     }
 
     void BaseApplication::InitVulkan()
@@ -32,13 +37,15 @@ namespace VkCore
 
         CreateInstance();
         m_Window->CreateSurface(m_Instance);
-        CreateDevices();
+
+        DeviceManager::Initialize(m_Instance, m_Window->GetSurface());
         CreateServices();
 
-        m_Device.InitSwapChain(m_PhysicalDevice, m_Window->GetSurface(), m_WinWidth, m_WinHeight);
-        m_DescriptorBuilder = DescriptorBuilder(m_Device);
+        DeviceManager::GetDevice().InitSwapChain(DeviceManager::GetPhysicalDevice(), m_Window->GetSurface(), m_WinWidth,
+                                                 m_WinHeight);
+        m_DescriptorBuilder = DescriptorBuilder(DeviceManager::GetDevice());
 
-        m_RenderPass = VkCore::SwapchainRenderPass(m_Device);
+        m_RenderPass = VkCore::SwapchainRenderPass(DeviceManager::GetDevice());
         PostInitVulkan();
     }
 
@@ -62,12 +69,12 @@ namespace VkCore
 
     void BaseApplication::PreShutdown()
     {
-        m_Device.WaitIdle();
+        DeviceManager::GetDevice().WaitIdle();
     }
 
     void BaseApplication::PostShutdown()
     {
-        m_Device.Destroy();
+        DeviceManager::GetDevice().Destroy();
         m_Instance.destroy();
     }
 
@@ -126,21 +133,10 @@ namespace VkCore
 #endif
     }
 
-    void BaseApplication::CreateDevices()
-    {
-        m_PhysicalDevice = VkCore::PhysicalDevice(m_Instance, m_Window->GetSurface(), m_DeviceExtensions);
-        m_Device = VkCore::Device(m_PhysicalDevice, m_DeviceExtensions);
-    }
-
     void BaseApplication::CreateServices()
     {
-        VmaAllocatorService* allocationService = new VmaAllocatorService(m_Device, m_PhysicalDevice, m_Instance);
+        VmaAllocatorService* allocationService = new VmaAllocatorService(m_Instance);
         ServiceLocator::ProvideAllocatorService(allocationService);
-    }
-
-    void BaseApplication::AddDeviceExtension(const char* extension)
-    {
-        m_DeviceExtensions.emplace_back(extension);
     }
 
 } // namespace VkCore

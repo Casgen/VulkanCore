@@ -1,5 +1,5 @@
 
-#include "Texture2D.h"
+#include "Image2D.h"
 #include "../../FileUtils.h"
 #include "../Services/ServiceLocator.h"
 #include "vulkan/vulkan_core.h"
@@ -11,12 +11,12 @@
 namespace VkCore
 {
 
-    Texture2D::Texture2D(const char* filename)
+    Image2D::Image2D(const char* filename)
     {
         m_ImgData = FileUtils::ReadImage(filename);
     }
 
-    void Texture2D::InitializeOnTheGpu(const uint32_t mipLevels)
+    void Image2D::InitializeOnTheGpu(const uint32_t mipLevels)
     {
         Buffer::BufferInfo stagingBufferInfo;
 
@@ -77,7 +77,7 @@ namespace VkCore
         m_ImgData.Free();
     }
 
-    void Texture2D::TransitionImageLayout(const VkCore::Device& device, const vk::Format format,
+    void Image2D::TransitionImageLayout(const VkCore::Device& device, const vk::Format format,
                                           const vk::ImageLayout oldLayout, const vk::ImageLayout newLayout)
     {
         vk::CommandPool cmdPool;

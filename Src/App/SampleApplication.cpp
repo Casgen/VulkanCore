@@ -5,6 +5,7 @@
 #include "GLFW/glfw3.h"
 #include "../Log/Log.h"
 #include "../Vk/Utils.h"
+#include "../Vk/Devices/DeviceManager.h"
 #include "../Vk/Swapchain.h"
 #include "../Model/MatrixBuffer.h"
 #include "../Model/Shaders/ShaderLoader.h"
@@ -61,7 +62,7 @@ namespace VkCore
         m_IndexBuffer.InitializeOnGpu(m_CubeIndices.data(), m_CubeIndices.size()*sizeof(uint32_t));
 
 
-        for (int i = 0; i < m_Device.GetSwapchain()->GetImageCount(); i++)
+        for (int i = 0; i < DeviceManager::GetDevice().GetSwapchain()->GetImageCount(); i++)
         {
             Buffer matBuffer = Buffer(vk::BufferUsageFlagBits::eUniformBuffer);
             matBuffer.InitializeOnCpu(sizeof(MatrixBuffer));
@@ -72,7 +73,7 @@ namespace VkCore
 
     void SampleApplication::CreateDescriptorSets()
     {
-        m_DescriptorBuilder = DescriptorBuilder(m_Device);
+        m_DescriptorBuilder = DescriptorBuilder(DeviceManager::GetDevice());
 
         vk::DescriptorSet tempSet;
 
@@ -91,7 +92,7 @@ namespace VkCore
     {
         const std::vector<ShaderData> shaders = ShaderLoader::LoadClassicShaders("VulkanCore/Res/Shaders/");
 
-        m_PipelineBuilder = GraphicsPipelineBuilder(m_Device);
+        m_PipelineBuilder = GraphicsPipelineBuilder(DeviceManager::GetDevice());
 
         m_Pipeline = m_PipelineBuilder.BindShaderModules(shaders)
                          .BindRenderPass(m_RenderPass.GetVkRenderPass())
@@ -106,7 +107,7 @@ namespace VkCore
 
     void SampleApplication::CreateFramebuffers()
     {
-        std::vector<vk::ImageView> imageViews = m_Device.GetSwapchain()->GetImageViews();
+        std::vector<vk::ImageView> imageViews = DeviceManager::GetDevice().GetSwapchain()->GetImageViews();
 
         TRY_CATCH_BEGIN()
 
@@ -120,7 +121,7 @@ namespace VkCore
                 .setRenderPass(m_RenderPass.GetVkRenderPass())
                 .setAttachments(view);
 
-            m_SwapchainFramebuffers.emplace_back(m_Device.CreateFrameBuffer(createInfo));
+            m_SwapchainFramebuffers.emplace_back(DeviceManager::GetDevice().CreateFrameBuffer(createInfo));
         }
 
         TRY_CATCH_END()
@@ -130,9 +131,9 @@ namespace VkCore
     {
 
         vk::CommandPoolCreateInfo createInfo{vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-                                             m_PhysicalDevice.GetQueueFamilyIndices().m_GraphicsFamily.value()};
+                                             DeviceManager::GetPhysicalDevice().GetQueueFamilyIndices().m_GraphicsFamily.value()};
 
-        m_CommandPool = m_Device.CreateCommandPool(createInfo);
+        m_CommandPool = DeviceManager::GetDevice().CreateCommandPool(createInfo);
     }
 
     void SampleApplication::CreateCommandBuffer()
@@ -142,10 +143,10 @@ namespace VkCore
 
         allocateInfo.setLevel(vk::CommandBufferLevel::ePrimary)
             .setCommandPool(m_CommandPool)
-            .setCommandBufferCount(m_Device.GetSwapchain()->GetImageViews().size());
+            .setCommandBufferCount(DeviceManager::GetDevice().GetSwapchain()->GetImageViews().size());
 
         TRY_CATCH_BEGIN()
-        m_CommandBuffers = m_Device.AllocateCommandBuffers(allocateInfo);
+        m_CommandBuffers = DeviceManager::GetDevice().AllocateCommandBuffers(allocateInfo);
         TRY_CATCH_END()
     }
 
@@ -158,12 +159,12 @@ namespace VkCore
 
         TRY_CATCH_BEGIN()
 
-        for (int i = 0; i < m_Device.GetSwapchain()->GetNumberOfSwapBuffers(); i++)
+        for (int i = 0; i < DeviceManager::GetDevice().GetSwapchain()->GetNumberOfSwapBuffers(); i++)
         {
-            m_ImageAvailableSemaphores.emplace_back(m_Device.CreateSemaphore(imageAvailableCreateInfo));
-            m_RenderFinishedSemaphores.emplace_back(m_Device.CreateSemaphore(renderFinishedCreateInfo));
+            m_ImageAvailableSemaphores.emplace_back(DeviceManager::GetDevice().CreateSemaphore(imageAvailableCreateInfo));
+            m_RenderFinishedSemaphores.emplace_back(DeviceManager::GetDevice().CreateSemaphore(renderFinishedCreateInfo));
 
-            m_InFlightFences.emplace_back(m_Device.CreateFence(fenceCreateInfo));
+            m_InFlightFences.emplace_back(DeviceManager::GetDevice().CreateFence(fenceCreateInfo));
         }
 
         TRY_CATCH_END()
@@ -171,16 +172,16 @@ namespace VkCore
 
     void SampleApplication::DrawFrame()
     {
-        m_Device.WaitForFences(m_InFlightFences[m_CurrentFrame], false);
+    DeviceManager::GetDevice().WaitForFences(m_InFlightFences[m_CurrentFrame], false);
 
         uint32_t imageIndex;
-        vk::ResultValue<uint32_t> result = m_Device.AcquireNextImageKHR(m_ImageAvailableSemaphores[m_CurrentFrame]);
+        vk::ResultValue<uint32_t> result = DeviceManager::GetDevice().AcquireNextImageKHR(m_ImageAvailableSemaphores[m_CurrentFrame]);
 
         Utils::CheckVkResult(result.result);
 
         imageIndex = result.value;
 
-        m_Device.ResetFences(m_InFlightFences[m_CurrentFrame]);
+    DeviceManager::GetDevice().ResetFences(m_InFlightFences[m_CurrentFrame]);
         m_CommandBuffers[m_CurrentFrame].reset();
 
         RecordCommandBuffer(m_CommandBuffers[m_CurrentFrame], imageIndex);
@@ -195,11 +196,11 @@ namespace VkCore
 
         TRY_CATCH_BEGIN()
 
-        m_Device.GetGraphicsQueue().submit(submitInfo, m_InFlightFences[m_CurrentFrame]);
+        DeviceManager::GetDevice().GetGraphicsQueue().submit(submitInfo, m_InFlightFences[m_CurrentFrame]);
 
         TRY_CATCH_END()
 
-        vk::SwapchainKHR swapchain = m_Device.GetSwapchain()->GetVkSwapchain();
+        vk::SwapchainKHR swapchain = DeviceManager::GetDevice().GetSwapchain()->GetVkSwapchain();
 
         vk::PresentInfoKHR presentInfo{};
         presentInfo.setWaitSemaphores(m_RenderFinishedSemaphores[m_CurrentFrame])
@@ -207,9 +208,9 @@ namespace VkCore
             .setImageIndices(imageIndex)
             .setPResults(nullptr);
 
-        Utils::CheckVkResult(m_Device.GetPresentQueue().presentKHR(presentInfo));
+        Utils::CheckVkResult(DeviceManager::GetDevice().GetPresentQueue().presentKHR(presentInfo));
 
-        m_CurrentFrame = (m_CurrentFrame + 1) % m_Device.GetSwapchain()->GetNumberOfSwapBuffers();
+        m_CurrentFrame = (m_CurrentFrame + 1) % DeviceManager::GetDevice().GetSwapchain()->GetNumberOfSwapBuffers();
     }
 
     void SampleApplication::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, const uint32_t imageIndex)

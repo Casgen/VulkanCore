@@ -4,6 +4,7 @@
 
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
@@ -38,6 +39,12 @@ namespace VkCore
         static vk::DebugUtilsMessengerCreateInfoEXT PopulateDebugMessengerCreateInfo();
 
         /**
+         * Finds the "Best" depth buffer format according to the PhysicalDeviceFormatProperties
+         */
+        static vk::Format FindSupportedFormat(const std::vector<vk::Format>& candidates, const vk::ImageTiling tiling,
+                                              vk::FormatFeatureFlags featureFlags);
+
+        /**
          * @brief Acts as a callback function for the validation layers. With this the errors are logged into the
          * console. DO NOT USE IT BY ITSELF.
          * @param messageSeverity A bitfield representing level of severity
@@ -67,7 +74,6 @@ namespace VkCore
         static void CheckVkResult(VkResult result);
 
         inline static std::vector<const char*> m_ValidationLayers = {"VK_LAYER_KHRONOS_validation"};
-
     };
 
 } // namespace VkCore

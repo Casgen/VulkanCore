@@ -52,6 +52,7 @@ namespace VkCore
         // ------------ GETTERS ------------
 
         SwapChainSupportDetails GetSwapChainSupportDetails() const;
+        vk::FormatProperties GetFormatProperties(const vk::Format format) const;
         QueueFamilyIndices GetQueueFamilyIndices() const;
         vk::PhysicalDeviceProperties GetProperties() const;
         vk::PhysicalDeviceMemoryProperties GetMemoryProperties() const;

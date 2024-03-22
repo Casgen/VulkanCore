@@ -7,7 +7,7 @@
 #include "../Vk/Descriptors/DescriptorBuilder.h"
 #include "../Vk/Devices/Device.h"
 #include "../Platform/Window.h"
-#include "../Vk/RenderPass.h"
+#include "../Vk/SwapchainRenderPass.h"
 #include "../Vk/GraphicsPipeline/GraphicsPipelineBuilder.h"
 #include "../Event/Event.h"
 #include "../Event/KeyEvent.h"
@@ -53,20 +53,12 @@ namespace VkCore
         void CreateDevices();
         void CreateServices();
 
-        void AddDeviceExtension(const char* extension);
-
       protected:
-        std::vector<const char*> m_DeviceExtensions = {VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
-                                                       VK_KHR_SWAPCHAIN_EXTENSION_NAME};
-
         MouseState m_MouseState;
 
         vk::DebugUtilsMessengerEXT m_DebugMessenger;
         vk::Instance m_Instance;
-        RenderPass m_RenderPass;
-
-        PhysicalDevice m_PhysicalDevice;
-        Device m_Device;
+        SwapchainRenderPass m_RenderPass;
 
         uint32_t m_CurrentFrame = 0;
 

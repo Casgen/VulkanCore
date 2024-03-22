@@ -188,9 +188,19 @@ namespace VkCore
         return m_Device.createFence(createInfo);
     }
 
+    void Device::DestroyRenderPass(const vk::RenderPass& renderPass)
+    {
+        m_Device.destroyRenderPass(renderPass);
+    }
+
     void Device::DestroyImageView(const vk::ImageView& imageView)
     {
         m_Device.destroyImageView(imageView);
+    }
+
+    void Device::DestroyImage(const vk::Image& image)
+    {
+        m_Device.destroyImage(image);
     }
 
     void Device::DestroySwapchain(const vk::SwapchainKHR& swapchain)

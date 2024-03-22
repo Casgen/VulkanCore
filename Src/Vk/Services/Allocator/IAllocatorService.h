@@ -42,6 +42,18 @@ namespace VkCore
         virtual VkImage CreateImage(const void* data, const VkDeviceSize size, const vk::ImageCreateInfo& createInfo,
                                     const VmaAllocationCreateInfo& allocCreateInfo, VmaAllocation& outAllocation,
                                     VmaAllocationInfo* outAllocationInfo = nullptr) = 0;
+        /**
+         * @brief Allocates creates a new VkImage.
+         * @param width
+         * @param height
+         * @param createInfo
+         * @param outAllocation
+         * #param outAlloationInfo - optional
+         */
+        virtual VkImage CreateImage(const uint32_t width, const uint32_t height, const vk::Format format,
+                                    vk::ImageTiling imageTiling, vk::ImageUsageFlags usageFlags,
+                                    const VmaAllocationCreateInfo& allocCreateInfo, VmaAllocation& outAllocation,
+                                    VmaAllocationInfo* outAllocationInfo = nullptr) = 0;
 
         virtual void CopyBufferToImage(const VkImage& image, const VkBuffer& srcBuffer, const VkDeviceSize size,
                                        const vk::Extent2D& resolution) = 0;
@@ -50,6 +62,13 @@ namespace VkCore
          * @param buffer - buffer to destroy
          */
         virtual void DestroyBuffer(Buffer& buffer) = 0;
+
+        /**
+         * Destroys the image and frees the memory.
+         * @param image - image to destroy.
+         * @param allocation - image allocation associated with it.
+         */
+        virtual void DestroyImage(vk::Image& image, VmaAllocation& allocation) = 0;
 
         /**
          * @brief Copies the data from the source buffer to the destination buffer. A Command buffer is used to transfer

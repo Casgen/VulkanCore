@@ -5,8 +5,12 @@
 #include <iostream>
 
 #include "../Log/Log.h"
+#include "Devices/DeviceManager.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_hpp_macros.hpp"
+#include "vulkan/vulkan_structs.hpp"
 #include "Utils.h"
 
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
@@ -67,7 +71,6 @@ namespace VkCore
             vk::DispatchLoaderDynamic dli{};
             dli.init();
             dli.init(instance);
-
         }
         catch (const vk::SystemError& err)
         {
@@ -89,6 +92,29 @@ namespace VkCore
         }
 
         return instance;
+    }
+    vk::Format Utils::FindSupportedFormat(const std::vector<vk::Format>& candidates, const vk::ImageTiling tiling,
+                                          vk::FormatFeatureFlags featureFlags)
+    {
+        for (vk::Format format : candidates)
+        {
+
+            vk::FormatProperties props = DeviceManager::GetPhysicalDevice().GetFormatProperties(format);
+
+            if (tiling == vk::ImageTiling::eLinear && (props.linearTilingFeatures & featureFlags) == featureFlags)
+            {
+                return format;
+            }
+            else if (tiling == vk::ImageTiling::eOptimal &&
+                     (props.optimalTilingFeatures & featureFlags) == featureFlags)
+            {
+                return format;
+            }
+        }
+
+        const char* errMsg = "Couldn't find supported format!";
+        LOG(Vulkan, Error, errMsg)
+        throw std::runtime_error(errMsg);
     }
 
     VKAPI_ATTR VkBool32 VKAPI_CALL Utils::DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -189,7 +215,6 @@ namespace VkCore
                 abort();
         }
     }
-
 
 } // namespace VkCore
 

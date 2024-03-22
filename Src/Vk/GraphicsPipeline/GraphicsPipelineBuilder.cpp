@@ -11,6 +11,7 @@
 #include "../Utils.h"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {
@@ -166,6 +167,37 @@ namespace VkCore
     GraphicsPipelineBuilder& GraphicsPipelineBuilder::EnableDepthClamping(const bool isEnabled)
     {
         m_RasterizationInfo.setDepthClampEnable(isEnabled);
+
+        return *this;
+    }
+
+    GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetDepthStencilState(
+        const vk::PipelineDepthStencilStateCreateInfo& createInfo)
+    {
+        m_DepthStencilState = createInfo;
+
+        return *this;
+    }
+
+    GraphicsPipelineBuilder& GraphicsPipelineBuilder::EnableDepthTest()
+    {
+        m_DepthStencilState.depthTestEnable = true;
+        m_DepthStencilState.depthWriteEnable = true;
+        m_DepthStencilState.depthCompareOp = vk::CompareOp::eLess;
+
+        // TODO: Maybe address this later?
+        m_DepthStencilState.depthBoundsTestEnable = false;
+        m_DepthStencilState.stencilTestEnable = false;
+
+        return *this;
+    }
+
+    GraphicsPipelineBuilder& GraphicsPipelineBuilder::EnableStencilTest(const vk::StencilOpState backState,
+                                                                        const vk::StencilOpState frontState)
+    {
+        m_DepthStencilState.stencilTestEnable = true;
+        m_DepthStencilState.back = backState;
+        m_DepthStencilState.front = frontState;
 
         return *this;
     }
@@ -329,28 +361,32 @@ namespace VkCore
         vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo{};
         dynamicStateCreateInfo.setDynamicStates(m_DynamicStates);
 
-        m_PipelineCreateInfo.setSubpass(0)
-            .setLayout(pipelineLayout)
-            .setPDynamicState(&dynamicStateCreateInfo)
-            .setPColorBlendState(&m_BlendStateCreateInfo)
-            .setSubpass(0)
-            .setPViewportState(&viewportStateCreateInfo)
-            .setPStages(m_ShaderStageCreateInfos.data())
-            .setPMultisampleState(&m_MultisampleCreateInfo)
-            .setStageCount(m_ShaderStageCreateInfos.size())
-            .setPDepthStencilState(nullptr)
-            .setPRasterizationState(&m_RasterizationInfo);
+        m_PipelineCreateInfo.subpass = 0;
+        m_PipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
+        m_PipelineCreateInfo.pColorBlendState = &m_BlendStateCreateInfo;
+        m_PipelineCreateInfo.pDepthStencilState = &m_DepthStencilState;
+        m_PipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
+        m_PipelineCreateInfo.stageCount = m_ShaderStageCreateInfos.size();
+        m_PipelineCreateInfo.pStages = m_ShaderStageCreateInfos.data();
+        m_PipelineCreateInfo.pMultisampleState = &m_MultisampleCreateInfo;
+        m_PipelineCreateInfo.pRasterizationState = &m_RasterizationInfo;
+        m_PipelineCreateInfo.layout = pipelineLayout;
 
-        if (m_VertexInputAttributes.size() == 0)
+        if (m_VertexInputAttributes.size() == 0 || m_IsMeshShading)
             m_PipelineCreateInfo.setPVertexInputState(nullptr);
         else
             m_PipelineCreateInfo.setPVertexInputState(&vertexInputState);
 
-        m_PipelineCreateInfo
-            .setPInputAssemblyState(&m_VertexInputAssembly)
-            // These member variables are for creating a derivative of this pipeline. Won't be used here.
-            .setBasePipelineIndex(-1)
-            .setBasePipelineHandle(VK_NULL_HANDLE);
+        if (m_IsMeshShading)
+        {
+            m_PipelineCreateInfo.setPInputAssemblyState(nullptr);
+        }
+        else
+        {
+            m_PipelineCreateInfo.setPInputAssemblyState(&m_VertexInputAssembly);
+        }
+        // These member variables are for creating a derivative of this pipeline. Won't be used here.
+        m_PipelineCreateInfo.setBasePipelineIndex(-1).setBasePipelineHandle(VK_NULL_HANDLE);
 
         TRY_CATCH_BEGIN()
 
@@ -540,6 +576,15 @@ namespace VkCore
             .setPSampleMask(nullptr)
             .setAlphaToOneEnable(false)
             .setAlphaToCoverageEnable(false);
+
+        m_DepthStencilState.front = vk::StencilOpState();
+        m_DepthStencilState.back = vk::StencilOpState();
+        m_DepthStencilState.stencilTestEnable = false;
+        m_DepthStencilState.depthTestEnable = false;
+        m_DepthStencilState.depthWriteEnable = false;
+        m_DepthStencilState.depthCompareOp = vk::CompareOp::eLess;
+        m_DepthStencilState.minDepthBounds = 0.0f;
+        m_DepthStencilState.maxDepthBounds = 1.0f;
 
         m_BlendStateCreateInfo.setLogicOpEnable(false);
         m_BlendStateCreateInfo.setLogicOp(vk::LogicOp::eCopy);

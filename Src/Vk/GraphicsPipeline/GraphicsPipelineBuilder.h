@@ -5,10 +5,12 @@
 
 #include "vulkan/vulkan.hpp"
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "../Devices/Device.h"
 #include "../../Model/Shaders/ShaderData.h"
 #include "../Vertex/VertexAttributeBuilder.h"
 #include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {
@@ -130,6 +132,18 @@ namespace VkCore
          */
         GraphicsPipelineBuilder& EnableDepthClamping(const bool isEnabled);
 
+        GraphicsPipelineBuilder& SetDepthStencilState(const vk::PipelineDepthStencilStateCreateInfo& createInfo);
+
+        /**
+         * Enables depth and stencil testing in the pipeline.
+         */
+        GraphicsPipelineBuilder& EnableDepthTest();
+
+        /**
+         * Enables stencil testing to the pipeline. MAKE SURE YOU HAVE A DEPTH IMAGE FORMAT THAT SUPPORTS STENCIL!
+         */
+        GraphicsPipelineBuilder& EnableStencilTest(const vk::StencilOpState backState, const vk::StencilOpState frontState);
+
         /**
          * @brief tells vulkan how to polygons should be drawn (Fill, lines, or as only their points).
          * By default it is set to vk::PolygonMode:eFill.
@@ -245,8 +259,8 @@ namespace VkCore
         std::vector<vk::DynamicState> m_DynamicStates;
 
         vk::PipelineRasterizationStateCreateInfo m_RasterizationInfo{};
-
         vk::PipelineMultisampleStateCreateInfo m_MultisampleCreateInfo{};
+        vk::PipelineDepthStencilStateCreateInfo m_DepthStencilState{};
 
         std::vector<vk::PipelineColorBlendAttachmentState> m_ColorBlendAttachmentStates{};
         vk::PipelineColorBlendStateCreateInfo m_BlendStateCreateInfo{};

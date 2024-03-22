@@ -1,23 +1,22 @@
 #pragma once
 #include <cstdint>
 
-#include "../../Devices/Device.h"
-#include "../../Devices/PhysicalDevice.h"
 #include "IAllocatorService.h"
 #include "vk_mem_alloc.h"
 #include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_structs.hpp"
-#include "../../Texture/ImageData.h"
 
 namespace VkCore
 {
     class VmaAllocatorService : public IAllocatorService
     {
       public:
-        VmaAllocatorService(Device& device, PhysicalDevice& physicalDevice, vk::Instance& instance);
+        VmaAllocatorService(vk::Instance& instance);
         ~VmaAllocatorService();
 
         void DestroyBuffer(Buffer& buffer) override;
+        void DestroyImage(vk::Image& image, VmaAllocation& allocation) override;
 
         /**
          * @brief Allocates and creates a new buffer.
@@ -38,6 +37,20 @@ namespace VkCore
          * #param outAlloationInfo - optional
          */
         VkImage CreateImage(const void* data, const VkDeviceSize size, const vk::ImageCreateInfo& createInfo,
+                            const VmaAllocationCreateInfo& allocCreateInfo, VmaAllocation& outAllocation,
+                            VmaAllocationInfo* outAllocationInfo = nullptr) override;
+        /**
+         * @brief Allocates creates a new VkImage.
+         * @param width
+         * @param height
+         * @param format - Specifies the image format
+         * @param tiling
+         * @param usageFlags - How is the image going to be used
+         * @param outAllocation - Output Allocation struct
+         * #param outAlloationInfo - output allocation info struct (optional)
+         */
+        VkImage CreateImage(const uint32_t width, const uint32_t height, const vk::Format format,
+                            vk::ImageTiling imageTiling, vk::ImageUsageFlags usageFlags,
                             const VmaAllocationCreateInfo& allocCreateInfo, VmaAllocation& outAllocation,
                             VmaAllocationInfo* outAllocationInfo = nullptr) override;
         /**
@@ -77,9 +90,6 @@ namespace VkCore
 
       private:
         VmaAllocator m_VmaAllocator;
-
-        PhysicalDevice m_PhysicalDevice;
-        Device m_Device;
     };
 
 } // namespace VkCore
