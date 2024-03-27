@@ -4,9 +4,10 @@
 #include <iostream>
 #include <string>
 
-Logger::Logger() {
+Logger::Logger()
+{
     outputLogFile = fopen("Log.txt", "a+");
-    
+
     fprintf(outputLogFile, "Logger Initialized: \n\n");
     fflush(outputLogFile);
 }
@@ -22,9 +23,7 @@ void Logger::Printf(const ECategory& category, const ESeverity& severity, const 
     // auto timeStamp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
     printf("Log: [%s | %s] Description: ", severityString, categoryString);
-    fprintf(outputLogFile,"Log: [%s | %s] Description: ", severityString, categoryString);
-
-
+    fprintf(outputLogFile, "Log: [%s | %s] Description: ", severityString, categoryString);
 
     va_list argptr;
     va_start(argptr, format);
@@ -49,10 +48,8 @@ void Logger::Printf(const ECategory& category, const ESeverity& severity, const 
 
     printf("\n");
 
-
     va_end(argptr);
     va_end(argptrFile);
-
 }
 
 void Logger::Print(const ECategory& category, const ESeverity& severity, const char* message)
@@ -64,7 +61,7 @@ void Logger::Print(const ECategory& category, const ESeverity& severity, const c
     const char* categoryString = EvaluateCategoryString(category);
 
     printf("Log: [%s | %s] Description: %s\n", severityString, categoryString, message);
-    fprintf(outputLogFile,"Log: [%s | %s] Description: %s\n", severityString, categoryString, message);
+    fprintf(outputLogFile, "Log: [%s | %s] Description: %s\n", severityString, categoryString, message);
     fflush(outputLogFile);
 }
 
@@ -72,14 +69,15 @@ void Logger::SetSeverityFilter(const ESeverity& severity)
 {
     m_Filter = severity;
 }
-Logger* Logger::GetLogger() {
+Logger* Logger::GetLogger()
+{
 
-    if (m_Logger == nullptr) {
+    if (m_Logger == nullptr)
+    {
         m_Logger = new Logger();
     }
 
     return m_Logger;
-
 }
 
 const char* Logger::EvaluateSeverityString(ESeverity severity)
@@ -137,6 +135,9 @@ const char* Logger::EvaluateCategoryString(ECategory category)
         break;
     case ECategory::Shader:
         return "SHADER";
+        break;
+    case ECategory::Assimp:
+        return "ASSIMP";
         break;
 
     // Vulkan Specific

@@ -11,17 +11,17 @@
     }                                                                                                                  \
     catch (const vk::SystemError& err)                                                                                 \
     {                                                                                                                  \
-        Logger::GetLogger()->Logger::Print(ECategory::SystemError, ESeverity::Error, err.what());                                           \
+        Logger::GetLogger()->Logger::Print(ECategory::SystemError, ESeverity::Error, err.what());                      \
         exit(-1);                                                                                                      \
     }                                                                                                                  \
     catch (std::exception & err)                                                                                       \
     {                                                                                                                  \
-        Logger::GetLogger()->Logger::Print(ECategory::Exception, ESeverity::Error, err.what());                                             \
+        Logger::GetLogger()->Logger::Print(ECategory::Exception, ESeverity::Error, err.what());                        \
         exit(-1);                                                                                                      \
     }                                                                                                                  \
     catch (...)                                                                                                        \
     {                                                                                                                  \
-        Logger::GetLogger()->Logger::Print(ECategory::Unknown, ESeverity::Error, "Unknown error!");                                         \
+        Logger::GetLogger()->Logger::Print(ECategory::Unknown, ESeverity::Error, "Unknown error!");                    \
         exit(-1);                                                                                                      \
     }
 
@@ -36,22 +36,23 @@ enum class ESeverity : uint32_t
 
 enum class ECategory : uint8_t
 {
-    Window = 0x0,
-    Vulkan = 0x1,
-    Application = 0x2,
-    Event = 0x3,
-    Rendering = 0x4,
-    Exception = 0x5,
-    SystemError = 0x6,
-    Unknown = 0x7,
-    Shader = 0x8,
+    Window = 0x00,
+    Vulkan = 0x01,
+    Application = 0x02,
+    Event = 0x03,
+    Rendering = 0x04,
+    Exception = 0x05,
+    SystemError = 0x06,
+    Unknown = 0x07,
+    Shader = 0x08,
+    Assimp = 0x09,
 
     // Vulkan specific
-    Validation = 0x9,
-    Performance = 0xA,
-    DeviceAddressBinding = 0xB,
-    General = 0xC,
-    Allocation = 0xD
+    Validation = 0x0A,
+    Performance = 0x0B,
+    DeviceAddressBinding = 0x0C,
+    General = 0x0D,
+    Allocation = 0x0E
 };
 
 class Logger
@@ -93,9 +94,9 @@ class Logger
 };
 
 #ifdef DEBUG
-    #define LOGF(Category, Severity, Format, ...)                                                                          \
-Logger::GetLogger()->Printf(ECategory::Category, ESeverity::Severity, Format, __VA_ARGS__);
-    #define LOG(Category, Severity, Format) Logger::GetLogger()->Print(ECategory::Category, ESeverity::Severity, Format);
+#define LOGF(Category, Severity, Format, ...)                                                                          \
+    Logger::GetLogger()->Printf(ECategory::Category, ESeverity::Severity, Format, __VA_ARGS__);
+#define LOG(Category, Severity, Format) Logger::GetLogger()->Print(ECategory::Category, ESeverity::Severity, Format);
 #else
 #define LOGF(Category, Severity, Format, ...)
 #define LOG(Category, Severity, Format)
