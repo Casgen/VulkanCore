@@ -22,7 +22,7 @@ namespace VkCore
     void SampleApplication::PostInitVulkan()
     {
 
-        m_Camera = Camera({0.f, 0.f, -2.f}, {0.f, 0.f, 0.f}, (float)m_WinWidth / m_WinHeight);
+        m_Camera = Camera({0.f, 0.f, -2.f}, {0.f, 0.f, 0.f}, (float)m_Window->GetWidth() / m_Window->GetHeight());
 
         CreateBuffers();
         CreateDescriptorSets();
@@ -31,7 +31,7 @@ namespace VkCore
         CreateCommandPool();
         CreateCommandBuffer();
         CreateSyncObjects();
-   }
+    }
 
     void SampleApplication::CreateBuffers()
     {
@@ -41,17 +41,10 @@ namespace VkCore
         };
 
         float cubeVertices[56] = {
-        -1, -1, -1, 1,  1, 0, 0,
-        1, -1, -1, 1,   1, 0, 0,
-        1, -1, 1, 1,    1, 0, 0,
-        -1, -1, 1, 1,   1, 0, 0,
+            -1, -1, -1, 1, 1, 0, 0, 1, -1, -1, 1, 1, 0, 0, 1, -1, 1, 1, 1, 0, 0, -1, -1, 1, 1, 1, 0, 0,
 
-        -1, 1, -1, 1,   0, 1, 0,
-        1, 1, -1, 1,    0, 1, 0,
-        1, 1, 1, 1,     0, 1, 0,
-        -1, 1, 1, 1,    0, 1, 0,
-    };
-        
+            -1, 1,  -1, 1, 0, 1, 0, 1, 1,  -1, 1, 0, 1, 0, 1, 1,  1, 1, 0, 1, 0, -1, 1,  1, 1, 0, 1, 0,
+        };
 
         m_VertexBuffer = Buffer(vk::BufferUsageFlagBits::eVertexBuffer);
         m_VertexBuffer.InitializeOnGpu(cubeVertices, 56 * sizeof(float));
@@ -59,8 +52,7 @@ namespace VkCore
         m_AttributeBuilder.PushAttribute<float>(4).PushAttribute<float>(3).SetBinding(0);
 
         m_IndexBuffer = Buffer(vk::BufferUsageFlagBits::eIndexBuffer);
-        m_IndexBuffer.InitializeOnGpu(m_CubeIndices.data(), m_CubeIndices.size()*sizeof(uint32_t));
-
+        m_IndexBuffer.InitializeOnGpu(m_CubeIndices.data(), m_CubeIndices.size() * sizeof(uint32_t));
 
         for (int i = 0; i < DeviceManager::GetDevice().GetSwapchain()->GetImageCount(); i++)
         {
@@ -96,7 +88,7 @@ namespace VkCore
 
         m_Pipeline = m_PipelineBuilder.BindShaderModules(shaders)
                          .BindRenderPass(m_RenderPass.GetVkRenderPass())
-                         .AddViewport(glm::uvec4(0, 0, m_WinWidth, m_WinHeight))
+                         .AddViewport(glm::uvec4(0, 0, m_Window->GetWidth(), m_Window->GetHeight()))
                          .FrontFaceDirection(vk::FrontFace::eCounterClockwise)
                          .AddDisabledBlendAttachment()
                          .AddDescriptorLayout(m_DescriptorSetLayout)
@@ -115,8 +107,8 @@ namespace VkCore
         {
 
             vk::FramebufferCreateInfo createInfo{};
-            createInfo.setWidth(m_WinWidth)
-                .setHeight(m_WinHeight)
+            createInfo.setWidth(m_Window->GetWidth())
+                .setHeight(m_Window->GetHeight())
                 .setLayers(1)
                 .setRenderPass(m_RenderPass.GetVkRenderPass())
                 .setAttachments(view);
@@ -130,8 +122,9 @@ namespace VkCore
     void SampleApplication::CreateCommandPool()
     {
 
-        vk::CommandPoolCreateInfo createInfo{vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
-                                             DeviceManager::GetPhysicalDevice().GetQueueFamilyIndices().m_GraphicsFamily.value()};
+        vk::CommandPoolCreateInfo createInfo{
+            vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+            DeviceManager::GetPhysicalDevice().GetQueueFamilyIndices().m_GraphicsFamily.value()};
 
         m_CommandPool = DeviceManager::GetDevice().CreateCommandPool(createInfo);
     }
@@ -161,8 +154,10 @@ namespace VkCore
 
         for (int i = 0; i < DeviceManager::GetDevice().GetSwapchain()->GetNumberOfSwapBuffers(); i++)
         {
-            m_ImageAvailableSemaphores.emplace_back(DeviceManager::GetDevice().CreateSemaphore(imageAvailableCreateInfo));
-            m_RenderFinishedSemaphores.emplace_back(DeviceManager::GetDevice().CreateSemaphore(renderFinishedCreateInfo));
+            m_ImageAvailableSemaphores.emplace_back(
+                DeviceManager::GetDevice().CreateSemaphore(imageAvailableCreateInfo));
+            m_RenderFinishedSemaphores.emplace_back(
+                DeviceManager::GetDevice().CreateSemaphore(renderFinishedCreateInfo));
 
             m_InFlightFences.emplace_back(DeviceManager::GetDevice().CreateFence(fenceCreateInfo));
         }
@@ -172,16 +167,17 @@ namespace VkCore
 
     void SampleApplication::DrawFrame()
     {
-    DeviceManager::GetDevice().WaitForFences(m_InFlightFences[m_CurrentFrame], false);
+        DeviceManager::GetDevice().WaitForFences(m_InFlightFences[m_CurrentFrame], false);
 
         uint32_t imageIndex;
-        vk::ResultValue<uint32_t> result = DeviceManager::GetDevice().AcquireNextImageKHR(m_ImageAvailableSemaphores[m_CurrentFrame]);
+        vk::ResultValue<uint32_t> result =
+            DeviceManager::GetDevice().AcquireNextImageKHR(m_ImageAvailableSemaphores[m_CurrentFrame]);
 
         Utils::CheckVkResult(result.result);
 
         imageIndex = result.value;
 
-    DeviceManager::GetDevice().ResetFences(m_InFlightFences[m_CurrentFrame]);
+        DeviceManager::GetDevice().ResetFences(m_InFlightFences[m_CurrentFrame]);
         m_CommandBuffers[m_CurrentFrame].reset();
 
         RecordCommandBuffer(m_CommandBuffers[m_CurrentFrame], imageIndex);
@@ -230,7 +226,7 @@ namespace VkCore
 
         vk::RenderPassBeginInfo renderPassBeginInfo{};
         renderPassBeginInfo.setRenderPass(m_RenderPass.GetVkRenderPass())
-            .setRenderArea(vk::Rect2D({0, 0}, {m_WinWidth, m_WinHeight}))
+            .setRenderArea(vk::Rect2D({0, 0}, {m_Window->GetWidth(), m_Window->GetHeight()}))
             .setFramebuffer(m_SwapchainFramebuffers[imageIndex])
             .setClearValues(clearValue);
 
@@ -417,6 +413,7 @@ namespace VkCore
 
     bool SampleApplication::OnWindowResize(WindowResizedEvent& event)
     {
+
         LOG(Application, Info, "Window resized")
         return true;
     }

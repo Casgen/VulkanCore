@@ -32,22 +32,24 @@ namespace VkCore
          * @brief Checks if the physical device supports the defined extensions;
          * @param physicalDevice
          */
-        static bool CheckDeviceExtensionSupport(const vk::PhysicalDevice& physicalDevice, std::vector<const char*> requiredExtensions);
+        static bool CheckDeviceExtensionSupport(const vk::PhysicalDevice& physicalDevice,
+                                                std::vector<const char*> requiredExtensions);
 
         /**
          * @brief Queries the swap chain support details of the physical device;
          */
-        static SwapChainSupportDetails QuerySwapChainSupport(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface);
+        static SwapChainSupportDetails QuerySwapChainSupport(const vk::PhysicalDevice& physicalDevice,
+                                                             const vk::SurfaceKHR& surface);
 
         /**
          * @brief Enumerates all the queue families and chooses their index. They are
          * used later for submitting commands to those queues.
          * @param surface
          */
-        static QueueFamilyIndices FindQueueFamilyIndices(const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface);
+        static QueueFamilyIndices FindQueueFamilyIndices(const vk::PhysicalDevice& physicalDevice,
+                                                         const vk::SurfaceKHR& surface);
 
         vk::PhysicalDeviceFeatures2 GetPhysicalDeviceFeatures2() const;
-
 
         // ------------ GETTERS ------------
 
@@ -64,6 +66,5 @@ namespace VkCore
 
         SwapChainSupportDetails m_SwapChainDetails;
         QueueFamilyIndices m_QueueFamilyIndices;
-
     };
 } // namespace VkCore

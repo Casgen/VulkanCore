@@ -2,6 +2,7 @@
 
 #include "../Log/Log.h"
 #include "Swapchain.h"
+#include "../Vk/Devices/DeviceManager.h"
 #include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
@@ -14,7 +15,7 @@ namespace VkCore
         // Choose a Swapchain format, present mode and extent
         vk::SurfaceFormat2KHR surfaceFormat = ChooseSurfaceFormat(supportDetails.m_SurfaceFormats);
         vk::PresentModeKHR presentMode = ChoosePresentMode(supportDetails.m_PresentModes);
-        vk::Extent2D extent = ChooseSwapExtent(supportDetails.m_Capabilites, desiredWidth, desiredHeight);
+        vk::Extent2D extent = ChooseSwapExtent(supportDetails.m_Capabilites, desiredWidth, desiredHeight, surface);
 
         uint32_t imageCount = supportDetails.m_Capabilites.minImageCount + 1;
 
@@ -144,9 +145,11 @@ namespace VkCore
     }
 
     vk::Extent2D Swapchain::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities,
-                                             const uint32_t desiredWidth, const uint32_t desiredHeight)
+                                             const uint32_t desiredWidth, const uint32_t desiredHeight,
+                                             const vk::SurfaceKHR& surface)
     {
-        vk::SurfaceCapabilitiesKHR surfaceCaps = capabilities;
+        vk::SurfaceCapabilitiesKHR surfaceCaps =
+            (*DeviceManager::GetPhysicalDevice()).getSurfaceCapabilitiesKHR(surface);
 
         if (surfaceCaps.currentExtent.width !=
             std::max(surfaceCaps.currentExtent.width, surfaceCaps.maxImageExtent.width))

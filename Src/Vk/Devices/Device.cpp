@@ -88,7 +88,6 @@ namespace VkCore
             .setPEnabledLayerNames(layerExtensions)
             .setPNext(&meshShaderFeatures);
 
-
         for (auto& ext : deviceExtensions)
         {
 
@@ -191,6 +190,19 @@ namespace VkCore
     void Device::DestroyRenderPass(const vk::RenderPass& renderPass)
     {
         m_Device.destroyRenderPass(renderPass);
+    }
+
+    void Device::DestroyFrameBuffer(const vk::Framebuffer& frameBuffer)
+    {
+        m_Device.destroyFramebuffer(frameBuffer);
+    }
+
+    void Device::DestroyFrameBuffers(const std::vector<vk::Framebuffer>& frameBuffers)
+    {
+        for (const vk::Framebuffer& frameBuffer : frameBuffers)
+        {
+            m_Device.destroyFramebuffer(frameBuffer);
+        }
     }
 
     void Device::DestroyImageView(const vk::ImageView& imageView)

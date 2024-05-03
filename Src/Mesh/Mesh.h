@@ -6,22 +6,32 @@
 #include "../Vk/Buffers/Buffer.h"
 #include "MeshVertex.h"
 
-class Mesh {
-   public:
+class Mesh
+{
+  public:
     Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& vertices);
 
-    vk::DescriptorSet GetDescriptorSet() const { return descriptor_set_; }
-    vk::DescriptorSetLayout GetDescriptorSetLayout() const { return descriptor_set_layout_; }
-    uint32_t GetMeshletCount() const { return meshlet_count_; }
+    vk::DescriptorSet GetDescriptorSet() const
+    {
+        return m_DescriptorSet;
+    }
+    vk::DescriptorSetLayout GetDescriptorSetLayout() const
+    {
+        return m_DescriptorSetLayout;
+    }
+    uint32_t GetMeshletCount() const
+    {
+        return m_MeshletCount;
+    }
 
-   private:
-    const std::vector<uint32_t> indices_;
-    const std::vector<MeshVertex> vertices_;
-    uint32_t meshlet_count_ = 0;
+  private:
+    const std::vector<uint32_t> m_Indices;
+    const std::vector<MeshVertex> m_Vertices;
+    uint32_t m_MeshletCount = 0;
 
-    VkCore::Buffer vertex_buffer_;
-    VkCore::Buffer meshlet_buffer_;
+    VkCore::Buffer m_VertexBuffer;
+    VkCore::Buffer m_MeshletBuffer;
 
-    vk::DescriptorSet descriptor_set_;
-    vk::DescriptorSetLayout descriptor_set_layout_;
+    vk::DescriptorSet m_DescriptorSet;
+    vk::DescriptorSetLayout m_DescriptorSetLayout;
 };

@@ -15,7 +15,7 @@ namespace VkCore
 {
 
     BaseApplication::BaseApplication(const uint32_t width, const uint32_t height, const std::string& title)
-        : m_WinWidth(width), m_WinHeight(height), m_Title(title)
+        : m_Title(title), m_InitWinWidth(width), m_InitWinHeight(height)
     {
         s_Instance = this;
 
@@ -41,8 +41,8 @@ namespace VkCore
         DeviceManager::Initialize(m_Instance, m_Window->GetSurface());
         CreateServices();
 
-        DeviceManager::GetDevice().InitSwapChain(DeviceManager::GetPhysicalDevice(), m_Window->GetSurface(), m_WinWidth,
-                                                 m_WinHeight);
+        DeviceManager::GetDevice().InitSwapChain(DeviceManager::GetPhysicalDevice(), m_Window->GetSurface(),
+                                                 m_Window->GetHeight(), m_Window->GetWidth());
         m_DescriptorBuilder = DescriptorBuilder(DeviceManager::GetDevice());
 
         m_RenderPass = VkCore::SwapchainRenderPass(DeviceManager::GetDevice());
@@ -110,7 +110,7 @@ namespace VkCore
 
     void BaseApplication::CreateWindow()
     {
-        VkCore::WindowProps windowProps{m_Title, m_WinWidth, m_WinHeight};
+        VkCore::WindowProps windowProps{m_Title, m_InitWinWidth, m_InitWinHeight};
 
         m_Window = std::make_unique<VkCore::Window>(m_Instance, windowProps);
         m_Window->SetEventCallback(std::bind(&BaseApplication::OnEvent, this, std::placeholders::_1));

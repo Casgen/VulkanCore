@@ -34,7 +34,6 @@ namespace VkCore
         std::vector<vk::ImageView> GetImageViews() const;
         uint32_t GetNumberOfSwapBuffers() const;
 
-
       private:
         vk::SwapchainKHR m_Swapchain;
 
@@ -47,6 +46,6 @@ namespace VkCore
         vk::SurfaceFormat2KHR ChooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& surfaceFormats);
         vk::PresentModeKHR ChoosePresentMode(const std::vector<vk::PresentModeKHR>& presentModes);
         vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& presentModes, const uint32_t desiredWidth,
-                                      const uint32_t desiredHeight);
+                                      const uint32_t desiredHeight, const vk::SurfaceKHR& surface);
     };
 } // namespace VkCore

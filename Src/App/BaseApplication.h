@@ -40,13 +40,35 @@ namespace VkCore
         virtual void Shutdown() = 0;
 
         virtual void OnEvent(Event& event);
-        virtual bool OnMousePress(MouseButtonEvent& event) { return false; }
-        virtual bool OnMouseMoved(MouseMovedEvent& event) { return false; }
-        virtual bool OnMouseScrolled(MouseScrolledEvent& event) { return false; }
-        virtual bool OnMouseRelease(MouseButtonEvent& event) { return false; }
-        virtual bool OnKeyPressed(KeyPressedEvent& event) { return false; }
-        virtual bool OnKeyReleased(KeyReleasedEvent& event) { return false; }
-        virtual bool OnWindowResize(WindowResizedEvent& event) { return false; }
+
+        virtual bool OnMousePress(MouseButtonEvent& event)
+        {
+            return false;
+        }
+        virtual bool OnMouseMoved(MouseMovedEvent& event)
+        {
+            return false;
+        }
+        virtual bool OnMouseScrolled(MouseScrolledEvent& event)
+        {
+            return false;
+        }
+        virtual bool OnMouseRelease(MouseButtonEvent& event)
+        {
+            return false;
+        }
+        virtual bool OnKeyPressed(KeyPressedEvent& event)
+        {
+            return false;
+        }
+        virtual bool OnKeyReleased(KeyReleasedEvent& event)
+        {
+            return false;
+        }
+        virtual bool OnWindowResize(WindowResizedEvent& event)
+        {
+            return false;
+        }
 
         void CreateWindow();
         void CreateInstance();
@@ -61,9 +83,9 @@ namespace VkCore
         SwapchainRenderPass m_RenderPass;
 
         uint32_t m_CurrentFrame = 0;
+        bool m_FramebufferResized = false;
 
         std::unique_ptr<Window> m_Window;
-        uint32_t m_WinWidth, m_WinHeight;
         std::string m_Title;
 
         VertexAttributeBuilder m_AttributeBuilder;
@@ -77,6 +99,9 @@ namespace VkCore
         static inline BaseApplication* s_Instance = nullptr;
 
       private:
+        uint32_t m_InitWinWidth = 0;
+        uint32_t m_InitWinHeight = 0;
+
         void PreShutdown();
         void PostShutdown();
     };

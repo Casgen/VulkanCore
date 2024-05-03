@@ -37,18 +37,23 @@ namespace VkCore
         vk::ShaderModule CreateShaderModule(const vk::ShaderModuleCreateInfo& createInfo);
         vk::PipelineLayout CreatePipelineLayout(const vk::PipelineLayoutCreateInfo& createInfo);
         vk::Framebuffer CreateFrameBuffer(const vk::FramebufferCreateInfo& createInfo);
-        vk::ResultValue<std::vector<vk::Pipeline>> CreateGraphicsPipelines(const std::vector<vk::GraphicsPipelineCreateInfo>& createInfo);
+        vk::ResultValue<std::vector<vk::Pipeline>> CreateGraphicsPipelines(
+            const std::vector<vk::GraphicsPipelineCreateInfo>& createInfo);
         vk::Semaphore CreateSemaphore(const vk::SemaphoreCreateInfo& createInfo);
         vk::Fence CreateFence(const vk::FenceCreateInfo& createInfo);
 
         // ---------- DESTROYERS -----------
 
         void DestroyRenderPass(const vk::RenderPass& renderPass);
+        void DestroyFrameBuffer(const vk::Framebuffer& frameBuffer);
+        void DestroyFrameBuffers(const std::vector<vk::Framebuffer>& frameBuffers);
         void DestroyImageView(const vk::ImageView& imageView);
         void DestroyImage(const vk::Image& image);
         void DestroySwapchain(const vk::SwapchainKHR& swapchain);
         void DestroyDescriptorPool(const vk::DescriptorPool& pool);
-        void DestroyDescriptorSetLayout(const vk::DescriptorSetLayout& layout); void DestroyShaderModule(const vk::ShaderModule& module); void DestroyCommandPool(const vk::CommandPool& commandPool);
+        void DestroyDescriptorSetLayout(const vk::DescriptorSetLayout& layout);
+        void DestroyShaderModule(const vk::ShaderModule& module);
+        void DestroyCommandPool(const vk::CommandPool& commandPool);
         void Destroy();
 
         // ------------ GETTERS ------------
@@ -94,7 +99,6 @@ namespace VkCore
 
         void ResetDescriptorPool(const vk::DescriptorPool& pool, const vk::DescriptorPoolResetFlags& resetFlags =
                                                                      vk::Flags<vk::DescriptorPoolResetFlagBits>(0));
-
 
         void UpdateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes);
         void UpdateDescriptorSets(const std::vector<vk::WriteDescriptorSet>& writes,

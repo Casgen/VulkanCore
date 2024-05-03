@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <iostream>
 #include <stdexcept>
 
@@ -46,6 +47,8 @@ namespace VkCore
         glfwSetWindowUserPointer(m_GlfwWindow, this);
         glfwMakeContextCurrent(m_GlfwWindow);
 
+        RefreshResolution();
+
         LOG(Window, Verbose, "WindowSize callback set.")
     }
 
@@ -57,14 +60,23 @@ namespace VkCore
 
     void Window::CreateSurface(const vk::Instance& instance)
     {
+
         VkResult err = glfwCreateWindowSurface(static_cast<VkInstance>(instance), m_GlfwWindow, nullptr,
                                                reinterpret_cast<VkSurfaceKHR*>(&m_Surface));
+
+        RefreshResolution();
+
         VkCore::Utils::CheckVkResult(err);
     }
 
     void Window::SwapBuffers() const
     {
         glfwSwapBuffers(m_GlfwWindow);
+    }
+
+    void Window::WaitEvents() const
+    {
+        glfwWaitEvents();
     }
 
     // -------------- GETTERS ------------------
@@ -167,12 +179,11 @@ namespace VkCore
         LOG(Window, Verbose, "CursorPos callback set.")
 
         glfwSetWindowSizeCallback(m_GlfwWindow, [](GLFWwindow* window, int width, int height) {
-            const Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+            Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
             WindowResizedEvent event(width, height);
             usrWindow->m_Props.m_CbFunction(event);
         });
-
     }
 
     // ------------------------------------------

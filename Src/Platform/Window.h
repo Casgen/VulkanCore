@@ -27,18 +27,17 @@ namespace VkCore
     class Window
     {
       public:
-
         /**
-        * Initializes GLFW and creates a new winow. Also Creates a new VkInstance.
-        * @param vkInstance a reference to a VkInstance object. In the constructor, the instance will be created.
-        * @param props
-        */
+         * Initializes GLFW and creates a new winow. Also Creates a new VkInstance.
+         * @param vkInstance a reference to a VkInstance object. In the constructor, the instance will be created.
+         * @param props
+         */
         Window(vk::Instance& vkInstance, const WindowProps& props = WindowProps());
 
         ~Window();
         void CreateSurface(const vk::Instance& instance);
         void SwapBuffers() const;
-
+        void WaitEvents() const;
 
         // ---------------- GETTERS ---------------------
 
@@ -48,13 +47,41 @@ namespace VkCore
         [[nodiscard]] bool ShouldClose() const;
         [[nodiscard]] vk::SurfaceKHR& GetSurface();
 
+        [[nodiscard]] uint32_t GetWidth()
+        {
+            return m_Width;
+        }
+        [[nodiscard]] uint32_t GetHeight()
+        {
+            return m_Height;
+        }
+
         // ---------------- SETTERS ---------------------
 
         void SetEventCallback(const std::function<void(Event&)>& callback);
         void SetWindowSize(const int width, const int height);
 
-        // ----------------------------------------------
+        void SetWidth(const unsigned int width)
+        {
+            m_Width = width;
+        }
 
+        void SetHeight(const unsigned int height)
+        {
+            m_Height = height;
+        }
+
+        void RefreshResolution()
+        {
+            int32_t width, height = 0;
+
+            glfwGetFramebufferSize(m_GlfwWindow, &width, &height);
+
+            m_Width = static_cast<uint32_t>(width);
+            m_Height = static_cast<uint32_t>(height);
+        }
+
+        // ----------------------------------------------
 
         static void ErrorCallback(int error, const char* desc);
 
@@ -64,6 +91,9 @@ namespace VkCore
         vk::SurfaceKHR m_Surface;
         GLFWwindow* m_GlfwWindow;
         WindowProps m_Props;
+
+        uint32_t m_Width = 0;
+        uint32_t m_Height = 0;
 
         MouseState m_MouseState;
     };
