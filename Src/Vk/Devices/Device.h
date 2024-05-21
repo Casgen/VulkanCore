@@ -49,17 +49,26 @@ namespace VkCore
         void DestroyFrameBuffers(const std::vector<vk::Framebuffer>& frameBuffers);
         void DestroyImageView(const vk::ImageView& imageView);
         void DestroyImage(const vk::Image& image);
+
+        void DestroyFences(const std::vector<vk::Fence>& fences);
+        void DestroySemaphores(const std::vector<vk::Semaphore>& semaphores);
+
+        void DestroyFence(const vk::Fence& fence);
+        void DestroySemaphore(const vk::Semaphore& semaphore);
+
         void DestroySwapchain(const vk::SwapchainKHR& swapchain);
         void DestroyDescriptorPool(const vk::DescriptorPool& pool);
         void DestroyDescriptorSetLayout(const vk::DescriptorSetLayout& layout);
         void DestroyShaderModule(const vk::ShaderModule& module);
         void DestroyCommandPool(const vk::CommandPool& commandPool);
+        void DestroyPipeline(const vk::Pipeline& pipeline);
+        void DestroyPipelineLayout(const vk::PipelineLayout& pipelineLayout);
+        void FreeDescriptorSet(const vk::DescriptorPool descPool, const vk::DescriptorSet& descSet);
         void Destroy();
 
         // ------------ GETTERS ------------
 
         vk::Device& operator*();
-        std::shared_ptr<Swapchain> GetSwapchain() const;
         std::vector<vk::Image> GetSwapchainImages(const vk::SwapchainKHR& swapchain);
         vk::Queue GetQueue(const uint32_t queueFamilyIndex, const uint32_t queueIndex) const;
 
@@ -113,18 +122,7 @@ namespace VkCore
          */
         void InitQueues(const QueueFamilyIndices& indices);
 
-        /**
-         *  Acquires the next image index according to the framebuffer in the swapchain.
-         *  @param semaphore - semaphore which will be signaled.
-         *  @param fence - fence which will be signaled.
-         *  @param timeout - how long should it wait for the acquisition of the image before bailing.
-         */
-        vk::ResultValue<uint32_t> AcquireNextImageKHR(const vk::Semaphore& semaphore = {}, const vk::Fence& fence = {},
-                                                      const uint64_t timeout = UINT64_MAX);
-
       private:
-        std::shared_ptr<Swapchain> m_Swapchain;
-
         QueueFamilyIndices m_QueueFamilyIndices;
         vk::Device m_Device;
 

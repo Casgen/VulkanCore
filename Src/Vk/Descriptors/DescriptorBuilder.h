@@ -18,21 +18,12 @@ namespace VkCore
         DescriptorBuilder();
         DescriptorBuilder(DescriptorBuilder&& other);
         DescriptorBuilder& operator=(DescriptorBuilder&& other);
-        ~DescriptorBuilder();
 
         /**
          *   @brief Initializes the DescriptorBuilder with the DescriptorAllocator and DescriptorLayoutCache.
          *   @brief device
          */
         DescriptorBuilder(const Device& device);
-
-        /**
-         *   @brief Initializes the DescriptorBuilder with the given DescriptorAllocator and DescriptorLayoutCache.
-         *   @param layoutCache - a unique pointer to the layoutCache. Use std::move()!
-         *   @param allocator - a unique pointer to the layoutCache. Use std::move()!
-         */
-        DescriptorBuilder(std::unique_ptr<DescriptorLayoutCache> layoutCache,
-                          std::unique_ptr<DescriptorAllocator> allocator);
 
         DescriptorBuilder& BindBuffer(uint32_t binding, const vk::DescriptorBufferInfo& bufferInfo,
                                       vk::DescriptorType type, vk::ShaderStageFlags stageFlags)
@@ -66,7 +57,8 @@ namespace VkCore
         }
 
         /**
-         * @brief Creates a Descriptor Layout binding for the given buffers with the provided binding index. Results in createing an array.
+         * @brief Creates a Descriptor Layout binding for the given buffers with the provided binding index. Results in
+         * createing an array.
          * @param binding - binding index to bound the buffers onto (Has to reflect also in the shader file)
          * @param Buffers - buffers to bind
          * @param descriptorType
@@ -89,7 +81,7 @@ namespace VkCore
             }
 
             vk::WriteDescriptorSet newWrite = vk::WriteDescriptorSet();
-            //TODO: Test this out with arrays of buffers
+            // TODO: Test this out with arrays of buffers
             newWrite.setDescriptorCount(3);
             newWrite.setPBufferInfo(bufferInfos);
             newWrite.setDstBinding(binding);
@@ -114,13 +106,14 @@ namespace VkCore
         bool Build(vk::DescriptorSet& set);
         bool Build(vk::DescriptorSet& set, vk::DescriptorSetLayout& layout);
         void Clear();
+        void Cleanup();
 
       private:
         // The Descriptor builder takes ownership of the DescriptorLayoutCache's a DescriptorAllocator's memory
         // Therefore it is responsible for their deletion.
 
-        std::unique_ptr<DescriptorLayoutCache> m_Cache;
-        std::unique_ptr<DescriptorAllocator> m_Allocator;
+        DescriptorLayoutCache* m_Cache;
+        DescriptorAllocator* m_Allocator;
 
         std::vector<vk::DescriptorSetLayoutBinding> m_Bindings = {};
         std::vector<vk::WriteDescriptorSet> m_Writes = {};

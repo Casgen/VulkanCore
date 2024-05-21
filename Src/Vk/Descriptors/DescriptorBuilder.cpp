@@ -10,31 +10,21 @@ namespace VkCore
 {
 
     DescriptorBuilder::DescriptorBuilder()
-        : m_Cache(std::make_unique<DescriptorLayoutCache>()), m_Allocator(std::make_unique<DescriptorAllocator>())
+        : m_Cache(new DescriptorLayoutCache()), m_Allocator(new DescriptorAllocator())
     {
     }
 
     DescriptorBuilder::DescriptorBuilder(const Device& device)
-        : m_Cache(std::make_unique<DescriptorLayoutCache>(device)),
-          m_Allocator(std::make_unique<DescriptorAllocator>(device))
+        : m_Cache(new DescriptorLayoutCache(device)), m_Allocator(new DescriptorAllocator(device))
     {
-    }
-
-    DescriptorBuilder::~DescriptorBuilder()
-    {
-        // TODO: Check if this works!
-        for (vk::WriteDescriptorSet& write : m_Writes)
-        {
-            delete[] write.pBufferInfo;
-        }
     }
 
     DescriptorBuilder::DescriptorBuilder(DescriptorBuilder&& other)
     {
         if (this != &other)
         {
-            m_Cache = std::move(other.m_Cache);
-            m_Allocator = std::move(other.m_Allocator);
+            m_Cache = other.m_Cache;
+            m_Allocator = other.m_Allocator;
         }
     }
 
@@ -42,18 +32,11 @@ namespace VkCore
     {
         if (this != &other)
         {
-            m_Cache = std::move(other.m_Cache);
-            m_Allocator = std::move(other.m_Allocator);
+            m_Cache = other.m_Cache;
+            m_Allocator = other.m_Allocator;
         }
 
         return *this;
-    }
-
-    DescriptorBuilder::DescriptorBuilder(std::unique_ptr<DescriptorLayoutCache> layoutCache,
-                                         std::unique_ptr<DescriptorAllocator> allocator)
-    {
-        m_Cache = std::move(layoutCache);
-        m_Allocator = std::move(allocator);
     }
 
     DescriptorBuilder& DescriptorBuilder::BindImage(uint32_t binding, const vk::DescriptorImageInfo& imageInfo,
@@ -113,6 +96,12 @@ namespace VkCore
         }
 
         m_Writes.clear();
+    }
+
+    void DescriptorBuilder::Cleanup()
+    {
+        m_Cache->Cleanup();
+        m_Allocator->Cleanup();
     }
 
 } // namespace VkCore

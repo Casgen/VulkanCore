@@ -24,6 +24,12 @@ class Mesh
         return m_MeshletCount;
     }
 
+    void Destroy()
+    {
+        m_VertexBuffer.Destroy();
+        m_MeshletBuffer.Destroy();
+    }
+
   private:
     const std::vector<uint32_t> m_Indices;
     const std::vector<MeshVertex> m_Vertices;

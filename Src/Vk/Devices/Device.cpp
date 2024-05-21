@@ -108,17 +108,8 @@ namespace VkCore
         TRY_CATCH_END()
     }
 
-    void Device::InitSwapChain(const PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface,
-                               const uint32_t desiredWidth, const uint32_t desiredHeight)
-    {
-        m_Swapchain =
-            std::make_shared<Swapchain>(*this, surface, physicalDevice.GetQueueFamilyIndices(),
-                                        physicalDevice.GetSwapChainSupportDetails(), desiredWidth, desiredHeight);
-    }
-
     void Device::Destroy()
     {
-        m_Swapchain->Destroy(*this);
         m_Device.destroy();
     }
 
@@ -215,6 +206,32 @@ namespace VkCore
         m_Device.destroyImage(image);
     }
 
+    void Device::DestroyFences(const std::vector<vk::Fence>& fences)
+    {
+
+        for (const vk::Fence fence : fences)
+        {
+            m_Device.destroyFence(fence);
+        }
+    }
+
+    void Device::DestroySemaphores(const std::vector<vk::Semaphore>& semaphores)
+    {
+        for (const vk::Semaphore semaphore : semaphores)
+        {
+            m_Device.destroySemaphore(semaphore);
+        }
+    }
+
+    void Device::DestroyFence(const vk::Fence& fence)
+    {
+        m_Device.destroyFence(fence);
+    }
+    void Device::DestroySemaphore(const vk::Semaphore& semaphore)
+    {
+        m_Device.destroySemaphore(semaphore);
+    }
+
     void Device::DestroySwapchain(const vk::SwapchainKHR& swapchain)
     {
         m_Device.destroySwapchainKHR(swapchain);
@@ -240,14 +257,23 @@ namespace VkCore
         m_Device.destroyCommandPool(commandPool);
     }
 
+    void Device::DestroyPipeline(const vk::Pipeline& pipeline)
+    {
+        m_Device.destroyPipeline(pipeline);
+    }
+
+    void Device::DestroyPipelineLayout(const vk::PipelineLayout& pipelineLayout)
+    {
+        m_Device.destroyPipelineLayout(pipelineLayout);
+    }
+    void Device::FreeDescriptorSet(const vk::DescriptorPool descPool, const vk::DescriptorSet& descSet)
+    {
+        m_Device.freeDescriptorSets(descPool, descSet);
+    }
+
     vk::Device& Device::operator*()
     {
         return m_Device;
-    }
-
-    std::shared_ptr<Swapchain> Device::GetSwapchain() const
-    {
-        return m_Swapchain;
     }
 
     std::vector<vk::Image> Device::GetSwapchainImages(const vk::SwapchainKHR& swapchain)
@@ -422,12 +448,6 @@ namespace VkCore
         m_QueueFamilyIndices = indices;
 
         LOG(Vulkan, Verbose, "Queues done initializing...")
-    }
-
-    vk::ResultValue<uint32_t> Device::AcquireNextImageKHR(const vk::Semaphore& semaphore, const vk::Fence& fence,
-                                                          const uint64_t timeout)
-    {
-        return m_Device.acquireNextImageKHR(m_Swapchain->GetVkSwapchain(), timeout, semaphore, fence);
     }
 
 } // namespace VkCore

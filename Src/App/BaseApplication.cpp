@@ -10,6 +10,7 @@
 #include "../Vk/Services/ServiceLocator.h"
 #include "../Vk/Devices/DeviceManager.h"
 #include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
 {
@@ -29,23 +30,43 @@ namespace VkCore
     {
 
         PreInitVulkan();
-        // The window has to be created before the instance in order to obtain the required extensions
-        // for the VkInstance!
 
-        CreateWindow();
+        // Init Window. The window has to be created before the instance in order to obtain the required extensions
+        // for the VkInstance!
+        VkCore::WindowProps windowProps{m_Title, m_InitWinWidth, m_InitWinHeight};
+
+        m_Window = std::make_unique<VkCore::Window>(m_Instance, windowProps);
+        m_Window->SetEventCallback(std::bind(&BaseApplication::OnEvent, this, std::placeholders::_1));
+
         m_Running = true;
 
-        CreateInstance();
-        m_Window->CreateSurface(m_Instance);
+        // Init Instance
+        std::vector<const char*> requiredExtensions(Window::GetRequiredInstanceExtensions()), layers;
 
-        DeviceManager::Initialize(m_Instance, m_Window->GetSurface());
-        CreateServices();
+#ifdef DEBUG
+        requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
 
-        DeviceManager::GetDevice().InitSwapChain(DeviceManager::GetPhysicalDevice(), m_Window->GetSurface(),
-                                                 m_Window->GetHeight(), m_Window->GetWidth());
+        m_Instance = VkCore::Utils::CreateInstance(m_Title, VK_API_VERSION_1_3, requiredExtensions, layers, true);
+
+#ifdef DEBUG
+        // Debug messenger has to be created after creating the VkInstance!
+        m_DebugMessenger = m_Instance.createDebugUtilsMessengerEXT(VkCore::Utils::PopulateDebugMessengerCreateInfo());
+#endif
+
+        m_Window->InitSurface(m_Instance);
+
+        // Init Devices
+        DeviceManager::Initialize(m_Instance, m_Window->GetVkSurface());
+
+        // Init Services
+        VmaAllocatorService* allocationService = new VmaAllocatorService(m_Instance);
+        ServiceLocator::ProvideAllocatorService(allocationService);
+
+        m_Swapchain = VkCore::Swapchain(m_Window->GetVkSurface(), m_Window->GetHeight(), m_Window->GetWidth());
         m_DescriptorBuilder = DescriptorBuilder(DeviceManager::GetDevice());
 
-        m_RenderPass = VkCore::SwapchainRenderPass(DeviceManager::GetDevice());
+        m_RenderPass = VkCore::SwapchainRenderPass(m_Swapchain);
         PostInitVulkan();
     }
 
@@ -106,37 +127,6 @@ namespace VkCore
             dispatcher.Dispatch<WindowResizedEvent>(BIND_EVENT_FN(BaseApplication::OnWindowResize));
             break;
         }
-    }
-
-    void BaseApplication::CreateWindow()
-    {
-        VkCore::WindowProps windowProps{m_Title, m_InitWinWidth, m_InitWinHeight};
-
-        m_Window = std::make_unique<VkCore::Window>(m_Instance, windowProps);
-        m_Window->SetEventCallback(std::bind(&BaseApplication::OnEvent, this, std::placeholders::_1));
-    }
-
-    void BaseApplication::CreateInstance()
-    {
-
-        std::vector<const char*> requiredExtensions(Window::GetRequiredInstanceExtensions()), layers;
-
-#ifdef DEBUG
-        requiredExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-#endif
-
-        m_Instance = VkCore::Utils::CreateInstance(m_Title, VK_API_VERSION_1_3, requiredExtensions, layers, true);
-
-#ifdef DEBUG
-        // Debug messenger has to be created after creating the VkInstance!
-        m_DebugMessenger = m_Instance.createDebugUtilsMessengerEXT(VkCore::Utils::PopulateDebugMessengerCreateInfo());
-#endif
-    }
-
-    void BaseApplication::CreateServices()
-    {
-        VmaAllocatorService* allocationService = new VmaAllocatorService(m_Instance);
-        ServiceLocator::ProvideAllocatorService(allocationService);
     }
 
 } // namespace VkCore

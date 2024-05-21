@@ -11,7 +11,7 @@ namespace VkCore
     {
       public:
         SwapchainRenderPass(){};
-        SwapchainRenderPass(const Device& device);
+        SwapchainRenderPass(const VkCore::Swapchain& swapchain);
         void Destroy();
 
         DepthImage& GetDepthImage()

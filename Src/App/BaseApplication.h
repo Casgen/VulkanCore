@@ -5,8 +5,8 @@
 #include <string>
 
 #include "../Vk/Descriptors/DescriptorBuilder.h"
-#include "../Vk/Devices/Device.h"
 #include "../Platform/Window.h"
+#include "../Vk/Swapchain.h"
 #include "../Vk/SwapchainRenderPass.h"
 #include "../Vk/GraphicsPipeline/GraphicsPipelineBuilder.h"
 #include "../Event/Event.h"
@@ -14,7 +14,6 @@
 #include "../Event/WindowEvent.h"
 #include "../Event/MouseEvent.h"
 
-#include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
@@ -70,11 +69,6 @@ namespace VkCore
             return false;
         }
 
-        void CreateWindow();
-        void CreateInstance();
-        void CreateDevices();
-        void CreateServices();
-
       protected:
         MouseState m_MouseState;
 
@@ -86,6 +80,7 @@ namespace VkCore
         bool m_FramebufferResized = false;
 
         std::unique_ptr<Window> m_Window;
+        VkCore::Swapchain m_Swapchain;
         std::string m_Title;
 
         VertexAttributeBuilder m_AttributeBuilder;

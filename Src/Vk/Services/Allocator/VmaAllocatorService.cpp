@@ -47,7 +47,7 @@ namespace VkCore
 
     void VmaAllocatorService::DestroyBuffer(Buffer& buffer)
     {
-        if (buffer.GetVkBuffer() && buffer.GetVmaAllocation() != VK_NULL_HANDLE)
+        if (buffer.GetVkBuffer() != VK_NULL_HANDLE && buffer.GetVmaAllocation() != VK_NULL_HANDLE)
         {
             vmaDestroyBuffer(m_VmaAllocator, buffer.GetVkBuffer(), buffer.GetVmaAllocation());
             return;
@@ -60,7 +60,6 @@ namespace VkCore
     void VmaAllocatorService::DestroyImage(vk::Image& image, VmaAllocation& allocation)
     {
         vmaDestroyImage(m_VmaAllocator, image, allocation);
-
     }
 
     void VmaAllocatorService::CopyBuffer(const VkBuffer& srcBuffer, const VkBuffer& dstBuffer, const size_t size,

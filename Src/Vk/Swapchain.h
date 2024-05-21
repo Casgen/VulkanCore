@@ -1,10 +1,9 @@
 #pragma once
 
-#include "Devices/Device.h"
-#include "SwapChainSupportDetails.h"
-#include "vulkan/vulkan_enums.hpp"
+#include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_handles.hpp"
-#include "vulkan/vulkan_structs.hpp"
+#include <cstdint>
+#include <vector>
 
 namespace VkCore
 {
@@ -13,9 +12,7 @@ namespace VkCore
     {
 
       public:
-        Swapchain(Device& device, const vk::SurfaceKHR& surface, const QueueFamilyIndices indices,
-                  const SwapChainSupportDetails& supportDetails, const uint32_t desiredWidth,
-                  const uint32_t desiredHeight);
+        Swapchain(const vk::SurfaceKHR& surface, const uint32_t desiredWidth, const uint32_t desiredHeight);
         Swapchain() = default;
 
         /**
@@ -23,7 +20,12 @@ namespace VkCore
          * and the Vulkan swapchain.
          * @param device
          */
-        void Destroy(Device& device);
+        void Destroy();
+
+        vk::SwapchainKHR operator*() const
+        {
+            return m_Swapchain;
+        }
 
         // ------------ GETTERS ------------
 
@@ -34,18 +36,27 @@ namespace VkCore
         std::vector<vk::ImageView> GetImageViews() const;
         uint32_t GetNumberOfSwapBuffers() const;
 
-      private:
-        vk::SwapchainKHR m_Swapchain;
+        /**
+         *  Acquires the next image index according to the framebuffer in the swapchain.
+         *  @param semaphore - semaphore which will be signaled.
+         *  @param fence - fence which will be signaled.
+         *  @param timeout - how long should it wait for the acquisition of the image before bailing.
+         */
+        vk::ResultValue<uint32_t> AcquireNextImageKHR(const vk::Semaphore& semaphore, const vk::Fence& fence = {},
+                                                      const uint64_t timeout = UINT64_MAX);
 
-        std::vector<vk::Image> m_Images;
-        std::vector<vk::ImageView> m_ImageViews;
+      private:
+        vk::SwapchainKHR m_Swapchain = nullptr;
+
+        std::vector<vk::Image> m_Images = {};
+        std::vector<vk::ImageView> m_ImageViews = {};
 
         vk::SurfaceFormat2KHR m_SurfaceFormat;
         vk::Extent2D m_SwapExtent;
 
         vk::SurfaceFormat2KHR ChooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& surfaceFormats);
         vk::PresentModeKHR ChoosePresentMode(const std::vector<vk::PresentModeKHR>& presentModes);
-        vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& presentModes, const uint32_t desiredWidth,
-                                      const uint32_t desiredHeight, const vk::SurfaceKHR& surface);
+        vk::Extent2D ChooseSwapExtent(const vk::SurfaceKHR& surface, const vk::SurfaceCapabilitiesKHR& presentModes,
+                                      const uint32_t desiredWidth, const uint32_t desiredHeight);
     };
 } // namespace VkCore

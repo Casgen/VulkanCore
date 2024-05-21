@@ -58,15 +58,18 @@ namespace VkCore
         glfwDestroyWindow(m_GlfwWindow);
     }
 
-    void Window::CreateSurface(const vk::Instance& instance)
+    void Window::InitSurface(const vk::Instance& instance)
     {
 
-        VkResult err = glfwCreateWindowSurface(static_cast<VkInstance>(instance), m_GlfwWindow, nullptr,
-                                               reinterpret_cast<VkSurfaceKHR*>(&m_Surface));
+        VkSurfaceKHR surface = VK_NULL_HANDLE;
+
+        VkResult err = glfwCreateWindowSurface(static_cast<VkInstance>(instance), m_GlfwWindow, nullptr, &surface);
 
         RefreshResolution();
 
         VkCore::Utils::CheckVkResult(err);
+
+        m_Surface = surface;
     }
 
     void Window::SwapBuffers() const
@@ -79,7 +82,20 @@ namespace VkCore
         glfwWaitEvents();
     }
 
+    void Window::Destroy(const vk::Instance& vkInstance)
+    {
+        glfwWaitEvents();
+        vkInstance.destroySurfaceKHR(m_Surface);
+
+        glfwDestroyWindow(m_GlfwWindow);
+        glfwTerminate();
+    }
+
     // -------------- GETTERS ------------------
+    vk::SurfaceKHR Window::GetVkSurface() const
+    {
+        return m_Surface;
+    }
 
     GLFWwindow* Window::GetGLFWWindow() const
     {
@@ -94,11 +110,6 @@ namespace VkCore
     WindowProps Window::GetProps() const
     {
         return m_Props;
-    }
-
-    vk::SurfaceKHR& Window::GetSurface()
-    {
-        return m_Surface;
     }
 
     void Window::SetEventCallback(const std::function<void(Event&)>& callback)

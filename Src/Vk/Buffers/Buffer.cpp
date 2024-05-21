@@ -59,7 +59,7 @@ namespace VkCore
 
     Buffer::~Buffer()
     {
-        if (m_Buffer != VK_NULL_HANDLE)
+        if (!m_WasDestroyed)
         {
             ServiceLocator::GetAllocatorService().DestroyBuffer(*this);
         }
@@ -183,10 +183,12 @@ namespace VkCore
     {
         m_UsageFlags = flags;
     }
+
     void Buffer::Destroy()
     {
         ServiceLocator::GetAllocatorService().DestroyBuffer(*this);
-        m_Buffer = VK_NULL_HANDLE;
+        m_Buffer = nullptr;
+        m_WasDestroyed = true;
     }
 
 } // namespace VkCore

@@ -7,15 +7,15 @@
 
 namespace VkCore
 {
-    Swapchain::Swapchain(Device& device, const vk::SurfaceKHR& surface, const QueueFamilyIndices indices,
-                         const SwapChainSupportDetails& supportDetails, const uint32_t desiredWidth,
-                         const uint32_t desiredHeight)
+    Swapchain::Swapchain(const vk::SurfaceKHR& surface, const uint32_t desiredWidth, const uint32_t desiredHeight)
     {
 
         // Choose a Swapchain format, present mode and extent
+        SwapChainSupportDetails supportDetails = DeviceManager::GetPhysicalDevice().GetSwapChainSupportDetails();
+
         vk::SurfaceFormat2KHR surfaceFormat = ChooseSurfaceFormat(supportDetails.m_SurfaceFormats);
         vk::PresentModeKHR presentMode = ChoosePresentMode(supportDetails.m_PresentModes);
-        vk::Extent2D extent = ChooseSwapExtent(supportDetails.m_Capabilites, desiredWidth, desiredHeight, surface);
+        vk::Extent2D extent = ChooseSwapExtent(surface, supportDetails.m_Capabilites, desiredWidth, desiredHeight);
 
         uint32_t imageCount = supportDetails.m_Capabilites.minImageCount + 1;
 
@@ -36,6 +36,7 @@ namespace VkCore
         createInfo.setImageArrayLayers(1);
         createInfo.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
 
+        QueueFamilyIndices indices = DeviceManager::GetPhysicalDevice().GetQueueFamilyIndices();
         uint32_t queueFamilyIndices[] = {indices.m_GraphicsFamily.value(), indices.m_PresentFamily.value()};
 
         if (indices.m_GraphicsFamily != indices.m_PresentFamily)
@@ -56,6 +57,8 @@ namespace VkCore
 
         TRY_CATCH_BEGIN()
 
+        VkCore::Device& device = DeviceManager::GetDevice();
+
         m_Swapchain = device.CreateSwapchain(createInfo);
         m_Images = device.GetSwapchainImages(m_Swapchain);
 
@@ -75,8 +78,10 @@ namespace VkCore
         m_SurfaceFormat = surfaceFormat.surfaceFormat;
     }
 
-    void Swapchain::Destroy(Device& device)
+    void Swapchain::Destroy()
     {
+
+        VkCore::Device& device = VkCore::DeviceManager::GetDevice();
 
         for (const auto& imageView : m_ImageViews)
         {
@@ -116,6 +121,12 @@ namespace VkCore
         return m_ImageViews.size();
     }
 
+    vk::ResultValue<uint32_t> Swapchain::AcquireNextImageKHR(const vk::Semaphore& semaphore, const vk::Fence& fence,
+                                                             const uint64_t timeout)
+    {
+        return (*VkCore::DeviceManager::GetDevice()).acquireNextImageKHR(m_Swapchain, timeout, semaphore, fence);
+    }
+
     vk::SurfaceFormat2KHR Swapchain::ChooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& surfaceFormats)
     {
         for (const auto& format : surfaceFormats)
@@ -144,9 +155,9 @@ namespace VkCore
         return vk::PresentModeKHR::eFifo;
     }
 
-    vk::Extent2D Swapchain::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities,
-                                             const uint32_t desiredWidth, const uint32_t desiredHeight,
-                                             const vk::SurfaceKHR& surface)
+    vk::Extent2D Swapchain::ChooseSwapExtent(const vk::SurfaceKHR& surface,
+                                             const vk::SurfaceCapabilitiesKHR& capabilities,
+                                             const uint32_t desiredWidth, const uint32_t desiredHeight)
     {
         vk::SurfaceCapabilitiesKHR surfaceCaps =
             (*DeviceManager::GetPhysicalDevice()).getSurfaceCapabilitiesKHR(surface);

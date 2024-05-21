@@ -8,13 +8,13 @@
 namespace VkCore
 {
 
-    SwapchainRenderPass::SwapchainRenderPass(const Device& device)
+    SwapchainRenderPass::SwapchainRenderPass(const VkCore::Swapchain& swapchain)
     {
-        vk::Extent2D swapExtent = device.GetSwapchain()->GetSwapExtent();
+        vk::Extent2D swapExtent = swapchain.GetSwapExtent();
         m_DepthImage = DepthImage(swapExtent.width, swapExtent.height);
 
         vk::AttachmentDescription colorAttachment{};
-        colorAttachment.format = device.GetSwapchain()->GetVkSurfaceFormat().surfaceFormat.format;
+        colorAttachment.format = swapchain.GetVkSurfaceFormat().surfaceFormat.format;
         colorAttachment.samples = vk::SampleCountFlagBits::e1;
         colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
         colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
@@ -62,7 +62,7 @@ namespace VkCore
         vk::AttachmentDescription attachments[2] = {colorAttachment, depthAttachment};
         createInfo.setAttachments(attachments).setSubpasses(subpass).setDependencies(dependency);
 
-        m_RenderPass = device.CreateRenderPass(createInfo);
+        m_RenderPass = VkCore::DeviceManager::GetDevice().CreateRenderPass(createInfo);
     }
     void SwapchainRenderPass::Destroy()
     {

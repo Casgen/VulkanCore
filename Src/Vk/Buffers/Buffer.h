@@ -9,6 +9,8 @@
 namespace VkCore
 {
 
+    // Buffer object is like a `std::unique_ptr`. That means when the Buffer goes out of scope, it gets removed.
+    // Though you can still preemptively destroy it by calling the `Destroy()` method.
     class Buffer
     {
       public:
@@ -49,18 +51,18 @@ namespace VkCore
             }
         };
 
-        Buffer() = default;
-        virtual ~Buffer();
+        Buffer()
+            : m_Size(0), m_UsageFlags(0), m_IsHostVisible(false), m_IsMapped(false), m_Buffer(VK_NULL_HANDLE),
+              m_Allocation(VK_NULL_HANDLE), m_AllocationInfo({})
+        {
+        }
 
-        // Copy
+        ~Buffer();
+
         Buffer(const Buffer& other) = delete;
         Buffer& operator=(const Buffer& other) = delete;
-
-        // Move
         Buffer& operator=(Buffer&& other);
         Buffer(Buffer&& other);
-
-
 
         /**
          *  @brief Creates a buffer object. Note that no vulkan buffer has been created and allocated yet! Call after
@@ -69,7 +71,6 @@ namespace VkCore
         Buffer(const vk::BufferUsageFlags& usageFlags) : m_UsageFlags(usageFlags)
         {
         }
-        
 
         // ----------- INITIALIZATION -----------------
 
@@ -82,8 +83,8 @@ namespace VkCore
         void InitializeOnGpu(const void* data, const size_t size);
 
         /**
-         * @brief Allocates a new buffer, puts it on the CPU and fills it with the given data. The buffer will be visible both to
-         * the device (GPU) and host (CPU)
+         * @brief Allocates a new buffer, puts it on the CPU and fills it with the given data. The buffer will be
+         * visible both to the device (GPU) and host (CPU)
          * @param data - Pointer to a block of data to allocate on the buffer. Note that the data is being copied!
          * @param size - size of data in BYTES
          * @param isMapped - Allows the buffer to return a pointer to the buffer, making it able to transfer data into.
@@ -107,8 +108,8 @@ namespace VkCore
         void UpdateData(const void* data);
 
         /**
-         * @brief Updates the buffer's content with the provided data with number of BYTES. Note that if the size exceeds the size set at the initialization
-         * stage, it will throw an exception!
+         * @brief Updates the buffer's content with the provided data with number of BYTES. Note that if the size
+         * exceeds the size set at the initialization stage, it will throw an exception!
          */
         void UpdateData(const void* data, const size_t size);
 
@@ -129,10 +130,9 @@ namespace VkCore
         void Destroy();
 
       private:
-        size_t m_Size = 0;
+        size_t m_Size;
         vk::BufferUsageFlags m_UsageFlags;
-        bool m_IsHostVisible, m_IsMapped;
-
+        bool m_IsHostVisible, m_IsMapped, m_WasDestroyed;
         VkBuffer m_Buffer;
         VmaAllocation m_Allocation;
         VmaAllocationInfo m_AllocationInfo;

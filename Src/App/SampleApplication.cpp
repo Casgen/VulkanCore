@@ -54,7 +54,7 @@ namespace VkCore
         m_IndexBuffer = Buffer(vk::BufferUsageFlagBits::eIndexBuffer);
         m_IndexBuffer.InitializeOnGpu(m_CubeIndices.data(), m_CubeIndices.size() * sizeof(uint32_t));
 
-        for (int i = 0; i < DeviceManager::GetDevice().GetSwapchain()->GetImageCount(); i++)
+        for (int i = 0; i < m_Swapchain.GetImageCount(); i++)
         {
             Buffer matBuffer = Buffer(vk::BufferUsageFlagBits::eUniformBuffer);
             matBuffer.InitializeOnCpu(sizeof(MatrixBuffer));
@@ -99,7 +99,7 @@ namespace VkCore
 
     void SampleApplication::CreateFramebuffers()
     {
-        std::vector<vk::ImageView> imageViews = DeviceManager::GetDevice().GetSwapchain()->GetImageViews();
+        std::vector<vk::ImageView> imageViews = m_Swapchain.GetImageViews();
 
         TRY_CATCH_BEGIN()
 
@@ -136,7 +136,7 @@ namespace VkCore
 
         allocateInfo.setLevel(vk::CommandBufferLevel::ePrimary)
             .setCommandPool(m_CommandPool)
-            .setCommandBufferCount(DeviceManager::GetDevice().GetSwapchain()->GetImageViews().size());
+            .setCommandBufferCount(m_Swapchain.GetImageViews().size());
 
         TRY_CATCH_BEGIN()
         m_CommandBuffers = DeviceManager::GetDevice().AllocateCommandBuffers(allocateInfo);
@@ -152,7 +152,7 @@ namespace VkCore
 
         TRY_CATCH_BEGIN()
 
-        for (int i = 0; i < DeviceManager::GetDevice().GetSwapchain()->GetNumberOfSwapBuffers(); i++)
+        for (int i = 0; i < m_Swapchain.GetNumberOfSwapBuffers(); i++)
         {
             m_ImageAvailableSemaphores.emplace_back(
                 DeviceManager::GetDevice().CreateSemaphore(imageAvailableCreateInfo));
@@ -170,8 +170,8 @@ namespace VkCore
         DeviceManager::GetDevice().WaitForFences(m_InFlightFences[m_CurrentFrame], false);
 
         uint32_t imageIndex;
-        vk::ResultValue<uint32_t> result =
-            DeviceManager::GetDevice().AcquireNextImageKHR(m_ImageAvailableSemaphores[m_CurrentFrame]);
+        vk::ResultValue<uint32_t> result = m_Swapchain.AcquireNextImageKHR(m_ImageAvailableSemaphores[m_CurrentFrame],
+                                                                           m_InFlightFences[m_CurrentFrame], 0);
 
         Utils::CheckVkResult(result.result);
 
@@ -196,7 +196,7 @@ namespace VkCore
 
         TRY_CATCH_END()
 
-        vk::SwapchainKHR swapchain = DeviceManager::GetDevice().GetSwapchain()->GetVkSwapchain();
+        vk::SwapchainKHR swapchain = *m_Swapchain;
 
         vk::PresentInfoKHR presentInfo{};
         presentInfo.setWaitSemaphores(m_RenderFinishedSemaphores[m_CurrentFrame])
@@ -206,7 +206,7 @@ namespace VkCore
 
         Utils::CheckVkResult(DeviceManager::GetDevice().GetPresentQueue().presentKHR(presentInfo));
 
-        m_CurrentFrame = (m_CurrentFrame + 1) % DeviceManager::GetDevice().GetSwapchain()->GetNumberOfSwapBuffers();
+        m_CurrentFrame = (m_CurrentFrame + 1) % m_Swapchain.GetNumberOfSwapBuffers();
     }
 
     void SampleApplication::RecordCommandBuffer(const vk::CommandBuffer& commandBuffer, const uint32_t imageIndex)
