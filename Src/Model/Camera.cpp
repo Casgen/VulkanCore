@@ -1,4 +1,5 @@
 #include "Camera.h"
+#include "Log/Log.h"
 #include "glm/common.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/matrix_clip_space.hpp"
@@ -42,8 +43,8 @@ void Camera::Update()
 
     m_Position += -m_CurrentMovingDir * m_CurrAcceleration;
     m_ViewMat = glm::lookTo(m_Position, -m_FwdVector, m_UpVector);
+    LOGF(Application, Verbose, "%f", m_CurrAcceleration)
     UpdateVectors();
-
 }
 
 void Camera::SetIsMovingRight(const bool value)

@@ -11,12 +11,11 @@
 #include "GLFW/glfw3.h"
 #include "Window.h"
 #include "vulkan/vulkan_core.h"
-#include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
 {
 
-    Window::Window(vk::Instance& vkInstance, const WindowProps& props) : m_Props(props)
+    Window::Window(const std::string& title, uint32_t width, uint32_t height) : m_Width(width), m_Height(height)
     {
         glfwSetErrorCallback(ErrorCallback);
 
@@ -36,7 +35,7 @@ namespace VkCore
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        m_GlfwWindow = glfwCreateWindow(m_Props.m_Width, m_Props.m_Height, m_Props.m_Title.c_str(), nullptr, nullptr);
+        m_GlfwWindow = glfwCreateWindow(m_Width, m_Height, title.c_str(), nullptr, nullptr);
 
         if (m_GlfwWindow == nullptr)
         {
@@ -54,22 +53,10 @@ namespace VkCore
 
     Window::~Window()
     {
+        glfwWaitEvents();
+
         glfwTerminate();
         glfwDestroyWindow(m_GlfwWindow);
-    }
-
-    void Window::InitSurface(const vk::Instance& instance)
-    {
-
-        VkSurfaceKHR surface = VK_NULL_HANDLE;
-
-        VkResult err = glfwCreateWindowSurface(static_cast<VkInstance>(instance), m_GlfwWindow, nullptr, &surface);
-
-        RefreshResolution();
-
-        VkCore::Utils::CheckVkResult(err);
-
-        m_Surface = surface;
     }
 
     void Window::SwapBuffers() const
@@ -82,20 +69,7 @@ namespace VkCore
         glfwWaitEvents();
     }
 
-    void Window::Destroy(const vk::Instance& vkInstance)
-    {
-        glfwWaitEvents();
-        vkInstance.destroySurfaceKHR(m_Surface);
-
-        glfwDestroyWindow(m_GlfwWindow);
-        glfwTerminate();
-    }
-
     // -------------- GETTERS ------------------
-    vk::SurfaceKHR Window::GetVkSurface() const
-    {
-        return m_Surface;
-    }
 
     GLFWwindow* Window::GetGLFWWindow() const
     {
@@ -107,31 +81,26 @@ namespace VkCore
         return m_MouseState;
     }
 
-    WindowProps Window::GetProps() const
-    {
-        return m_Props;
-    }
-
     void Window::SetEventCallback(const std::function<void(Event&)>& callback)
     {
-        m_Props.m_CbFunction = callback;
+        m_CbFunction = callback;
 
         glfwSetKeyCallback(m_GlfwWindow, [](GLFWwindow* window, int key, int scancode, int action, int mods) -> void {
-            const WindowProps& data = static_cast<Window*>(glfwGetWindowUserPointer(window))->m_Props;
+            const Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
             switch (action)
             {
             case GLFW_PRESS: {
                 KeyPressedEvent event = KeyPressedEvent(key);
-                return data.m_CbFunction(event);
+                return win->m_CbFunction(event);
             }
             case GLFW_RELEASE: {
                 KeyReleasedEvent event = KeyReleasedEvent(key);
-                return data.m_CbFunction(event);
+                return win->m_CbFunction(event);
             }
             case GLFW_REPEAT: {
                 KeyRepeatedEvent event = KeyRepeatedEvent(key);
-                return data.m_CbFunction(event);
+                return win->m_CbFunction(event);
             }
             default:
                 std::cout << "Action couldn't be recognized!" << std::endl;
@@ -147,15 +116,15 @@ namespace VkCore
             {
             case GLFW_PRESS: {
                 MouseButtonPressedEvent event = MouseButtonPressedEvent(button);
-                return usrWindow->m_Props.m_CbFunction(event);
+                return usrWindow->m_CbFunction(event);
             }
             case GLFW_RELEASE: {
                 MouseButtonReleasedEvent event = MouseButtonReleasedEvent(button);
-                return usrWindow->m_Props.m_CbFunction(event);
+                return usrWindow->m_CbFunction(event);
             }
             case GLFW_REPEAT: {
                 MouseButtonRepeatedEvent event = MouseButtonRepeatedEvent(button);
-                return usrWindow->m_Props.m_CbFunction(event);
+                return usrWindow->m_CbFunction(event);
             }
             default:
                 std::cout << "Action couldn't be recognized!" << std::endl;
@@ -165,19 +134,19 @@ namespace VkCore
         LOG(Window, Verbose, "MouseButton callback set.")
 
         glfwSetWindowCloseCallback(m_GlfwWindow, [](GLFWwindow* window) -> void {
-            const WindowProps& data = static_cast<Window*>(glfwGetWindowUserPointer(window))->m_Props;
+            const Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
             WindowClosedEvent event;
-            data.m_CbFunction(event);
+            win->m_CbFunction(event);
         });
 
         LOG(Window, Verbose, "Close callback set.")
 
         glfwSetScrollCallback(m_GlfwWindow, [](GLFWwindow* window, double xoffset, double yoffset) -> void {
-            const WindowProps& data = static_cast<Window*>(glfwGetWindowUserPointer(window))->m_Props;
+            const Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
             MouseScrolledEvent event(xoffset, yoffset);
-            data.m_CbFunction(event);
+            win->m_CbFunction(event);
         });
 
         LOG(Window, Verbose, "ScrollCallback callback set.")
@@ -185,7 +154,7 @@ namespace VkCore
             const Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
             MouseMovedEvent event(xpos, ypos);
-            usrWindow->m_Props.m_CbFunction(event);
+            usrWindow->m_CbFunction(event);
         });
         LOG(Window, Verbose, "CursorPos callback set.")
 
@@ -193,7 +162,7 @@ namespace VkCore
             Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
             WindowResizedEvent event(width, height);
-            usrWindow->m_Props.m_CbFunction(event);
+            usrWindow->m_CbFunction(event);
         });
     }
 
@@ -206,8 +175,8 @@ namespace VkCore
 
     void Window::SetWindowSize(const int width, const int height)
     {
-        m_Props.m_Width = width;
-        m_Props.m_Height = height;
+        m_Width = width;
+        m_Height = height;
         glfwSetWindowSize(m_GlfwWindow, width, height);
     }
 

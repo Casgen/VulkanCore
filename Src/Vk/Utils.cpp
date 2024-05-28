@@ -13,9 +13,6 @@
 #include "vulkan/vulkan_structs.hpp"
 #include "Utils.h"
 
-#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC_STORAGE
-
 namespace VkCore
 {
     vk::Instance Utils::CreateInstance(const std::string& appName, const uint32_t vkApiVersion,
@@ -55,7 +52,7 @@ namespace VkCore
 
         if (CheckValidationLayerSupport())
         {
-            instanceCreateInfo.setPEnabledLayerNames(m_ValidationLayers);
+            instanceCreateInfo.setPEnabledLayerNames(validationLayers);
             instanceCreateInfo.setPNext(&debugCreateInfo);
         }
 #endif
@@ -174,7 +171,7 @@ namespace VkCore
     {
         std::vector<vk::LayerProperties> layerProperties = vk::enumerateInstanceLayerProperties();
 
-        for (const auto& layer : m_ValidationLayers)
+        for (const auto& layer : validationLayers)
         {
             bool layerFound = false;
 

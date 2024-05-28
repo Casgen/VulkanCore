@@ -73,7 +73,7 @@ namespace VkCore
          */
         static void CheckVkResult(VkResult result);
 
-        inline static std::vector<const char*> m_ValidationLayers = {"VK_LAYER_KHRONOS_validation"};
+        inline static std::vector<const char*> validationLayers = {"VK_LAYER_KHRONOS_validation"};
     };
 
 } // namespace VkCore

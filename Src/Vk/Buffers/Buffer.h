@@ -9,8 +9,8 @@
 namespace VkCore
 {
 
-    // Buffer object is like a `std::unique_ptr`. That means when the Buffer goes out of scope, it gets removed.
-    // Though you can still preemptively destroy it by calling the `Destroy()` method.
+    // Buffer object is like an `std::unique_ptr`. That means when the Buffer goes out of scope, it gets removed.
+    // Though you can still destroy it ahead of time by calling the `Destroy()` method.
     class Buffer
     {
       public:
