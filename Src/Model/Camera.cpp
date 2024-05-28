@@ -43,7 +43,6 @@ void Camera::Update()
 
     m_Position += -m_CurrentMovingDir * m_CurrAcceleration;
     m_ViewMat = glm::lookTo(m_Position, -m_FwdVector, m_UpVector);
-    LOGF(Application, Verbose, "%f", m_CurrAcceleration)
     UpdateVectors();
 }
 

@@ -67,14 +67,8 @@ namespace VkCore
 
     void Buffer::InitializeOnGpu(const void* data, const size_t size)
     {
-        BufferInfo bufferInfo{};
-
-        bufferInfo.m_UsageFlags = m_UsageFlags;
-        bufferInfo.m_Size = size;
-
-        m_Buffer =
-            ServiceLocator::GetAllocatorService().CreateBufferOnGpu(data, bufferInfo, m_Allocation, &m_AllocationInfo);
-
+        m_Buffer = ServiceLocator::GetAllocatorService().CreateBufferOnGpu(data, size, m_UsageFlags, m_Allocation,
+                                                                           &m_AllocationInfo);
         m_Size = size;
     }
 
@@ -86,19 +80,15 @@ namespace VkCore
 
     void Buffer::InitializeOnCpu(const size_t size, const bool isMapped)
     {
-        BufferInfo bufferInfo{};
-
-        bufferInfo.m_UsageFlags = m_UsageFlags;
-        bufferInfo.m_Size = size;
-        bufferInfo.m_AllocCreateFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
-        bufferInfo.m_MemoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
+        VmaAllocationCreateFlags allocFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
 
         if (isMapped)
         {
-            bufferInfo.m_AllocCreateFlags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
+            allocFlags |= VMA_ALLOCATION_CREATE_MAPPED_BIT;
         }
 
-        m_Buffer = ServiceLocator::GetAllocatorService().CreateBuffer(bufferInfo, m_Allocation, &m_AllocationInfo);
+        m_Buffer = ServiceLocator::GetAllocatorService().CreateBuffer(
+            size, {}, m_UsageFlags, {}, VMA_MEMORY_USAGE_AUTO_PREFER_HOST, allocFlags, m_Allocation, &m_AllocationInfo);
 
         if (isMapped && m_AllocationInfo.pMappedData == nullptr)
         {

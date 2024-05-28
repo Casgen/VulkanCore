@@ -25,8 +25,10 @@ namespace VkCore
          * @param outAllocationInfo - Optional output VmaAllocationInfo struct.
          * @return newly created buffer.
          */
-        VkBuffer CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
-                              VmaAllocationInfo* outAllocationInfo = nullptr) override;
+        VkBuffer CreateBuffer(const size_t size, const std::vector<uint32_t> queueFamilyIndices,
+                              const vk::BufferUsageFlags usageFlags, const vk::BufferCreateFlags createFlags,
+                              const VmaMemoryUsage memoryUsage, const VmaAllocationCreateFlags allocFlags,
+                              VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo) override;
 
         /**
          * @brief Allocates and creates a new VkImage.
@@ -74,8 +76,8 @@ namespace VkCore
          *  @param buffer - A block of memory to copy the data from and transfer to the GPU.
          *  @param data - pointer to the data.
          */
-        VkBuffer CreateBufferOnGpu(const void* data, const Buffer::BufferInfo bufferInfo, VmaAllocation& allocation,
-                                   VmaAllocationInfo* allocationInfo) override;
+        VkBuffer CreateBufferOnGpu(const void* data, const size_t size, const vk::BufferUsageFlags usageFlags,
+                                   VmaAllocation& allocation, VmaAllocationInfo* allocationInfo) override;
 
         /**
          * @brief Maps the buffer memory and returns back a pointer to the VkBuffer memory. It can be used for updating

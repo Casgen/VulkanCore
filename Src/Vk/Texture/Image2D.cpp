@@ -2,6 +2,7 @@
 #include "Image2D.h"
 #include "../../FileUtils.h"
 #include "../Services/ServiceLocator.h"
+#include "Vk/Buffers/Buffer.h"
 #include "vulkan/vulkan_core.h"
 #include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
@@ -18,20 +19,14 @@ namespace VkCore
 
     void Image2D::InitializeOnTheGpu(const uint32_t mipLevels)
     {
-        Buffer::BufferInfo stagingBufferInfo;
-
-        stagingBufferInfo.m_Size = m_ImgData.dataSize;
-        stagingBufferInfo.m_UsageFlags = vk::BufferUsageFlagBits::eTransferSrc;
-        stagingBufferInfo.m_MemoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-        stagingBufferInfo.m_AllocCreateFlags = VMA_ALLOCATION_CREATE_MAPPED_BIT |
-                                               VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-                                               VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT;
-
         VmaAllocation stagingAllocation;
         VmaAllocationInfo stagingAllocationInfo;
 
         VkBuffer stagingBuffer = ServiceLocator::GetAllocatorService().CreateBuffer(
-            stagingBufferInfo, stagingAllocation, &stagingAllocationInfo);
+            m_ImgData.dataSize, {}, vk::BufferUsageFlagBits::eTransferSrc, {}, VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+            VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT,
+            stagingAllocation, &stagingAllocationInfo);
 
         std::memcpy(stagingAllocationInfo.pMappedData, m_ImgData.data, m_ImgData.dataSize);
 
@@ -78,7 +73,7 @@ namespace VkCore
     }
 
     void Image2D::TransitionImageLayout(const VkCore::Device& device, const vk::Format format,
-                                          const vk::ImageLayout oldLayout, const vk::ImageLayout newLayout)
+                                        const vk::ImageLayout oldLayout, const vk::ImageLayout newLayout)
     {
         vk::CommandPool cmdPool;
         vk::CommandBuffer cmdBuffer = device.BeginSingleTimeCommands(cmdPool);
@@ -97,6 +92,7 @@ namespace VkCore
         memoryBarrier.srcAccessMask = vk::AccessFlagBits::eNone;
         memoryBarrier.dstAccessMask = vk::AccessFlagBits::eNone;
 
-        cmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eNone, vk::PipelineStageFlagBits::eNone, {}, {}, {}, memoryBarrier);
+        cmdBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eNone, vk::PipelineStageFlagBits::eNone, {}, {}, {},
+                                  memoryBarrier);
     }
 } // namespace VkCore

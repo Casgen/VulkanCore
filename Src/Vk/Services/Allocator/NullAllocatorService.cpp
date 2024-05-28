@@ -5,7 +5,11 @@
 namespace VkCore
 {
 
-    VkBuffer NullAllocatorService::CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
+    VkBuffer NullAllocatorService::CreateBuffer(const size_t size, const std::vector<uint32_t> queueFamilyIndices,
+                                                const vk::BufferUsageFlags usageFlags,
+                                                const vk::BufferCreateFlags createFlags,
+                                                const VmaMemoryUsage memoryUsage,
+                                                const VmaAllocationCreateFlags allocFlags, VmaAllocation& outAllocation,
                                                 VmaAllocationInfo* outAllocationInfo)
     {
         LOG(Allocation, Fatal,
@@ -60,8 +64,9 @@ namespace VkCore
         LOG(Allocation, Fatal,
             "Allocation service couldn't be located! Please make sure you have provided an allocation service!")}
 
-    VkBuffer NullAllocatorService::CreateBufferOnGpu(const void* data, const Buffer::BufferInfo bufferInfo,
-                                                     VmaAllocation& allocation, VmaAllocationInfo* allocationInfo)
+    VkBuffer NullAllocatorService::CreateBufferOnGpu(const void* data, const size_t size,
+                                                     const vk::BufferUsageFlags usageFlags, VmaAllocation& allocation,
+                                                     VmaAllocationInfo* allocationInfo)
     {
         LOG(Allocation, Fatal,
             "Allocation service couldn't be located! Please make sure you have provided an allocation service!")

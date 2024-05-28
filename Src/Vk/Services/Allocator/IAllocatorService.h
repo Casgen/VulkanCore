@@ -11,7 +11,7 @@ namespace VkCore
       public:
         friend class Buffer;
 
-        virtual ~IAllocatorService(){};
+        virtual ~IAllocatorService() {};
 
         /**
          * @brief takes data and info from the buffer and creates a new GPU-only visible buffer (allocates and populates
@@ -19,7 +19,7 @@ namespace VkCore
          * @param - A reference to an existing buffer. Used for obtaining info about the buffer.
          * @param - pointer to the data.
          */
-        virtual VkBuffer CreateBufferOnGpu(const void* data, const Buffer::BufferInfo bufferInfo,
+        virtual VkBuffer CreateBufferOnGpu(const void* data, const size_t size, const vk::BufferUsageFlags usageFlags,
                                            VmaAllocation& allocation, VmaAllocationInfo* allocationInfo) = 0;
 
         /**
@@ -29,8 +29,10 @@ namespace VkCore
          * @param outAllocationInfo - Optional output VmaAllocationInfo struct.
          * @return newly created VkBuffer handle.
          */
-        virtual VkBuffer CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
-                                      VmaAllocationInfo* outAllocationInfo = nullptr) = 0;
+        virtual VkBuffer CreateBuffer(const size_t size, const std::vector<uint32_t> queueFamilyIndices,
+                                      const vk::BufferUsageFlags usageFlags, const vk::BufferCreateFlags createFlags,
+                                      const VmaMemoryUsage memoryUsage, const VmaAllocationCreateFlags allocFlags,
+                                      VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo) = 0;
         /**
          * @brief Allocates and creates a new VkImage.
          * @param data - pointer to the data

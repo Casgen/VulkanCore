@@ -266,6 +266,7 @@ namespace VkCore
     {
         m_Device.destroyPipelineLayout(pipelineLayout);
     }
+
     void Device::FreeDescriptorSet(const vk::DescriptorPool descPool, const vk::DescriptorSet& descSet)
     {
         m_Device.freeDescriptorSets(descPool, descSet);

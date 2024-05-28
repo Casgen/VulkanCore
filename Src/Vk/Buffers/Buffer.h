@@ -14,43 +14,6 @@ namespace VkCore
     class Buffer
     {
       public:
-        struct BufferInfo
-        {
-            size_t m_Size = 0;
-            vk::BufferUsageFlags m_UsageFlags = {};
-            VmaAllocationCreateFlags m_AllocCreateFlags = {};
-            VmaMemoryUsage m_MemoryUsage = {};
-            vk::BufferCreateFlags m_CreateFlags = {};
-            std::vector<uint32_t> m_QueueFamilyIndices = {};
-
-            BufferInfo() = default;
-
-            BufferInfo(const size_t size, const vk::BufferUsageFlags usageFlags,
-                       const VmaAllocationCreateFlags allocCreateFlags,
-                       const VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO)
-                : m_Size(size), m_UsageFlags(usageFlags), m_AllocCreateFlags(allocCreateFlags),
-                  m_MemoryUsage(memoryUsage)
-            {
-            }
-
-            BufferInfo(const size_t size, const vk::BufferUsageFlags usageFlags,
-                       const VmaAllocationCreateFlags allocCreateFlags, const vk::BufferCreateFlags createFlags,
-                       const VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO)
-                : m_Size(size), m_UsageFlags(usageFlags), m_AllocCreateFlags(allocCreateFlags),
-                  m_MemoryUsage(memoryUsage), m_CreateFlags(createFlags)
-            {
-            }
-
-            BufferInfo(const size_t size, const vk::BufferUsageFlags usageFlags,
-                       const VmaAllocationCreateFlags allocCreateFlags, const vk::BufferCreateFlags createFlags,
-                       const std::vector<uint32_t>& queueFamilyIndices,
-                       const VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO)
-                : m_Size(size), m_UsageFlags(usageFlags), m_AllocCreateFlags(allocCreateFlags),
-                  m_MemoryUsage(memoryUsage), m_CreateFlags(createFlags), m_QueueFamilyIndices(queueFamilyIndices)
-            {
-            }
-        };
-
         Buffer()
             : m_Size(0), m_UsageFlags(0), m_IsHostVisible(false), m_IsMapped(false), m_Buffer(VK_NULL_HANDLE),
               m_Allocation(VK_NULL_HANDLE), m_AllocationInfo({})
@@ -136,5 +99,23 @@ namespace VkCore
         VkBuffer m_Buffer;
         VmaAllocation m_Allocation;
         VmaAllocationInfo m_AllocationInfo;
+    };
+
+    class VertexBuffer : public Buffer
+    {
+
+      public:
+        VertexBuffer() : Buffer(vk::BufferUsageFlagBits::eVertexBuffer)
+        {
+        }
+    };
+
+    class IndexBuffer : public Buffer
+    {
+
+      public:
+        IndexBuffer() : Buffer(vk::BufferUsageFlagBits::eIndexBuffer)
+        {
+        }
     };
 } // namespace VkCore

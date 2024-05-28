@@ -101,32 +101,32 @@ namespace VkCore
         DeviceManager::GetDevice().EndSingleTimeCommands(cmdBuffer, cmdPool);
     }
 
-    VkBuffer VmaAllocatorService::CreateBuffer(const Buffer::BufferInfo& bufferInfo, VmaAllocation& outAllocation,
+    VkBuffer VmaAllocatorService::CreateBuffer(const size_t size, const std::vector<uint32_t> queueFamilyIndices,
+                                               const vk::BufferUsageFlags usageFlags,
+                                               const vk::BufferCreateFlags createFlags,
+                                               const VmaMemoryUsage memoryUsage,
+                                               const VmaAllocationCreateFlags allocFlags, VmaAllocation& outAllocation,
                                                VmaAllocationInfo* outAllocationInfo)
     {
-        if (bufferInfo.m_Size <= 0)
+        if (size <= 0)
         {
             LOGF(Vulkan, Fatal,
-                 "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d",
-                 bufferInfo.m_Size)
+                 "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d", size)
             throw std::runtime_error("Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)!");
         }
 
         VkBufferCreateInfo bufferCreateInfo{};
         bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferCreateInfo.pNext = nullptr;
-        bufferCreateInfo.size = bufferInfo.m_Size;
+        bufferCreateInfo.size = size;
+        bufferCreateInfo.flags = static_cast<VkBufferCreateFlags>(createFlags);
+        bufferCreateInfo.usage = static_cast<VkBufferUsageFlags>(usageFlags);
 
-        VkBufferUsageFlags usageFlags = static_cast<VkBufferUsageFlags>(bufferInfo.m_UsageFlags);
-
-        bufferCreateInfo.flags = static_cast<VkBufferCreateFlags>(bufferInfo.m_CreateFlags);
-        bufferCreateInfo.usage = usageFlags;
-
-        if (bufferInfo.m_QueueFamilyIndices.empty())
+        if (queueFamilyIndices.empty())
         {
             bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            bufferCreateInfo.pQueueFamilyIndices = bufferInfo.m_QueueFamilyIndices.data();
-            bufferCreateInfo.queueFamilyIndexCount = bufferInfo.m_QueueFamilyIndices.size();
+            bufferCreateInfo.pQueueFamilyIndices = queueFamilyIndices.data();
+            bufferCreateInfo.queueFamilyIndexCount = queueFamilyIndices.size();
         }
         else
         {
@@ -135,8 +135,8 @@ namespace VkCore
 
         VmaAllocationCreateInfo allocCreateInfo{};
         allocCreateInfo.pool = nullptr;
-        allocCreateInfo.usage = bufferInfo.m_MemoryUsage;
-        allocCreateInfo.flags = bufferInfo.m_AllocCreateFlags;
+        allocCreateInfo.usage = memoryUsage;
+        allocCreateInfo.flags = allocFlags;
         allocCreateInfo.priority = 1.f;
 
         VkBuffer handle = VK_NULL_HANDLE;
@@ -226,8 +226,9 @@ namespace VkCore
         return image;
     }
 
-    VkBuffer VmaAllocatorService::CreateBufferOnGpu(const void* data, const Buffer::BufferInfo bufferInfo,
-                                                    VmaAllocation& allocation, VmaAllocationInfo* allocationInfo)
+    VkBuffer VmaAllocatorService::CreateBufferOnGpu(const void* data, const size_t size,
+                                                    const vk::BufferUsageFlags usageFlags, VmaAllocation& allocation,
+                                                    VmaAllocationInfo* allocationInfo)
     {
 
         if (data == nullptr)
@@ -237,41 +238,29 @@ namespace VkCore
             throw std::runtime_error(errorMsg);
         }
 
-        if (bufferInfo.m_Size <= 0)
+        if (size <= 0)
         {
             LOGF(Vulkan, Fatal,
-                 "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d",
-                 bufferInfo.m_Size)
+                 "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d", size)
             throw std::runtime_error("Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)!");
         }
 
         // First create a staging Buffer to act as a CPU visible buffer.
-
-        Buffer::BufferInfo stagingBufferInfo{};
-
-        stagingBufferInfo.m_Size = bufferInfo.m_Size;
-        stagingBufferInfo.m_UsageFlags = vk::BufferUsageFlagBits::eTransferSrc;
-        stagingBufferInfo.m_MemoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_HOST;
-        stagingBufferInfo.m_AllocCreateFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-                                               VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
-                                               VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
         VmaAllocation stagingAllocation;
         VmaAllocationInfo stagingAllocationInfo;
-        VkBuffer stagingBuffer = CreateBuffer(stagingBufferInfo, stagingAllocation, &stagingAllocationInfo);
+
+        VkBuffer stagingBuffer = CreateBuffer(size, {}, usageFlags, {}, VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+                                              VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                                                  VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+                                                  VMA_ALLOCATION_CREATE_MAPPED_BIT,
+                                              stagingAllocation, &stagingAllocationInfo);
 
         // Copy the data from the memory to the staging buffer.
-        std::memcpy(stagingAllocationInfo.pMappedData, data, bufferInfo.m_Size);
+        std::memcpy(stagingAllocationInfo.pMappedData, data, size);
 
         // Create the GPU Buffer.
-        //
-        Buffer::BufferInfo gpuBufferInfo{};
-
-        gpuBufferInfo.m_Size = bufferInfo.m_Size;
-        gpuBufferInfo.m_UsageFlags = bufferInfo.m_UsageFlags | vk::BufferUsageFlagBits::eTransferDst;
-        gpuBufferInfo.m_MemoryUsage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE;
-
-        VkBuffer gpuBuffer = CreateBuffer(gpuBufferInfo, allocation, allocationInfo);
+        VkBuffer gpuBuffer = CreateBuffer(size, {}, usageFlags | vk::BufferUsageFlagBits::eTransferDst, {},
+                                          VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, {}, allocation, allocationInfo);
 
         if (!gpuBuffer)
         {
@@ -291,13 +280,12 @@ namespace VkCore
         }
 
         // Copy the contents of the staging buffer to the gpu buffer.
-        CopyBuffer(stagingBuffer, gpuBuffer, bufferInfo.m_Size);
+        CopyBuffer(stagingBuffer, gpuBuffer, size);
 
         vmaDestroyBuffer(m_VmaAllocator, stagingBuffer, stagingAllocation);
 
         LOGF(Allocation, Verbose,
-             "Buffer has been succesfully allocated and data has been transferred onto the GPU. Size: %d",
-             bufferInfo.m_Size)
+             "Buffer has been succesfully allocated and data has been transferred onto the GPU. Size: %d", size)
 
         return gpuBuffer;
     }

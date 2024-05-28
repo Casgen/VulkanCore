@@ -102,7 +102,7 @@ class Camera
     float m_MovementSpeed = .01f;
     float m_MovementSpeedMax = .75f;
     float m_CurrAcceleration = 0.f;
-    float m_AccelerationInc = .0010f;
+    float m_AccelerationInc = .0005f;
     float m_RotationSpeed = .01f;
 
     // Camera Parameters
