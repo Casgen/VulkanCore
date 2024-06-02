@@ -20,8 +20,6 @@ namespace VkCore
         {
         }
 
-        ~Buffer();
-
         Buffer(const Buffer& other) = delete;
         Buffer& operator=(const Buffer& other) = delete;
         Buffer& operator=(Buffer&& other);

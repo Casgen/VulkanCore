@@ -249,11 +249,11 @@ namespace VkCore
         VmaAllocation stagingAllocation;
         VmaAllocationInfo stagingAllocationInfo;
 
-        VkBuffer stagingBuffer = CreateBuffer(size, {}, usageFlags, {}, VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
-                                              VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-                                                  VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
-                                                  VMA_ALLOCATION_CREATE_MAPPED_BIT,
-                                              stagingAllocation, &stagingAllocationInfo);
+        VkBuffer stagingBuffer = CreateBuffer(
+            size, {}, usageFlags | vk::BufferUsageFlagBits::eTransferSrc, {}, VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+            stagingAllocation, &stagingAllocationInfo);
 
         // Copy the data from the memory to the staging buffer.
         std::memcpy(stagingAllocationInfo.pMappedData, data, size);

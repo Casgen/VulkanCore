@@ -3,6 +3,7 @@
 #include "../Log/Log.h"
 #include "Swapchain.h"
 #include "../Vk/Devices/DeviceManager.h"
+#include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
 
 namespace VkCore
@@ -76,6 +77,7 @@ namespace VkCore
 
         m_SwapExtent = extent;
         m_SurfaceFormat = surfaceFormat.surfaceFormat;
+        m_PresentMode = presentMode;
     }
 
     void Swapchain::Destroy()
@@ -106,6 +108,11 @@ namespace VkCore
         return m_SurfaceFormat;
     }
 
+    vk::PresentModeKHR Swapchain::GetPresentMode() const
+    {
+        return m_PresentMode;
+    }
+
     vk::Extent2D Swapchain::GetSwapExtent() const
     {
         return m_SwapExtent;
@@ -114,6 +121,11 @@ namespace VkCore
     std::vector<vk::ImageView> Swapchain::GetImageViews() const
     {
         return m_ImageViews;
+    }
+
+    std::vector<vk::Image> Swapchain::GetImages() const
+    {
+        return m_Images;
     }
 
     uint32_t Swapchain::GetNumberOfSwapBuffers() const

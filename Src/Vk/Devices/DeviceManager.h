@@ -32,6 +32,7 @@ namespace VkCore
         {
             return m_PhysicalDevice;
         };
+		
 
         static std::vector<const char*> GetDeviceExtensions()
         {

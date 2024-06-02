@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vulkan/vulkan.hpp"
+#include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include <cstdint>
 #include <vector>
@@ -32,8 +33,10 @@ namespace VkCore
         vk::SwapchainKHR GetVkSwapchain() const;
         uint32_t GetImageCount() const;
         vk::SurfaceFormat2KHR GetVkSurfaceFormat() const;
+        vk::PresentModeKHR GetPresentMode() const;
         vk::Extent2D GetSwapExtent() const;
         std::vector<vk::ImageView> GetImageViews() const;
+        std::vector<vk::Image> GetImages() const;
         uint32_t GetNumberOfSwapBuffers() const;
 
         /**
@@ -53,6 +56,7 @@ namespace VkCore
 
         vk::SurfaceFormat2KHR m_SurfaceFormat;
         vk::Extent2D m_SwapExtent;
+        vk::PresentModeKHR m_PresentMode;
 
         vk::SurfaceFormat2KHR ChooseSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& surfaceFormats);
         vk::PresentModeKHR ChoosePresentMode(const std::vector<vk::PresentModeKHR>& presentModes);

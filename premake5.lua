@@ -22,18 +22,23 @@ includedirs({
 	"Vendor/stb/",
 	"Vendor/vma/",
 	"Vendor/assimp/include/",
+	"Vendor/imgui/",
 	"Src/",
 })
 
 files({
-	"Src/**.cpp",
-	"Src/**.h",
-	"Src/**.hpp",
-	"Vendor/stb/**.cpp",
-	"Vendor/stb/**.h",
-	"Vendor/vma/**.h",
-	"Vendor/vma/**.cpp",
-	"Vendor/vma/**.hpp",
+	"./Src/**.cpp",
+	"./Src/**.h",
+	"./Src/**.hpp",
+	"./Vendor/stb/**.cpp",
+	"./Vendor/stb/**.h",
+	"./Vendor/vma/**.h",
+	"./Vendor/vma/**.cpp",
+	"./Vendor/vma/**.hpp",
+	"./Vendor/imgui/*.h",
+	"./Vendor/imgui/*.cpp",
+	"./Vendor/imgui/backends/imgui_impl_glfw.*",
+	"./Vendor/imgui/backends/imgui_impl_vulkan.*",
 })
 
 defines({

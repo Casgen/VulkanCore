@@ -7,3 +7,7 @@
 [submodule "Vendor/assimp"]
 	path = Vendor/assimp
 	url = https://github.com/Casgen/assimp
+[submodule "Vendor/imgui"]
+	path = Vendor/imgui
+	url = https://github.com/ocornut/imgui
+	branch = docking

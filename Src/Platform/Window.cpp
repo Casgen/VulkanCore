@@ -10,6 +10,7 @@
 #include "../Vk/Utils.h"
 #include "GLFW/glfw3.h"
 #include "Window.h"
+#include "backends/imgui_impl_glfw.h"
 #include "vulkan/vulkan_core.h"
 
 namespace VkCore
@@ -112,6 +113,8 @@ namespace VkCore
         glfwSetMouseButtonCallback(m_GlfwWindow, [](GLFWwindow* window, int button, int action, int mods) -> void {
             Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
+            ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+
             switch (action)
             {
             case GLFW_PRESS: {
@@ -152,6 +155,8 @@ namespace VkCore
         LOG(Window, Verbose, "ScrollCallback callback set.")
         glfwSetCursorPosCallback(m_GlfwWindow, [](GLFWwindow* window, double xpos, double ypos) -> void {
             const Window* usrWindow = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+            ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
 
             MouseMovedEvent event(xpos, ypos);
             usrWindow->m_CbFunction(event);

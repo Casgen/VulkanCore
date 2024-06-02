@@ -57,14 +57,6 @@ namespace VkCore
         }
     }
 
-    Buffer::~Buffer()
-    {
-        if (!m_WasDestroyed)
-        {
-            ServiceLocator::GetAllocatorService().DestroyBuffer(*this);
-        }
-    }
-
     void Buffer::InitializeOnGpu(const void* data, const size_t size)
     {
         m_Buffer = ServiceLocator::GetAllocatorService().CreateBufferOnGpu(data, size, m_UsageFlags, m_Allocation,
@@ -176,9 +168,15 @@ namespace VkCore
 
     void Buffer::Destroy()
     {
-        ServiceLocator::GetAllocatorService().DestroyBuffer(*this);
-        m_Buffer = nullptr;
-        m_WasDestroyed = true;
+        if (!m_WasDestroyed && m_Buffer != VK_NULL_HANDLE)
+        {
+            ServiceLocator::GetAllocatorService().DestroyBuffer(*this);
+            m_Buffer = VK_NULL_HANDLE;
+            m_AllocationInfo = {};
+            m_AllocationInfo.pUserData = nullptr;
+            m_AllocationInfo.pMappedData = nullptr;
+            m_WasDestroyed = true;
+        }
     }
 
 } // namespace VkCore
