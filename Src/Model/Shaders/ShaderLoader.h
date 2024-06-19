@@ -31,8 +31,7 @@ namespace VkCore
                                                                   const bool isOptimized = true);
 
         static std::vector<VkCore::ShaderData> LoadMeshShaders(const std::filesystem::path& path,
-                                                                  const bool isOptimized = true);
-
+                                                               const bool isOptimized = true);
 
         static const char* ShadercCompilationStatusToString(shaderc_compilation_status status);
 
@@ -70,7 +69,7 @@ namespace VkCore
          * @param shaderKind - A shaderc shader kind enum to deduce the stage flag
          * @param isNvExtension - Determines whether to return a ray tracing
          */
-        static vk::ShaderStageFlagBits ShaderKindToMeshShaderStageFlag(const shaderc_shader_kind shaderKind, bool isNvExtension);
+        static vk::ShaderStageFlagBits ShaderKindToMeshShaderStageFlag(const shaderc_shader_kind shaderKind);
 
       private:
         /**
@@ -95,10 +94,13 @@ namespace VkCore
             {"tesc", shaderc_tess_evaluation_shader},
             {"tese", shaderc_tess_evaluation_shader},
             {"comp", shaderc_compute_shader},
+#ifndef VK_MESH_EXT
+            {"nv.mesh", shaderc_mesh_shader},
+            {"nv.task", shaderc_task_shader}
+#else
             {"mesh", shaderc_mesh_shader},
-            {"task", shaderc_task_shader},
-            {"nv.mesh", shaderc_task_shader},
-            {"nv.task", shaderc_mesh_shader},
+            {"task", shaderc_task_shader}
+#endif
         };
     };
 

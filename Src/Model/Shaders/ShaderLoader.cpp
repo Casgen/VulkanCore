@@ -214,33 +214,40 @@ namespace VkCore
 
         for (const auto& dirEntry : std::filesystem::directory_iterator(relativePath))
         {
-            std::filesystem::path pathEntry = dirEntry.path();
+            std::string path = dirEntry.path().string();
 
-            std::string extension = pathEntry.extension().string();
-            bool isNVExtension = pathEntry.string().find(".nv.") != -1;
+            size_t splitIndex = path.find_first_of('.');
+            std::string fileExt = path.substr(splitIndex + 1, path.length() - splitIndex);
 
-            if (!isNVExtension && extension == ".mesh")
+#ifndef VK_MESH_EXT
+            bool isValidShader = fileExt == "nv.mesh" || fileExt == "task" || fileExt == "frag";
+#else
+            bool isValidShader = fileExt == "mesh" || fileExt == "task" || fileExt == "frag";
+#endif
+            if (isValidShader)
             {
-                compileOptions.SetTargetSpirv(shaderc_spirv_version_1_5);
-                compileOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
-            }
 
-            if (extension == ".mesh" || extension == ".task" || extension == ".frag")
-            {
-                LOGF(Shader, Info, "Found a file: %s", pathEntry.string().data())
-
+                LOGF(Shader, Info, "Found a file: %s", path.data())
 
                 size_t fileSize = 0;
-                char* data = FileUtils::ReadFileC(pathEntry.string().data(), fileSize);
+                char* data = FileUtils::ReadFileC(path.data(), fileSize);
 
-                shaderc_shader_kind shaderKind = DetermineShaderType(pathEntry.string());
+                shaderc_shader_kind shaderKind = DetermineShaderType(path);
+
+#ifdef VK_MESH_EXT
+                if (shaderc_mesh_shader == shaderKind)
+                {
+                    compileOptions.SetTargetSpirv(shaderc_spirv_version_1_5);
+                    compileOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
+                }
+#endif
 
                 shaderc::SpvCompilationResult result =
-                    compiler.CompileGlslToSpv(data, shaderKind, path.stem().string().data(), compileOptions);
+                    compiler.CompileGlslToSpv(data, shaderKind, dirEntry.path().stem().string().data(), compileOptions);
 
                 if (result.GetCompilationStatus() != shaderc_compilation_status_success)
                 {
-                    std::string errorMsg = "Failed to compile a shader!\nGiven file: " + path.string() +
+                    std::string errorMsg = "Failed to compile a shader!\nGiven file: " + path +
                                            ",\nCompilation status " +
                                            ShadercCompilationStatusToString(result.GetCompilationStatus());
 
@@ -248,18 +255,18 @@ namespace VkCore
                          "Failed to compile a shader!\n\tGiven file: %s\n\tCompilation status: %s\n\tNumber of errors: "
                          "%d "
                          "\n\tError message: %s \n\t Num of warnings: %d\n",
-                         path.string().data(), ShadercCompilationStatusToString(result.GetCompilationStatus()),
+                         path.data(), ShadercCompilationStatusToString(result.GetCompilationStatus()),
                          result.GetNumErrors(), result.GetErrorMessage().data(), result.GetNumWarnings())
 
                     throw std::runtime_error(errorMsg);
                 }
 
                 LOGF(Shader, Info, "Shader compilation was successful!\n\tGiven file: %s\n\tNum of warnings: %d\n",
-                     path.string().data(), result.GetNumWarnings())
+                     path.data(), result.GetNumWarnings())
 
                 ShaderData shaderData;
                 shaderData.m_Data = {result.cbegin(), result.cend()};
-                shaderData.m_StageFlags = ShaderKindToMeshShaderStageFlag(shaderKind, isNVExtension);
+                shaderData.m_StageFlags = ShaderKindToMeshShaderStageFlag(shaderKind);
 
                 modulesMap.emplace_back(shaderData);
 
@@ -293,16 +300,10 @@ namespace VkCore
 
     shaderc_shader_kind ShaderLoader::DetermineShaderType(const std::string& filename)
     {
-        std::stringstream stringStream(filename);
+        size_t splitIndex = filename.find_first_of('.');
+        std::string fileExt = filename.substr(splitIndex + 1, filename.length() - splitIndex);
 
-        std::string tempWord;
-
-        while (!stringStream.eof())
-        {
-            std::getline(stringStream, tempWord, '.');
-        }
-
-        const auto foundType = m_ShaderTypeMap.find(tempWord);
+        const auto foundType = m_ShaderTypeMap.find(fileExt);
 
         if (foundType != m_ShaderTypeMap.end())
         {
@@ -422,8 +423,7 @@ namespace VkCore
         }
     }
 
-    vk::ShaderStageFlagBits ShaderLoader::ShaderKindToMeshShaderStageFlag(const shaderc_shader_kind shaderKind,
-                                                                          bool isNvExtension)
+    vk::ShaderStageFlagBits ShaderLoader::ShaderKindToMeshShaderStageFlag(const shaderc_shader_kind shaderKind)
     {
 
         switch (shaderKind)
@@ -432,34 +432,21 @@ namespace VkCore
             return vk::ShaderStageFlagBits::eCompute;
         case shaderc_fragment_shader:
             return vk::ShaderStageFlagBits::eFragment;
-        }
-
-        if (isNvExtension)
-        {
-
-            switch (shaderKind)
-            {
-            case shaderc_task_shader:
-                return vk::ShaderStageFlagBits::eTaskNV;
-            case shaderc_mesh_shader:
-                return vk::ShaderStageFlagBits::eMeshNV;
-            }
-        }
-
-        switch (shaderKind)
-        {
+        // eTaskEXT and eTaskNV or eMeshEXT and eTaskNV have the same value.
         case shaderc_task_shader:
             return vk::ShaderStageFlagBits::eTaskEXT;
         case shaderc_mesh_shader:
             return vk::ShaderStageFlagBits::eMeshEXT;
+        default: {
+            LOG(Shader, Error,
+                "The given shader kind couldn't be mapped to the vulkan shader stage flag! returning "
+                "vk::ShaderStageFlagBits::eAll")
+            throw std::runtime_error(
+                "The given shader kind couldn't be mapped to the vulkan shader stage flag! returning "
+                "vk::ShaderStageFlagBits::eAll");
+            return vk::ShaderStageFlagBits::eAll;
         }
-
-        LOG(Shader, Error,
-            "The given shader kind couldn't be mapped to the vulkan shader stage flag! returning "
-            "vk::ShaderStageFlagBits::eAll")
-        throw std::runtime_error("The given shader kind couldn't be mapped to the vulkan shader stage flag! returning "
-                                 "vk::ShaderStageFlagBits::eAll");
-        return vk::ShaderStageFlagBits::eAll;
+        }
     }
 
 } // namespace VkCore

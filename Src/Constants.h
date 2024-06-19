@@ -2,6 +2,6 @@
 
 namespace Constants
 {
-    const unsigned int MAX_MESHLET_VERTICES = 64;
-    const unsigned int MAX_MESHLET_INDICES = 126;
+    constexpr const unsigned int MAX_MESHLET_VERTICES = 64;
+    constexpr const unsigned int MAX_MESHLET_INDICES = 384;
 } // namespace Constants

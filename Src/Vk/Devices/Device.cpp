@@ -63,7 +63,11 @@ namespace VkCore
 
         vk::PhysicalDeviceFeatures2 features2 = physicalDevice.GetPhysicalDeviceFeatures2();
 
+#ifndef VK_MESH_EXT
         vk::PhysicalDeviceMeshShaderFeaturesNV meshShaderFeatures(true, true);
+#else
+        vk::PhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures(true, true, false, false, false);
+#endif
 
         vk::PhysicalDeviceVulkan12Features vulkan12Features{};
         vulkan12Features.setBufferDeviceAddress(true);
