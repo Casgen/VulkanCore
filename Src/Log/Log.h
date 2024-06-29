@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <stdexcept>
 
 #define TRY_CATCH_BEGIN()                                                                                              \
     try                                                                                                                \
@@ -96,8 +97,15 @@ class Logger
 #ifdef DEBUG
 #define LOGF(Category, Severity, Format, ...)                                                                          \
     Logger::GetLogger()->Printf(ECategory::Category, ESeverity::Severity, Format, __VA_ARGS__);
+
 #define LOG(Category, Severity, Format) Logger::GetLogger()->Print(ECategory::Category, ESeverity::Severity, Format);
+
+#define LOG_AND_THROW(Category, Severity, Format)                                                                      \
+    const char* message = Format;                                                                                      \
+    Logger::GetLogger()->Print(ECategory::Category, ESeverity::Severity, message);                                     \
+    throw std::runtime_error(message);
 #else
 #define LOGF(Category, Severity, Format, ...)
 #define LOG(Category, Severity, Format)
+#define LOG_AND_THROW(Category, Severity, Format)
 #endif

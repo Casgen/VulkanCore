@@ -79,22 +79,22 @@ Mesh Model::ProcessMesh(const aiMesh* mesh, const aiScene* scene)
             normals = {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
         }
 
-        glm::vec2 textureCoord = glm::vec2();
-        glm::vec3 tangent = glm::vec3();
-        glm::vec3 biTangent = glm::vec3();
+        glm::vec2 textureCoord;
+        glm::vec3 tangent;
+        glm::vec3 biTangent;
 
         if (mesh->mTextureCoords[0] != nullptr)
         {
-            textureCoord.x = mesh->mTextureCoords[0][i].x;
-            textureCoord.y = mesh->mTextureCoords[0][i].y;
+            textureCoord = {
+                mesh->mTextureCoords[0][i].x,
+                mesh->mTextureCoords[0][i].y,
+            };
 
-            tangent.x = mesh->mTangents[i].x;
-            tangent.y = mesh->mTangents[i].y;
-            tangent.z = mesh->mTangents[i].z;
-
-            biTangent.x = mesh->mBitangents[i].x;
-            biTangent.y = mesh->mBitangents[i].y;
-            biTangent.z = mesh->mBitangents[i].z;
+            if (mesh->HasTangentsAndBitangents())
+            {
+                tangent = {mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z};
+                biTangent = {mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z};
+            }
         }
 
         meshVertices.emplace_back(MeshVertex{position, normals, tangent, biTangent, textureCoord});

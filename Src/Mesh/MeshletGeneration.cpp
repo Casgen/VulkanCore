@@ -4,8 +4,14 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
-#include <unordered_map>
+#include <immintrin.h>
+#include <limits>
+#include <xmmintrin.h>
 
+#include "Constants.h"
+#include "Log/Log.h"
+#include "Model/Structures/OcTree.h"
+#include "Model/Structures/Triangle.h"
 #include "glm/common.hpp"
 
 // std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts, uint32_t maxIndices,
@@ -86,8 +92,9 @@
 // }
 
 std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts, uint32_t maxIndices,
-                                                              const std::vector<uint32_t> indices,
-                                                              const uint32_t verticesSize) {
+                                                              const std::vector<uint32_t>& indices,
+                                                              const uint32_t verticesSize)
+{
     std::vector<Meshlet> meshlets;
     Meshlet meshlet = {};
 
@@ -95,7 +102,8 @@ std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts,
 
     uint8_t vertexCount = 0;
 
-    for (uint32_t i = 0; i < indices.size(); i += 3) {
+    for (uint32_t i = 0; i < indices.size(); i += 3)
+    {
 
         uint32_t a = indices[i + 0];
         uint32_t b = indices[i + 1];
@@ -106,23 +114,27 @@ std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts,
         uint8_t& cv = vertices[c];
 
         if ((meshlet.vertexCount + (av == 0xFF) + (bv == 0xFF) + (cv == 0xFF) > maxVerts) ||
-            (meshlet.indicesCount + 3 > maxIndices)) {
+            (meshlet.indicesCount + 3 > maxIndices))
+        {
             meshlets.push_back(meshlet);
             meshlet = {};
             memset(vertices.data(), 0xFF, verticesSize);
         }
 
-        if (av == 0xFF) {
+        if (av == 0xFF)
+        {
             av = meshlet.vertexCount;
             meshlet.vertices[meshlet.vertexCount++] = a;
         }
 
-        if (bv == 0xFF) {
+        if (bv == 0xFF)
+        {
             bv = meshlet.vertexCount;
             meshlet.vertices[meshlet.vertexCount++] = b;
         }
 
-        if (cv == 0xFF) {
+        if (cv == 0xFF)
+        {
             cv = meshlet.vertexCount;
             meshlet.vertices[meshlet.vertexCount++] = c;
         }
@@ -132,8 +144,96 @@ std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts,
         meshlet.indices[meshlet.indicesCount++] = cv;
     }
 
-    if (meshlet.indicesCount != 0) {
+    if (meshlet.indicesCount != 0)
+    {
         meshlets.push_back(meshlet);
+    }
+
+    return meshlets;
+}
+
+std::vector<Meshlet> MeshletGeneration::OcTreeMeshletizeMesh(uint32_t maxVerts, uint32_t maxIndices, const Mesh& mesh)
+{
+
+    std::vector<Triangle> triangles;
+    triangles.reserve(mesh.indices.size() / 3);
+
+    if (mesh.indices.size() % 3 != 0)
+    {
+        LOGF(Rendering, Warning,
+             "The number of indices in the model do not look like triangles! Mesh may not be complete! Indices count: "
+             "%d",
+             mesh.indices.size())
+    }
+
+	for (size_t i = 0; i < mesh.indices.size() - 3; i++) {
+		triangles.emplace_back(mesh.vertices[mesh.indices[i]].Position, mesh.vertices[mesh.indices[i + 1]].Position, mesh.vertices[mesh.indices[i + 3]].Position, 1);
+	}
+
+    OcTreeTriangles ocTree = OcTreeTriangles(Mesh::CreateBoundingBox(mesh), Constants::MAX_MESHLET_INDICES / 3);
+
+	for (const auto& triangle : triangles) {
+		ocTree.Push(triangle);
+	}
+
+
+    std::vector<OcTreeTriangles::Query> queries = ocTree.GetAllNodeTriangles();
+
+    std::vector<Meshlet> meshlets;
+    Meshlet meshlet = {};
+
+    for (const auto& query : queries)
+    {
+        for (const auto& triangle : query.triangles)
+        {
+
+            std::vector<uint8_t> vertexLookup(mesh.vertices.size(), 0xFF);
+
+            uint8_t vertexCount = 0;
+
+            uint32_t a = mesh.indices[triangle.id * 3];
+            uint32_t b = mesh.indices[triangle.id * 3 + 1];
+            uint32_t c = mesh.indices[triangle.id * 3 + 2];
+
+            uint8_t& av = vertexLookup[a];
+            uint8_t& bv = vertexLookup[b];
+            uint8_t& cv = vertexLookup[c];
+
+            if ((meshlet.vertexCount + (av == 0xFF) + (bv == 0xFF) + (cv == 0xFF) > maxVerts) ||
+                (meshlet.indicesCount + 3 > maxIndices))
+            {
+                meshlets.push_back(meshlet);
+                meshlet = {};
+                memset(vertexLookup.data(), 0xFF, mesh.vertices.size());
+            }
+
+            if (av == 0xFF)
+            {
+                av = meshlet.vertexCount;
+                meshlet.vertices[meshlet.vertexCount++] = a;
+            }
+
+            if (bv == 0xFF)
+            {
+                bv = meshlet.vertexCount;
+                meshlet.vertices[meshlet.vertexCount++] = b;
+            }
+
+            if (cv == 0xFF)
+            {
+                cv = meshlet.vertexCount;
+                meshlet.vertices[meshlet.vertexCount++] = c;
+            }
+
+            meshlet.indices[meshlet.indicesCount++] = av;
+            meshlet.indices[meshlet.indicesCount++] = bv;
+            meshlet.indices[meshlet.indicesCount++] = cv;
+        }
+
+        if (meshlet.indicesCount != 0)
+        {
+            meshlets.push_back(meshlet);
+        }
     }
 
     return meshlets;

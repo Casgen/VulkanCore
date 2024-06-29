@@ -94,3 +94,12 @@ project("VulkanCore")
 
 	filter("options:with-vulkan")
 		defines{ "VK_MESH_EXT"}
+
+	 -- GCC and Clang
+    filter { "action:gmake2", "architecture:x86_64" }
+        buildoptions { "-mavx" }
+
+    -- MSVC
+    filter { "action:vs*", "architecture:x86_64" }
+        buildoptions { "/arch:AVX" }
+

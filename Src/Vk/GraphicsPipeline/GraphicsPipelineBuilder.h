@@ -14,7 +14,10 @@
 #include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore {
+
+// TODO: Modify this class to use the DeviceManager.
 class GraphicsPipelineBuilder {
+
    public:
     GraphicsPipelineBuilder(bool isMeshShading = false) : m_IsMeshShading(isMeshShading) { Init(); }
 

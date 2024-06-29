@@ -5,6 +5,7 @@
 
 #include "../Vk/Buffers/Buffer.h"
 #include "MeshVertex.h"
+#include "Model/Structures/OcTree.h"
 
 class Mesh
 {
@@ -30,9 +31,13 @@ class Mesh
         m_MeshletBuffer.Destroy();
     }
 
+	static OcTreeTriangles OcTreeMesh(const Mesh& mesh, const uint32_t capacity);
+	static AABB CreateBoundingBox(const Mesh& mesh);
+
+    const std::vector<uint32_t> indices;
+    const std::vector<MeshVertex> vertices;
+
   private:
-    const std::vector<uint32_t> m_Indices;
-    const std::vector<MeshVertex> m_Vertices;
     uint32_t m_MeshletCount = 0;
 
     VkCore::Buffer m_VertexBuffer;
