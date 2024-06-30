@@ -1,8 +1,8 @@
-#include "Triangle.h"
+#include "IndexedTriangle.h"
 #include <cmath>
 #include <immintrin.h>
 
-AABB Triangle::ComputeAABB() const
+AABB IndexedTriangle::ComputeAABB() const
 {
 
     __m128 amm = _mm_set_ps(0.f, a.z, a.y, a.x);
@@ -38,7 +38,7 @@ AABB Triangle::ComputeAABB() const
     };
 }
 
-bool Triangle::Overlaps(const AABB& aabb) const {
+bool IndexedTriangle::Overlaps(const AABB& aabb) const {
 
 	return aabb.IsPointInside(a) || aabb.IsPointInside(b) || aabb.IsPointInside(c);
 }

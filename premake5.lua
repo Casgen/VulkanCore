@@ -23,6 +23,7 @@ project("VulkanCore")
 		"Vendor/vma/",
 		"Vendor/assimp/include/",
 		"Vendor/imgui/",
+		"Vendor/ZMath/",
 		"Src/",
 	}
 
@@ -39,6 +40,8 @@ project("VulkanCore")
 		"./Vendor/imgui/*.cpp",
 		"./Vendor/imgui/backends/imgui_impl_glfw.*",
 		"./Vendor/imgui/backends/imgui_impl_vulkan.*",
+		"./Vendor/ZMath/**.cpp",
+		"./Vendor/ZMath/**.h",
 	}
 
 	defines{

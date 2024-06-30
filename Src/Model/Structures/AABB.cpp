@@ -7,15 +7,18 @@ bool AABB::IsPointInside(const glm::vec3 point) const
     __m256 aabbPoints = _mm256_set_ps(minPoint.x, minPoint.y, minPoint.z, maxPoint.x, maxPoint.y, maxPoint.z, 0.0, 0.0);
     __m256 testedPoint = _mm256_set_ps(point.x, point.y, point.z, point.x, point.y, point.z, 0.0, 0.0);
 
-    __m256 result = _mm256_cmp_ps(aabbPoints, testedPoint, _CMP_GE_OQ);
-    int mask = _mm256_movemask_ps(result);
+    __m256 minResult = _mm256_cmp_ps(aabbPoints, testedPoint, _CMP_GE_OQ);
+    __m256 maxResult = _mm256_cmp_ps(aabbPoints, testedPoint, _CMP_LE_OQ);
+
+    int minMask = _mm256_movemask_ps(minResult);
+    int maxMask = _mm256_movemask_ps(maxResult);
 
     // Should we keep this in order to support non-SIMD compatible CPUs?
     // return minPoint.x < point.x && point.x < maxPoint.x && minPoint.y < point.y && point.y < maxPoint.y &&
     //        minPoint.z < point.z && point.z < maxPoint.z;
     //
 
-    return mask == 31;
+    return (minMask == 31) && (maxMask == 227);
 }
 
 glm::vec3 AABB::CenterPoint() const
@@ -37,13 +40,13 @@ std::vector<Edge> AABB::GenerateEdges() const  {
 
 	std::vector<Edge> edges;
 	
-	const glm::vec3 b = {maxPoint.x, minPoint.y, minPoint.z};
-	const glm::vec3 c = {maxPoint.x, minPoint.y, maxPoint.z};
-	const glm::vec3 d = {minPoint.x, minPoint.y, maxPoint.z};
+	const glm::vec3 b{maxPoint.x, minPoint.y, minPoint.z};
+	const glm::vec3 c{maxPoint.x, minPoint.y, maxPoint.z};
+	const glm::vec3 d{minPoint.x, minPoint.y, maxPoint.z};
 
-	const glm::vec3 e {minPoint.x, maxPoint.y, minPoint.z};
-	const glm::vec3 f {maxPoint.x, maxPoint.y, minPoint.z};
-	const glm::vec3 h {minPoint.x, maxPoint.y, maxPoint.z};
+	const glm::vec3 e{minPoint.x, maxPoint.y, minPoint.z};
+	const glm::vec3 f{maxPoint.x, maxPoint.y, minPoint.z};
+	const glm::vec3 h{minPoint.x, maxPoint.y, maxPoint.z};
 
 	// Bottom Face
 	edges.emplace_back(minPoint, b);

@@ -1,47 +1,11 @@
 #pragma once
 
 #include "Model/Structures/AABB.h"
-#include "Model/Structures/Triangle.h"
+#include "Model/Structures/IndexedTriangle.h"
 #include "Model/Structures/Edge.h"
 #include "glm/ext/vector_float3.hpp"
 #include <array>
 #include <vector>
-
-struct OcTree
-{
-
-  public:
-    struct Query
-    {
-        std::vector<glm::vec3> points = {};
-
-        Query(const std::vector<glm::vec3>& points) : points(points)
-        {
-        }
-    };
-
-    OcTree() = default;
-    OcTree(const AABB boundary, const uint32_t capacity);
-    OcTree(OcTree&& other);
-
-    ~OcTree();
-
-    void Subdivide();
-    bool Push(const glm::vec3 point);
-    std::vector<Query> GetAllNodePoints();
-
-    OcTree& operator=(OcTree&& other) noexcept;
-
-    static std::vector<Edge> GenerateEdges(const OcTree& ocTree, const bool showAllNodes = false);
-
-    uint32_t capacity = 0;
-    std::array<OcTree*, 8> nodes = {nullptr, nullptr, nullptr, nullptr,
-                                    nullptr, nullptr, nullptr, nullptr}; // A, B, C, D, E, F, G, H
-    std::vector<glm::vec3> points = {};
-
-    AABB boundary;
-    bool isDivided = false;
-};
 
 // This is an octal tree which instead of points contains triangles.
 struct OcTreeTriangles
@@ -50,9 +14,9 @@ struct OcTreeTriangles
   public:
     struct Query
     {
-        std::vector<Triangle> triangles = {};
+        std::vector<IndexedTriangle> triangles = {};
 
-        Query(const std::vector<Triangle>& triangles) : triangles(triangles)
+        Query(const std::vector<IndexedTriangle>& triangles) : triangles(triangles)
         {
         }
     };
@@ -63,8 +27,9 @@ struct OcTreeTriangles
     ~OcTreeTriangles();
 
     void Subdivide();
-    bool Push(const Triangle& triangle);
+    bool Push(const IndexedTriangle& triangle);
     std::vector<Query> GetAllNodeTriangles();
+	uint32_t CountTriangles(const uint32_t& count = 0) const;
 
     OcTreeTriangles& operator=(OcTreeTriangles&& other) noexcept;
 
@@ -73,7 +38,7 @@ struct OcTreeTriangles
     uint32_t capacity = 0;
     std::array<OcTreeTriangles*, 8> nodes = {nullptr, nullptr, nullptr, nullptr,
                                              nullptr, nullptr, nullptr, nullptr}; // A, B, C, D, E, F, G, H
-    std::vector<Triangle> triangles = {};
+    std::vector<IndexedTriangle> triangles = {};
 
     AABB boundary;
     bool isDivided = false;

@@ -5,13 +5,13 @@
 #include <cstdint>
 #include <cstring>
 #include <immintrin.h>
-#include <limits>
 #include <xmmintrin.h>
+#include "../Log/Log.h"
 
 #include "Constants.h"
 #include "Log/Log.h"
 #include "Model/Structures/OcTree.h"
-#include "Model/Structures/Triangle.h"
+#include "Model/Structures/IndexedTriangle.h"
 #include "glm/common.hpp"
 
 // std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts, uint32_t maxIndices,
@@ -155,7 +155,7 @@ std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts,
 std::vector<Meshlet> MeshletGeneration::OcTreeMeshletizeMesh(uint32_t maxVerts, uint32_t maxIndices, const Mesh& mesh)
 {
 
-    std::vector<Triangle> triangles;
+    std::vector<IndexedTriangle> triangles;
     triangles.reserve(mesh.indices.size() / 3);
 
     if (mesh.indices.size() % 3 != 0)
@@ -166,34 +166,48 @@ std::vector<Meshlet> MeshletGeneration::OcTreeMeshletizeMesh(uint32_t maxVerts, 
              mesh.indices.size())
     }
 
-	for (size_t i = 0; i < mesh.indices.size() - 3; i++) {
-		triangles.emplace_back(mesh.vertices[mesh.indices[i]].Position, mesh.vertices[mesh.indices[i + 1]].Position, mesh.vertices[mesh.indices[i + 3]].Position, 1);
-	}
+    for (size_t i = 0; i < mesh.indices.size() - 3; i += 3)
+    {
+
+        const uint32_t a = mesh.indices[i];
+        const uint32_t b = mesh.indices[i + 1];
+        const uint32_t c = mesh.indices[i + 2];
+
+		LOGF(Rendering, Verbose, "{%d, %d, %d}", a, b, c)
+
+        triangles.emplace_back(mesh.vertices[a].Position,
+							   mesh.vertices[b].Position,
+                               mesh.vertices[c].Position,
+							   a,
+							   b,
+                               c);
+    }
 
     OcTreeTriangles ocTree = OcTreeTriangles(Mesh::CreateBoundingBox(mesh), Constants::MAX_MESHLET_INDICES / 3);
 
-	for (const auto& triangle : triangles) {
-		ocTree.Push(triangle);
-	}
-
+    for (const auto& triangle : triangles)
+    {
+        ocTree.Push(triangle);
+    }
 
     std::vector<OcTreeTriangles::Query> queries = ocTree.GetAllNodeTriangles();
 
     std::vector<Meshlet> meshlets;
-    Meshlet meshlet = {};
 
     for (const auto& query : queries)
     {
+        Meshlet meshlet = {};
+
+        std::vector<uint8_t> vertexLookup(mesh.vertices.size(), 0xFF);
+
+        uint8_t vertexCount = 0;
+
         for (const auto& triangle : query.triangles)
         {
 
-            std::vector<uint8_t> vertexLookup(mesh.vertices.size(), 0xFF);
-
-            uint8_t vertexCount = 0;
-
-            uint32_t a = mesh.indices[triangle.id * 3];
-            uint32_t b = mesh.indices[triangle.id * 3 + 1];
-            uint32_t c = mesh.indices[triangle.id * 3 + 2];
+            uint32_t a = mesh.indices[triangle.indices.x];
+            uint32_t b = mesh.indices[triangle.indices.y];
+            uint32_t c = mesh.indices[triangle.indices.z];
 
             uint8_t& av = vertexLookup[a];
             uint8_t& bv = vertexLookup[b];
