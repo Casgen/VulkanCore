@@ -173,13 +173,7 @@ std::vector<Meshlet> MeshletGeneration::OcTreeMeshletizeMesh(uint32_t maxVerts, 
         const uint32_t b = mesh.indices[i + 1];
         const uint32_t c = mesh.indices[i + 2];
 
-		LOGF(Rendering, Verbose, "{%d, %d, %d}", a, b, c)
-
-        triangles.emplace_back(mesh.vertices[a].Position,
-							   mesh.vertices[b].Position,
-                               mesh.vertices[c].Position,
-							   a,
-							   b,
+        triangles.emplace_back(mesh.vertices[a].Position, mesh.vertices[b].Position, mesh.vertices[c].Position, a, b,
                                c);
     }
 
@@ -190,7 +184,8 @@ std::vector<Meshlet> MeshletGeneration::OcTreeMeshletizeMesh(uint32_t maxVerts, 
         ocTree.Push(triangle);
     }
 
-    std::vector<OcTreeTriangles::Query> queries = ocTree.GetAllNodeTriangles();
+    std::vector<OcTreeTriangles::Query> queries;
+	ocTree.GetAllNodeTriangles(queries);
 
     std::vector<Meshlet> meshlets;
 
@@ -205,9 +200,9 @@ std::vector<Meshlet> MeshletGeneration::OcTreeMeshletizeMesh(uint32_t maxVerts, 
         for (const auto& triangle : query.triangles)
         {
 
-            uint32_t a = mesh.indices[triangle.indices.x];
-            uint32_t b = mesh.indices[triangle.indices.y];
-            uint32_t c = mesh.indices[triangle.indices.z];
+            uint32_t a = mesh.indices[triangle.indexA];
+            uint32_t b = mesh.indices[triangle.indexB];
+            uint32_t c = mesh.indices[triangle.indexC];
 
             uint8_t& av = vertexLookup[a];
             uint8_t& bv = vertexLookup[b];

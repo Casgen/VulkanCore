@@ -1,24 +1,19 @@
 #pragma once
 
-#define GLM_FORCE_SSE2
-
 #include "Model/Structures/Edge.h"
-#include "glm/ext/vector_float3.hpp"
 #include <immintrin.h>
 #include <vector>
 #include <xmmintrin.h>
+#include "../ZMath/Vec3f.h"
 
 struct AABB
 {
+    Vec3f minPoint = Vec3f(-1.f);
+    Vec3f maxPoint = Vec3f(1.f);
 
-    glm::vec3 minPoint = glm::vec3(-1);
-    glm::vec3 maxPoint = glm::vec3(1);
-
-    AABB() = default;
-
-    bool IsPointInside(const glm::vec3 point) const;
-    glm::vec3 CenterPoint() const;
-    glm::vec3 Dimensions() const;
-    bool IsOverlapping(const AABB& aabb) const;
+    bool IsPointInside(const Vec3f& point) const;
+    Vec3f CenterPoint() const;
+    Vec3f Dimensions() const;
+    bool Intersects(const AABB& aabb) const;
     std::vector<Edge> GenerateEdges() const;
 };

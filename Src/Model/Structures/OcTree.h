@@ -3,7 +3,6 @@
 #include "Model/Structures/AABB.h"
 #include "Model/Structures/IndexedTriangle.h"
 #include "Model/Structures/Edge.h"
-#include "glm/ext/vector_float3.hpp"
 #include <array>
 #include <vector>
 
@@ -28,7 +27,7 @@ struct OcTreeTriangles
 
     void Subdivide();
     bool Push(const IndexedTriangle& triangle);
-    std::vector<Query> GetAllNodeTriangles();
+    void GetAllNodeTriangles(std::vector<Query>& outQueries);
 	uint32_t CountTriangles(const uint32_t& count = 0) const;
 
     OcTreeTriangles& operator=(OcTreeTriangles&& other) noexcept;

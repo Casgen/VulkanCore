@@ -250,6 +250,11 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::SetLineWidth(const float lineW
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddDescriptorLayout(
     const std::vector<vk::DescriptorSetLayout> layouts) {
     for (const auto& layout : layouts) {
+
+		if (layout == nullptr) {
+			LOG(Vulkan, Error, "The given DescriptorLayout is nullptr")
+		}
+
         m_DescriptorSetLayouts.emplace_back(layout);
     }
 
@@ -257,6 +262,11 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddDescriptorLayout(
 }
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::AddDescriptorLayout(const vk::DescriptorSetLayout layout) {
+
+	if (layout == nullptr) {
+		LOG(Vulkan, Error, "The given DescriptorLayout is nullptr")
+	}
+
     m_DescriptorSetLayouts.emplace_back(layout);
     return *this;
 }
@@ -290,6 +300,7 @@ vk::Pipeline GraphicsPipelineBuilder::Build(vk::PipelineLayout& pipelineLayout) 
     ValidateShaderInfo();
     ValidateVertexInfo();
     ValidateViewportInfo();
+
 
     m_PipelineCreateInfo.setStages(m_ShaderStageCreateInfos);
 
@@ -356,7 +367,9 @@ vk::Pipeline GraphicsPipelineBuilder::Build(vk::PipelineLayout& pipelineLayout) 
 
     TRY_CATCH_BEGIN()
 
+	LOG(Application, Verbose, "Drawing...")
     auto layout = m_Device.CreateGraphicsPipelines({m_PipelineCreateInfo});
+	LOG(Application, Verbose, "Created Graphics Pipeline...")
 
     VkCore::Utils::CheckVkResult(layout.result);
 

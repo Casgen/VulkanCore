@@ -1,37 +1,38 @@
 #include "Model/Structures/AABB.h"
 #include <algorithm>
 
-bool AABB::IsPointInside(const glm::vec3 point) const
+bool AABB::IsPointInside(const Vec3f& point) const
 {
 
-    __m256 aabbPoints = _mm256_set_ps(minPoint.x, minPoint.y, minPoint.z, maxPoint.x, maxPoint.y, maxPoint.z, 0.0, 0.0);
-    __m256 testedPoint = _mm256_set_ps(point.x, point.y, point.z, point.x, point.y, point.z, 0.0, 0.0);
+    __m128 aabbMax = _mm_set_ps(0.f, maxPoint.z, maxPoint.y, maxPoint.x);
+    __m128 aabbMin = _mm_set_ps(0.f, minPoint.z, minPoint.y, minPoint.x);
+    __m128 testedPoint = _mm_set_ps(0.f, point.z, point.y, point.x);
 
-    __m256 minResult = _mm256_cmp_ps(aabbPoints, testedPoint, _CMP_GE_OQ);
-    __m256 maxResult = _mm256_cmp_ps(aabbPoints, testedPoint, _CMP_LE_OQ);
+    __m128 maxResult = _mm_cmp_ps(testedPoint, aabbMax, _CMP_LE_OQ);
+    __m128 minResult = _mm_cmp_ps(testedPoint, aabbMin, _CMP_GE_OQ);
 
-    int minMask = _mm256_movemask_ps(minResult);
-    int maxMask = _mm256_movemask_ps(maxResult);
+    int minMask = _mm_movemask_ps(minResult) & 0b0111;
+    int maxMask = _mm_movemask_ps(maxResult) & 0b0111;
 
     // Should we keep this in order to support non-SIMD compatible CPUs?
     // return minPoint.x < point.x && point.x < maxPoint.x && minPoint.y < point.y && point.y < maxPoint.y &&
     //        minPoint.z < point.z && point.z < maxPoint.z;
     //
 
-    return (minMask == 31) && (maxMask == 227);
+    return (minMask == 0b0111) && (maxMask == 0b0111);
 }
 
-glm::vec3 AABB::CenterPoint() const
+Vec3f AABB::CenterPoint() const
 {
-    return (maxPoint + minPoint) / glm::vec3(2.0);
+    return (maxPoint + minPoint) / Vec3f(2.0);
 }
 
-glm::vec3 AABB::Dimensions() const
+Vec3f AABB::Dimensions() const
 {
     return maxPoint - minPoint;
 }
 
-bool AABB::IsOverlapping(const AABB& aabb) const
+bool AABB::Intersects(const AABB& aabb) const
 {
     return IsPointInside(aabb.minPoint) || IsPointInside(aabb.maxPoint);
 }
@@ -40,30 +41,32 @@ std::vector<Edge> AABB::GenerateEdges() const  {
 
 	std::vector<Edge> edges;
 	
+	const glm::vec3 a{minPoint.x, minPoint.y, minPoint.z};
 	const glm::vec3 b{maxPoint.x, minPoint.y, minPoint.z};
 	const glm::vec3 c{maxPoint.x, minPoint.y, maxPoint.z};
 	const glm::vec3 d{minPoint.x, minPoint.y, maxPoint.z};
 
 	const glm::vec3 e{minPoint.x, maxPoint.y, minPoint.z};
 	const glm::vec3 f{maxPoint.x, maxPoint.y, minPoint.z};
+	const glm::vec3 g{maxPoint.x, maxPoint.y, maxPoint.z};
 	const glm::vec3 h{minPoint.x, maxPoint.y, maxPoint.z};
 
 	// Bottom Face
-	edges.emplace_back(minPoint, b);
+	edges.emplace_back(a, b);
 	edges.emplace_back(b, c);
 	edges.emplace_back(c, d);
-	edges.emplace_back(d, minPoint);
+	edges.emplace_back(d, a);
 
 	// Top Face
 	edges.emplace_back(e, f);
-	edges.emplace_back(f, maxPoint);
-	edges.emplace_back(maxPoint, h);
+	edges.emplace_back(f, g);
+	edges.emplace_back(g, h);
 	edges.emplace_back(h, e);
 
 	// Edges connecting bottom and top
-	edges.emplace_back(minPoint, e);
+	edges.emplace_back(a, e);
 	edges.emplace_back(b, f);
-	edges.emplace_back(c, maxPoint);
+	edges.emplace_back(c, g);
 	edges.emplace_back(d, h);
 
 	return edges;

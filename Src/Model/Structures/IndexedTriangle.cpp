@@ -1,19 +1,10 @@
 #include "IndexedTriangle.h"
 #include <cmath>
+#include <cstdlib>
 #include <immintrin.h>
 
 AABB IndexedTriangle::ComputeAABB() const
 {
-
-    __m128 amm = _mm_set_ps(0.f, a.z, a.y, a.x);
-    __m128 bmm = _mm_set_ps(0.f, b.z, b.y, b.x);
-    __m128 cmm = _mm_set_ps(0.f, c.z, c.y, c.x);
-
-    __m128 maxPoint = _mm_max_ps(amm, bmm);
-    maxPoint = _mm_max_ps(maxPoint, cmm);
-
-    __m128 minPoint = _mm_min_ps(amm, bmm);
-    minPoint = _mm_min_ps(minPoint, cmm);
 
     // Should we keep this in order to support non-SIMD compatible CPUs?
     // maxPoint.x = std::max(maxPoint.x, b.x);
@@ -30,15 +21,86 @@ AABB IndexedTriangle::ComputeAABB() const
     // minPoint.y = std::min(minPoint.y, c.y);
     // minPoint.z = std::min(minPoint.z, c.z);
 
-    // We must be careful when obtaining the values.
-    // The values in MMX registers are stored in reversed order!
-    return AABB{
-        .minPoint = glm::vec3(minPoint[0], minPoint[1], minPoint[2]),
-        .maxPoint = glm::vec3(maxPoint[0], maxPoint[1], maxPoint[2]),
-    };
+    return AABB{.minPoint = Vec3f::Min(Vec3f::Min(a, b), c), .maxPoint = Vec3f::Max(Vec3f::Max(a, b), c)};
 }
 
-bool IndexedTriangle::Overlaps(const AABB& aabb) const {
+bool IndexedTriangle::Intersects(const AABB& aabb) const
+{
 
-	return aabb.IsPointInside(a) || aabb.IsPointInside(b) || aabb.IsPointInside(c);
+    if (!aabb.Intersects(ComputeAABB()))
+    {
+        return false;
+    }
+
+    Vec3f extent = aabb.Dimensions() / 2;
+    Vec3f boxCenter = aabb.CenterPoint();
+
+    Vec3f aCenter = a - boxCenter;
+    Vec3f bCenter = b - boxCenter;
+    Vec3f cCenter = c - boxCenter;
+
+    Vec3f f0 = bCenter - aCenter;
+    Vec3f f1 = cCenter - bCenter;
+    Vec3f f2 = aCenter - cCenter;
+
+    Vec3f u0 = Vec3f(1.f, 0.f, 0.f);
+    Vec3f u1 = Vec3f(0.f, 1.f, 0.f);
+    Vec3f u2 = Vec3f(0.f, 0.f, 1.f);
+
+    Vec3f firstAxis[9] = {};
+
+    firstAxis[0] = u0.Cross(f0);
+    firstAxis[1] = u0.Cross(f1);
+    firstAxis[2] = u0.Cross(f2);
+
+    firstAxis[3] = u1.Cross(f0);
+    firstAxis[4] = u1.Cross(f1);
+    firstAxis[5] = u1.Cross(f2);
+
+    firstAxis[6] = u2.Cross(f0);
+    firstAxis[7] = u2.Cross(f1);
+    firstAxis[8] = u2.Cross(f2);
+
+    for (int i = 0; i < 9; i++)
+    {
+        float p0 = aCenter.Dot(firstAxis[i]);
+        float p1 = bCenter.Dot(firstAxis[i]);
+        float p2 = cCenter.Dot(firstAxis[i]);
+
+        float r = extent.x * abs(u0.Dot(firstAxis[i])) + extent.y * abs(u1.Dot(firstAxis[i])) +
+                  extent.x * abs(u2.Dot(firstAxis[i]));
+
+        float pMax1 = std::max(p0, p1);
+        float pMin1 = std::min(p0, p1);
+
+        float pMax2 = std::max(pMax1, p1);
+        float pMin2 = std::min(pMin1, p1);
+
+        if (std::max(-pMax2, pMin2) > r)
+        {
+            return false;
+        }
+    }
+
+    Vec3f triangleNormal = f0.Cross(f2).Normalize();
+
+    float p0 = aCenter.Dot(triangleNormal);
+    float p1 = bCenter.Dot(triangleNormal);
+    float p2 = cCenter.Dot(triangleNormal);
+
+    float r = extent.x * abs(u0.Dot(triangleNormal)) + extent.y * abs(u1.Dot(triangleNormal)) +
+              extent.x * abs(u2.Dot(triangleNormal));
+
+    float pMax1 = std::max(p0, p1);
+    float pMin1 = std::min(p0, p1);
+
+    float pMax2 = std::max(pMax1, p1);
+    float pMin2 = std::min(pMin1, p1);
+
+    if (std::max(-pMax2, pMin2) > r)
+    {
+        return false;
+    }
+
+    return true;
 }
