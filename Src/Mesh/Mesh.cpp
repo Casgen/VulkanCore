@@ -1,5 +1,6 @@
 #include "Mesh.h"
 
+#include <cstdint>
 #include <immintrin.h>
 #include <stdexcept>
 
@@ -11,6 +12,7 @@
 #include "Meshlet.h"
 #include "MeshletGeneration.h"
 #include "Model/Structures/OcTree.h"
+#include "src/meshoptimizer.h"
 #include "vulkan/vulkan_enums.hpp"
 
 Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& vertices)
@@ -20,19 +22,77 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
     m_VertexBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
     m_VertexBuffer.InitializeOnGpu(vertices.data(), vertices.size() * sizeof(MeshVertex));
 
-    const std::vector<Meshlet> meshlets = MeshletGeneration::OcTreeMeshletizeMesh(
-        Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, *this);
+    size_t maxCountOfMeshlets =
+        meshopt_buildMeshletsBound(indices.size(), Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_TRIANGLES);
+
+    std::vector<meshopt_Meshlet> meshlets(maxCountOfMeshlets);
+    std::vector<unsigned int> meshletVertices(maxCountOfMeshlets * Constants::MAX_MESHLET_VERTICES);
+    std::vector<unsigned char> meshletTriangles(maxCountOfMeshlets * Constants::MAX_MESHLET_INDICES);
+
+    meshlets.resize(meshopt_buildMeshlets(meshlets.data(), meshletVertices.data(), meshletTriangles.data(),
+                                          indices.data(), indices.size(), &vertices[0].Position.x, vertices.size(),
+                                          sizeof(MeshVertex), Constants::MAX_MESHLET_VERTICES,
+                                          Constants::MAX_MESHLET_TRIANGLES, 0.f));
+    meshletVertices.shrink_to_fit();
+    meshletTriangles.shrink_to_fit();
 
     m_MeshletCount = meshlets.size();
 
+    m_MeshletVertices = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
+    m_MeshletVertices.InitializeOnGpu(meshletVertices.data(), meshletVertices.size() * sizeof(unsigned int));
+
+    // --- Since GLSL doesn't support 8-bit integers we are packing triangles into an uint.
+
+    uint32_t indexCount = 0;
+
+    std::vector<uint32_t> packedMeshletTriangles;
+    packedMeshletTriangles.reserve(meshletTriangles.size() / 3);
+
+    std::vector<uint32_t> triangleOffsets;
+    triangleOffsets.reserve(meshlets.size());
+
+    uint accOffset = 0;
+
+    for (auto& meshlet : meshlets)
+    {
+
+        for (int i = meshlet.triangle_offset; i < (meshlet.triangle_offset) + meshlet.triangle_count * 3; i += 3)
+        {
+            uint32_t packedTriangle = ((uint32_t)meshletTriangles.at(i));
+            packedTriangle |= ((uint32_t)meshletTriangles.at(i + 1)) << 8;
+            packedTriangle |= ((uint32_t)meshletTriangles.at(i + 2)) << 16;
+
+            packedMeshletTriangles.emplace_back(packedTriangle);
+            accOffset++;
+        }
+
+        triangleOffsets.emplace_back(accOffset);
+    }
+
+    assert(triangleOffsets.size() == meshlets.size());
+
+    meshlets[0].triangle_offset = 0;
+
+    for (int i = 1; i < meshlets.size(); i++)
+    {
+        meshlets[i].triangle_offset = triangleOffsets[i - 1];
+    }
+
+    // ---
+
+    m_MeshletTriangles = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
+    m_MeshletTriangles.InitializeOnGpu(packedMeshletTriangles.data(), packedMeshletTriangles.size() * sizeof(uint32_t));
+
     m_MeshletBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
-    m_MeshletBuffer.InitializeOnGpu(meshlets.data(), meshlets.size() * sizeof(Meshlet));
+    m_MeshletBuffer.InitializeOnGpu(meshlets.data(), meshlets.size() * sizeof(meshopt_Meshlet));
 
     VkCore::DescriptorBuilder descBuilder = VkCore::DescriptorBuilder(VkCore::DeviceManager::GetDevice());
 
     bool success =
         descBuilder.BindBuffer(0, m_VertexBuffer, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eMeshNV)
             .BindBuffer(1, m_MeshletBuffer, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eMeshNV)
+            .BindBuffer(2, m_MeshletVertices, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eMeshNV)
+            .BindBuffer(3, m_MeshletTriangles, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eMeshNV)
             .Build(m_DescriptorSet, m_DescriptorSetLayout);
 
     if (!success)
@@ -55,17 +115,19 @@ OcTreeTriangles Mesh::OcTreeMesh(const Mesh& mesh, const uint32_t capacity)
              mesh.indices.size())
     }
 
-	for (size_t i = 0; i < mesh.indices.size() - 3; i += 3) {
+    for (size_t i = 0; i < mesh.indices.size() - 3; i += 3)
+    {
         triangles.emplace_back(mesh.vertices[mesh.indices[i]].Position, mesh.vertices[mesh.indices[i + 1]].Position,
                                mesh.vertices[mesh.indices[i + 2]].Position, mesh.indices[i], mesh.indices[i + 1],
                                mesh.indices[i + 2]);
-	}
+    }
 
     OcTreeTriangles ocTree = OcTreeTriangles(Mesh::CreateBoundingBox(mesh), capacity);
 
-	for (const auto& triangle : triangles) {
-		ocTree.Push(triangle);
-	}
+    for (const auto& triangle : triangles)
+    {
+        ocTree.Push(triangle);
+    }
 
     return ocTree;
 }
@@ -85,7 +147,7 @@ AABB Mesh::CreateBoundingBox(const Mesh& mesh)
 
     while (i < (mesh.vertices.size()) - 2)
     {
-		// clang-format off
+        // clang-format off
         __m256 temp = _mm256_set_ps(0.f,
 									0.f,
 									mesh.vertices[i + 1].Position.z,
@@ -94,7 +156,7 @@ AABB Mesh::CreateBoundingBox(const Mesh& mesh)
 									mesh.vertices[i].Position.z,
                                     mesh.vertices[i].Position.y,
 									mesh.vertices[i].Position.x);
-		// clang-format on
+        // clang-format on
 
         maxPoint = _mm256_max_ps(maxPoint, temp);
         minPoint = _mm256_min_ps(minPoint, temp);
@@ -104,7 +166,7 @@ AABB Mesh::CreateBoundingBox(const Mesh& mesh)
 
     if ((mesh.vertices.size() - i) == 1)
     {
-		// clang-format off
+        // clang-format off
         __m256 temp = _mm256_set_ps(0.f, 
 									0.f,
 									mesh.vertices[i].Position.z,
@@ -113,7 +175,7 @@ AABB Mesh::CreateBoundingBox(const Mesh& mesh)
 									mesh.vertices[i].Position.z,
                                     mesh.vertices[i].Position.y,
 									mesh.vertices[i].Position.x);
-		// clang-format on
+        // clang-format on
 
         maxPoint = _mm256_max_ps(maxPoint, temp);
         minPoint = _mm256_min_ps(minPoint, temp);

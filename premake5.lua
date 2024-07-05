@@ -24,6 +24,7 @@ project("VulkanCore")
 		"Vendor/assimp/include/",
 		"Vendor/imgui/",
 		"Vendor/ZMath/",
+		"Vendor/meshoptimizer",
 		"Src/",
 	}
 
@@ -42,6 +43,9 @@ project("VulkanCore")
 		"./Vendor/imgui/backends/imgui_impl_vulkan.*",
 		"./Vendor/ZMath/**.cpp",
 		"./Vendor/ZMath/**.h",
+		"./Vendor/meshoptimizer/src/**.cpp",
+		"./Vendor/meshoptimizer/src/**.h",
+		"./Vendor/meshoptimizer/src/**.hpp",
 	}
 
 	defines{

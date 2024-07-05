@@ -25,7 +25,7 @@ Model::Model(const std::string& filePath)
     std::cout << "Offset of texCoords: " << offsetof(MeshVertex, TexCoords) << std::endl;
 
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(filePath.data(), aiProcess_Triangulate | aiProcess_GenNormals);
+    const aiScene* scene = importer.ReadFile(filePath.data(), aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices);
 
     if (scene == nullptr || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || scene->mRootNode == nullptr)
     {

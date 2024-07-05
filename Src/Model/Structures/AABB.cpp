@@ -34,40 +34,48 @@ Vec3f AABB::Dimensions() const
 
 bool AABB::Intersects(const AABB& aabb) const
 {
-    return IsPointInside(aabb.minPoint) || IsPointInside(aabb.maxPoint);
+    const bool xAxis = minPoint.x <= aabb.minPoint.x && aabb.minPoint.x <= maxPoint.x ||
+                       minPoint.x <= aabb.maxPoint.x && aabb.maxPoint.x <= maxPoint.x; // Test in x-axis.
+    const bool yAxis = (minPoint.y <= aabb.minPoint.y && aabb.minPoint.y <= maxPoint.y ||
+                        minPoint.y <= aabb.maxPoint.y && aabb.maxPoint.y <= maxPoint.y); // Test in y-axis.
+    const bool zAxis = (minPoint.z <= aabb.minPoint.z && aabb.minPoint.z <= maxPoint.z ||
+                        minPoint.z <= aabb.maxPoint.z && aabb.maxPoint.z <= maxPoint.z); // Test in z-axis.
+	
+	return xAxis && yAxis && zAxis;
 }
 
-std::vector<Edge> AABB::GenerateEdges() const  {
+std::vector<Edge> AABB::GenerateEdges() const
+{
 
-	std::vector<Edge> edges;
-	
-	const glm::vec3 a{minPoint.x, minPoint.y, minPoint.z};
-	const glm::vec3 b{maxPoint.x, minPoint.y, minPoint.z};
-	const glm::vec3 c{maxPoint.x, minPoint.y, maxPoint.z};
-	const glm::vec3 d{minPoint.x, minPoint.y, maxPoint.z};
+    std::vector<Edge> edges;
 
-	const glm::vec3 e{minPoint.x, maxPoint.y, minPoint.z};
-	const glm::vec3 f{maxPoint.x, maxPoint.y, minPoint.z};
-	const glm::vec3 g{maxPoint.x, maxPoint.y, maxPoint.z};
-	const glm::vec3 h{minPoint.x, maxPoint.y, maxPoint.z};
+    const glm::vec3 a{minPoint.x, minPoint.y, minPoint.z};
+    const glm::vec3 b{maxPoint.x, minPoint.y, minPoint.z};
+    const glm::vec3 c{maxPoint.x, minPoint.y, maxPoint.z};
+    const glm::vec3 d{minPoint.x, minPoint.y, maxPoint.z};
 
-	// Bottom Face
-	edges.emplace_back(a, b);
-	edges.emplace_back(b, c);
-	edges.emplace_back(c, d);
-	edges.emplace_back(d, a);
+    const glm::vec3 e{minPoint.x, maxPoint.y, minPoint.z};
+    const glm::vec3 f{maxPoint.x, maxPoint.y, minPoint.z};
+    const glm::vec3 g{maxPoint.x, maxPoint.y, maxPoint.z};
+    const glm::vec3 h{minPoint.x, maxPoint.y, maxPoint.z};
 
-	// Top Face
-	edges.emplace_back(e, f);
-	edges.emplace_back(f, g);
-	edges.emplace_back(g, h);
-	edges.emplace_back(h, e);
+    // Bottom Face
+    edges.emplace_back(a, b);
+    edges.emplace_back(b, c);
+    edges.emplace_back(c, d);
+    edges.emplace_back(d, a);
 
-	// Edges connecting bottom and top
-	edges.emplace_back(a, e);
-	edges.emplace_back(b, f);
-	edges.emplace_back(c, g);
-	edges.emplace_back(d, h);
+    // Top Face
+    edges.emplace_back(e, f);
+    edges.emplace_back(f, g);
+    edges.emplace_back(g, h);
+    edges.emplace_back(h, e);
 
-	return edges;
+    // Edges connecting bottom and top
+    edges.emplace_back(a, e);
+    edges.emplace_back(b, f);
+    edges.emplace_back(c, g);
+    edges.emplace_back(d, h);
+
+    return edges;
 }

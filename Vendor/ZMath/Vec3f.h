@@ -57,7 +57,9 @@ struct Vec3f
 
     Vec3f operator/(Vec3f const& other) const
     {
-        return Vec3f(_mm_div_ps(this->simd, other.simd));
+        __m128 result = _mm_div_ps(this->simd, other.simd);
+		result[3] = 0.f;
+		return result;
     }
 
 
@@ -79,7 +81,7 @@ struct Vec3f
 
     Vec3f operator/(float const& value) const
     {
-        return Vec3f(_mm_div_ps(this->simd, _mm_set_ps(0.f, value, value, value)));
+        return Vec3f(_mm_div_ps(this->simd, _mm_set_ps(value, value, value, value)));
     }
 
 
@@ -101,7 +103,9 @@ struct Vec3f
 
     Vec3f& operator/=(Vec3f const& other)
     {
-        return *this = Vec3f(_mm_div_ps(this->simd, other.simd));
+        __m128 result = _mm_div_ps(this->simd, other.simd);
+		result[3] = 0.f;
+        return *this = result;
     }
 
 
@@ -122,7 +126,7 @@ struct Vec3f
 
     Vec3f operator/=(float const& value)
     {
-        return *this = Vec3f(_mm_div_ps(this->simd, _mm_set_ps(0.f, value, value, value)));
+        return *this = Vec3f(_mm_div_ps(this->simd, _mm_set_ps(value, value, value, value)));
     }
 
     float Dot(const Vec3f& other)

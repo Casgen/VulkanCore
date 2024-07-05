@@ -27,7 +27,9 @@ class Mesh
 
     void Destroy()
     {
-        m_VertexBuffer.Destroy();
+		m_VertexBuffer.Destroy();
+        m_MeshletVertices.Destroy();
+        m_MeshletVertices.Destroy();
         m_MeshletBuffer.Destroy();
     }
 
@@ -40,7 +42,9 @@ class Mesh
   private:
     uint32_t m_MeshletCount = 0;
 
-    VkCore::Buffer m_VertexBuffer;
+	VkCore::Buffer m_VertexBuffer;
+    VkCore::Buffer m_MeshletVertices;
+    VkCore::Buffer m_MeshletTriangles;
     VkCore::Buffer m_MeshletBuffer;
 
     vk::DescriptorSet m_DescriptorSet;
