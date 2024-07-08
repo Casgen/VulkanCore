@@ -1,8 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <csignal>
 #include <fstream>
 #include <stdexcept>
+
+#ifdef _WIN32
+#define DEBUGBREAK() DebugBreak()
+#else
+#define DEBUGBREAK() raise(SIGTRAP)
+#endif
 
 #define TRY_CATCH_BEGIN()                                                                                              \
     try                                                                                                                \
@@ -47,6 +54,7 @@ enum class ECategory : uint8_t
     Unknown = 0x07,
     Shader = 0x08,
     Assimp = 0x09,
+    Assert = 0x10,
 
     // Vulkan specific
     Validation = 0x0A,
@@ -109,3 +117,17 @@ class Logger
 #define LOG(Category, Severity, Format)
 #define LOG_AND_THROW(Category, Severity, Format)
 #endif
+
+#define ASSERT(Expression, Format)                                                                                     \
+    if (!(Expression))                                                                                                 \
+    {                                                                                                                  \
+        Logger::GetLogger()->Print(ECategory::Assert, ESeverity::Fatal, Format);                                       \
+        DEBUGBREAK();                                                                                                  \
+    }
+
+#define ASSERTF(Expression, Format, ...)                                                                               \
+    if (!(Expression))                                                                                                 \
+    {                                                                                                                  \
+        Logger::GetLogger()->Print(ECategory::Assert, ESeverity::Fatal, Format, __VA_ARGS__);                          \
+        DEBUGBREAK();                                                                                                  \
+    }

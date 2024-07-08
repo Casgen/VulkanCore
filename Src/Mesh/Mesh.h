@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../Vk/Buffers/Buffer.h"
+#include "Mesh/Meshlet.h"
 #include "MeshVertex.h"
 #include "Model/Structures/OcTree.h"
 
@@ -27,14 +28,15 @@ class Mesh
 
     void Destroy()
     {
-		m_VertexBuffer.Destroy();
-        m_MeshletVertices.Destroy();
-        m_MeshletVertices.Destroy();
+        m_VertexBuffer.Destroy();
+        m_MeshletVerticesBuffer.Destroy();
+        m_MeshletVerticesBuffer.Destroy();
         m_MeshletBuffer.Destroy();
+        m_MeshletBoundsBuffer.Destroy();
     }
 
-	static OcTreeTriangles OcTreeMesh(const Mesh& mesh, const uint32_t capacity);
-	static AABB CreateBoundingBox(const Mesh& mesh);
+    static OcTreeTriangles OcTreeMesh(const Mesh& mesh, const uint32_t capacity);
+    static AABB CreateBoundingBox(const Mesh& mesh);
 
     const std::vector<uint32_t> indices;
     const std::vector<MeshVertex> vertices;
@@ -42,10 +44,11 @@ class Mesh
   private:
     uint32_t m_MeshletCount = 0;
 
-	VkCore::Buffer m_VertexBuffer;
-    VkCore::Buffer m_MeshletVertices;
-    VkCore::Buffer m_MeshletTriangles;
+    VkCore::Buffer m_VertexBuffer;
+    VkCore::Buffer m_MeshletVerticesBuffer;
+    VkCore::Buffer m_MeshletTrianglesBuffer;
     VkCore::Buffer m_MeshletBuffer;
+    VkCore::Buffer m_MeshletBoundsBuffer;
 
     vk::DescriptorSet m_DescriptorSet;
     vk::DescriptorSetLayout m_DescriptorSetLayout;

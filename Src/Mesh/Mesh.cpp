@@ -1,7 +1,9 @@
 #include "Mesh.h"
 
+#include <cmath>
 #include <cstdint>
 #include <immintrin.h>
+#include <limits>
 #include <stdexcept>
 
 #include "../Constants.h"
@@ -9,9 +11,8 @@
 #include "../Vk/Buffers/Buffer.h"
 #include "../Vk/Descriptors/DescriptorBuilder.h"
 #include "../Vk/Devices/DeviceManager.h"
+#include "Mesh/Meshlet.h"
 #include "Meshlet.h"
-#include "MeshletGeneration.h"
-#include "Model/Structures/OcTree.h"
 #include "src/meshoptimizer.h"
 #include "vulkan/vulkan_enums.hpp"
 
@@ -38,8 +39,92 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
 
     m_MeshletCount = meshlets.size();
 
-    m_MeshletVertices = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
-    m_MeshletVertices.InitializeOnGpu(meshletVertices.data(), meshletVertices.size() * sizeof(unsigned int));
+    m_MeshletVerticesBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
+    m_MeshletVerticesBuffer.InitializeOnGpu(meshletVertices.data(), meshletVertices.size() * sizeof(unsigned int));
+
+    std::vector<MeshletBounds> meshletBounds;
+    meshletBounds.reserve(meshlets.size());
+
+    // compute meshlet cones, normals and bounding spheres.
+    {
+        uint accOffset = 0;
+
+        for (auto& meshlet : meshlets)
+        {
+
+            std::vector<Vec3f> normals;
+            normals.reserve(meshlet.vertex_count);
+
+            AABB boundingBox = {
+                .minPoint = Vec3f(std::numeric_limits<float>::max()),
+                .maxPoint = Vec3f(std::numeric_limits<float>::min()),
+            };
+
+            for (int i = meshlet.vertex_offset; i < (meshlet.vertex_offset) + meshlet.vertex_count; i++)
+            {
+                const glm::vec3& glmNormal = vertices[meshletVertices[i]].Normal;
+                const glm::vec3& glmPositions = vertices[meshletVertices[i]].Position;
+
+                normals.emplace_back(Vec3f(glmNormal.x, glmNormal.y, glmNormal.z));
+
+                boundingBox.maxPoint =
+                    Vec3f::Max(Vec3f(glmPositions.x, glmPositions.y, glmPositions.z), boundingBox.maxPoint);
+                boundingBox.minPoint =
+                    Vec3f::Min(Vec3f(glmPositions.x, glmPositions.y, glmPositions.z), boundingBox.minPoint);
+            }
+
+            Vec3f sphereCenter = boundingBox.CenterPoint();
+            Vec3f halfDimensions = boundingBox.Dimensions() / 2.f;
+
+            float sphereRadius = std::max(std::max(halfDimensions.x, halfDimensions.y), halfDimensions.z);
+
+            assert(meshlet.vertex_count == normals.size());
+
+            Vec3f avgNormal;
+
+            for (const auto& normal : normals)
+            {
+                avgNormal += normal;
+            }
+
+            avgNormal /= normals.size();
+            avgNormal = avgNormal.Normalize();
+
+            Vec3f coneNormal = avgNormal;
+            float minDot = 1.f;
+
+            for (const auto& normal : normals)
+            {
+                float dot = avgNormal.Dot(normal);
+
+                if (dot < minDot)
+                {
+                    minDot = dot;
+                    coneNormal = normal;
+                }
+            }
+			
+			// We have to account for the fact that a triangle is visible to it's entire hemisphere.
+			// Therefore we need to add a 90 degree angle to the the most diverging normal.
+			minDot = cos(3.141589 / 2 + acosf(minDot));
+
+            uint32_t middleIndex = meshlet.vertex_offset + (meshlet.vertex_count) * 0.5f;
+
+            glm::vec3 normalPos = vertices[meshletVertices[middleIndex]].Position;
+
+            meshletBounds.emplace_back(MeshletBounds{.normal = {avgNormal.x, avgNormal.y, avgNormal.z},
+                                                     .coneAngle = minDot,
+                                                     .spherePos = {sphereCenter.x, sphereCenter.y, sphereCenter.z},
+                                                     .sphereRadius = sphereRadius,
+                                                     .normalPos = {normalPos.x, normalPos.y, normalPos.z}});
+        }
+    }
+
+    ASSERT(meshletBounds.size() == meshlets.size(), "Meshlet bounds and meshlets vectors don't have the same size!");
+
+
+    m_MeshletBoundsBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
+    m_MeshletBoundsBuffer.InitializeOnGpu(meshletBounds.data(), meshletBounds.size() * sizeof(MeshletBounds));
 
     // --- Since GLSL doesn't support 8-bit integers we are packing triangles into an uint.
 
@@ -69,7 +154,8 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
         triangleOffsets.emplace_back(accOffset);
     }
 
-    assert(triangleOffsets.size() == meshlets.size());
+    ASSERT(triangleOffsets.size() == meshlets.size(),
+           "There aren't that many triangle offsets to cover the number of meshlets!");
 
     meshlets[0].triangle_offset = 0;
 
@@ -80,8 +166,9 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
 
     // ---
 
-    m_MeshletTriangles = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
-    m_MeshletTriangles.InitializeOnGpu(packedMeshletTriangles.data(), packedMeshletTriangles.size() * sizeof(uint32_t));
+    m_MeshletTrianglesBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
+    m_MeshletTrianglesBuffer.InitializeOnGpu(packedMeshletTriangles.data(),
+                                             packedMeshletTriangles.size() * sizeof(uint32_t));
 
     m_MeshletBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
     m_MeshletBuffer.InitializeOnGpu(meshlets.data(), meshlets.size() * sizeof(meshopt_Meshlet));
@@ -91,15 +178,15 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
     bool success =
         descBuilder.BindBuffer(0, m_VertexBuffer, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eMeshNV)
             .BindBuffer(1, m_MeshletBuffer, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eMeshNV)
-            .BindBuffer(2, m_MeshletVertices, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eMeshNV)
-            .BindBuffer(3, m_MeshletTriangles, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eMeshNV)
+            .BindBuffer(2, m_MeshletVerticesBuffer, vk::DescriptorType::eStorageBuffer,
+                        vk::ShaderStageFlagBits::eMeshNV)
+            .BindBuffer(3, m_MeshletTrianglesBuffer, vk::DescriptorType::eStorageBuffer,
+                        vk::ShaderStageFlagBits::eMeshNV)
+            .BindBuffer(4, m_MeshletBoundsBuffer, vk::DescriptorType::eStorageBuffer,
+                        vk::ShaderStageFlagBits::eMeshNV | vk::ShaderStageFlagBits::eMeshNV)
             .Build(m_DescriptorSet, m_DescriptorSetLayout);
 
-    if (!success)
-    {
-        LOG(Vulkan, Fatal, "Failed to build a descriptor set for a mesh!")
-        throw std::runtime_error("Failed to build a descriptor set for a mesh!");
-    }
+    ASSERT(success, "Failed to build a descriptor set for a mesh!")
 }
 OcTreeTriangles Mesh::OcTreeMesh(const Mesh& mesh, const uint32_t capacity)
 {

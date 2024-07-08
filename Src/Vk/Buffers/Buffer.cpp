@@ -57,6 +57,7 @@ namespace VkCore
         }
     }
 
+	
     void Buffer::InitializeOnGpu(const void* data, const size_t size)
     {
         m_Buffer = ServiceLocator::GetAllocatorService().CreateBufferOnGpu(data, size, m_UsageFlags, m_Allocation,

@@ -28,12 +28,21 @@ struct MovingBitField
     }
 };
 
+struct FrustumNormals {
+	glm::vec3 left;
+	glm::vec3 right;
+	glm::vec3 top;
+	glm::vec3 bottom;
+	glm::vec3 front;
+	glm::vec3 back;
+};
+
 class Camera
 {
 
   public:
     Camera() = default;
-    Camera(const glm::vec3& position, const glm::vec3 lookAt, const float aspectRatio);
+    Camera(const glm::vec3& position, const glm::vec3 lookAt, const float aspectRatio, const float fov = 45.f);
 
     // Updates the state of the camera
     void Update();
@@ -55,11 +64,11 @@ class Camera
      */
     void AddMovementSpeed(const float value);
 
-    // ---------------- Camera Rotation ----------------
     void Yaw(const float step);
     void Pitch(const float step);
 
     void RecreateProjection(const int width, const int height);
+	FrustumNormals CalculateFrustumNormals() const;
 
     // ------------------ Getters ----------------------
 
@@ -105,7 +114,9 @@ class Camera
     float m_AccelerationInc = .0005f;
     float m_RotationSpeed = .01f;
 
+
     // Camera Parameters
+	float m_Fov = 45.f;
     float m_AspectRatio = 0.f;
     float m_Azimuth = 0.f;
     float m_Zenith = 0.f;

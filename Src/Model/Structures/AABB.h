@@ -16,4 +16,6 @@ struct AABB
     Vec3f Dimensions() const;
     bool Intersects(const AABB& aabb) const;
     std::vector<Edge> GenerateEdges() const;
+
+	
 };

@@ -417,26 +417,14 @@ void GraphicsPipelineBuilder::ValidateShaderInfo() {
             isMeshStagePresent |= stage & VK_SHADER_STAGE_MESH_BIT_EXT;
             isFragmentStagePresent |= stage & VK_SHADER_STAGE_FRAGMENT_BIT;
 
-            if (stageBitfield & stage) {
-                const char* errorMsg = "2 or more shaders of the same type were provided!";
-                LOG(Vulkan, Fatal, errorMsg)
-                throw std::runtime_error(errorMsg);
-            }
+
+			ASSERT(!(stageBitfield & stage), "2 or more shaders of the same type were provided!")
 
             stageBitfield |= stage;
         }
 
-        if (!isFragmentStagePresent) {
-            const char* errorMsg = "Failed to create the pipeline! Fragment shader not present!";
-            LOG(Vulkan, Fatal, errorMsg)
-            throw std::runtime_error(errorMsg);
-        }
-
-        if (!isMeshStagePresent) {
-            const char* errorMsg = "Failed to create the pipeline! Mesh shader not present!";
-            LOG(Vulkan, Fatal, errorMsg)
-            throw std::runtime_error(errorMsg);
-        }
+		ASSERT(isFragmentStagePresent, "Failed to create the pipeline! Fragment shader not present!")
+		ASSERT(isMeshStagePresent, "Failed to create the pipeline! Mesh shader not present!")
 
         return;
     }
