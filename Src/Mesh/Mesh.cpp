@@ -24,30 +24,15 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
     m_VertexBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
     m_VertexBuffer.InitializeOnGpu(vertices.data(), vertices.size() * sizeof(MeshVertex));
 
-    size_t maxCountOfMeshlets =
-        meshopt_buildMeshletsBound(indices.size(), Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_TRIANGLES);
+    std::vector<uint32_t> meshletVertices;
+    std::vector<uint32_t> meshletIndices;
 
-    std::vector<uint32_t> testVertices;
-    std::vector<uint32_t> testIndices;
-
-    std::vector<NewMeshlet> testNv =
+    std::vector<NewMeshlet> meshlets =
         MeshletGeneration::MeshletizeNv(Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, indices,
-                                        vertices.size(), testVertices, testIndices);
+                                        vertices.size(), meshletVertices, meshletIndices);
 
-	std::vector<Meshlet> testUnoptimized = MeshletGeneration::MeshletizeUnoptimized(Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, indices,
-                                        vertices.size());
-
-
-    std::vector<meshopt_Meshlet> meshlets(maxCountOfMeshlets);
-    std::vector<unsigned int> meshletVertices(maxCountOfMeshlets * Constants::MAX_MESHLET_VERTICES);
-    std::vector<unsigned char> meshletTriangles(maxCountOfMeshlets * Constants::MAX_MESHLET_INDICES);
-
-    meshlets.resize(meshopt_buildMeshlets(meshlets.data(), meshletVertices.data(), meshletTriangles.data(),
-                                          indices.data(), indices.size(), &vertices[0].Position.x, vertices.size(),
-                                          sizeof(MeshVertex), Constants::MAX_MESHLET_VERTICES,
-                                          Constants::MAX_MESHLET_TRIANGLES, 0.f));
     meshletVertices.shrink_to_fit();
-    meshletTriangles.shrink_to_fit();
+    meshletIndices.shrink_to_fit();
 
     m_MeshletCount = meshlets.size();
 
@@ -65,14 +50,14 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
         {
 
             std::vector<Vec3f> normals;
-            normals.reserve(meshlet.vertex_count);
+            normals.reserve(meshlet.vertexCount);
 
             AABB boundingBox = {
                 .minPoint = Vec3f(std::numeric_limits<float>::max()),
                 .maxPoint = Vec3f(std::numeric_limits<float>::min()),
             };
 
-            for (int i = meshlet.vertex_offset; i < (meshlet.vertex_offset) + meshlet.vertex_count; i++)
+            for (int i = meshlet.vertexOffset; i < (meshlet.vertexOffset) + meshlet.vertexCount; i++)
             {
                 const glm::vec3& glmNormal = vertices[meshletVertices[i]].Normal;
                 const glm::vec3& glmPositions = vertices[meshletVertices[i]].Position;
@@ -90,7 +75,7 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
 
             float sphereRadius = std::max(std::max(halfDimensions.x, halfDimensions.y), halfDimensions.z);
 
-            assert(meshlet.vertex_count == normals.size());
+            assert(meshlet.vertexCount == normals.size());
 
             Vec3f avgNormal;
 
@@ -120,7 +105,7 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
             // Therefore we need to add a 90 degree angle to the the most diverging normal.
             minDot = cos(3.141589 / 2 + acosf(minDot));
 
-            uint32_t middleIndex = meshlet.vertex_offset + (meshlet.vertex_count) * 0.5f;
+            uint32_t middleIndex = meshlet.vertexOffset + (meshlet.vertexCount) * 0.5f;
 
             glm::vec3 normalPos = vertices[meshletVertices[middleIndex]].Position;
 
@@ -139,50 +124,12 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
 
     // --- Since GLSL doesn't support 8-bit integers we are packing triangles into an uint.
 
-    uint32_t indexCount = 0;
-
-    std::vector<uint32_t> packedMeshletTriangles;
-    packedMeshletTriangles.reserve(meshletTriangles.size() / 3);
-
-    std::vector<uint32_t> triangleOffsets;
-    triangleOffsets.reserve(meshlets.size());
-
-    uint accOffset = 0;
-
-    for (auto& meshlet : meshlets)
-    {
-
-        for (int i = meshlet.triangle_offset; i < (meshlet.triangle_offset) + meshlet.triangle_count * 3; i += 3)
-        {
-            uint32_t packedTriangle = ((uint32_t)meshletTriangles.at(i));
-            packedTriangle |= ((uint32_t)meshletTriangles.at(i + 1)) << 8;
-            packedTriangle |= ((uint32_t)meshletTriangles.at(i + 2)) << 16;
-
-            packedMeshletTriangles.emplace_back(packedTriangle);
-            accOffset++;
-        }
-
-        triangleOffsets.emplace_back(accOffset);
-    }
-
-    ASSERT(triangleOffsets.size() == meshlets.size(),
-           "There aren't that many triangle offsets to cover the number of meshlets!");
-
-    meshlets[0].triangle_offset = 0;
-
-    for (int i = 1; i < meshlets.size(); i++)
-    {
-        meshlets[i].triangle_offset = triangleOffsets[i - 1];
-    }
-
-    // ---
 
     m_MeshletTrianglesBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
-    m_MeshletTrianglesBuffer.InitializeOnGpu(packedMeshletTriangles.data(),
-                                             packedMeshletTriangles.size() * sizeof(uint32_t));
+    m_MeshletTrianglesBuffer.InitializeOnGpu(meshletIndices.data(), meshletIndices.size() * sizeof(uint32_t));
 
     m_MeshletBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
-    m_MeshletBuffer.InitializeOnGpu(meshlets.data(), meshlets.size() * sizeof(meshopt_Meshlet));
+    m_MeshletBuffer.InitializeOnGpu(meshlets.data(), meshlets.size() * sizeof(NewMeshlet));
 
     VkCore::DescriptorBuilder descBuilder = VkCore::DescriptorBuilder(VkCore::DeviceManager::GetDevice());
 
