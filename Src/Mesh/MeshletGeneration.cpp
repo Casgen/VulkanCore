@@ -30,8 +30,6 @@ std::vector<NewMeshlet> MeshletGeneration::MeshletizeNv(uint32_t maxVerts, uint3
 
     NewMeshlet meshlet;
 
-    uint16_t indexCount = 0;
-
     for (uint32_t i = 0; i < indices.size(); i += 3)
     {
 
@@ -44,20 +42,15 @@ std::vector<NewMeshlet> MeshletGeneration::MeshletizeNv(uint32_t maxVerts, uint3
         uint8_t& cv = vertices[c];
 
         if ((meshlet.vertexCount + (av == 0xFF) + (bv == 0xFF) + (cv == 0xFF) > maxVerts) ||
-            (indexCount + 3 > maxIndices))
+            (meshlet.triangleCount + 1 > maxIndices / 3))
         {
-			ASSERT((outIndices.size() - indexCount) % 3 == 0, "The number of indices is not divisible by 3!")
-
-            meshlet.triangleOffset = (outIndices.size() - indexCount) / 3;
+            meshlet.triangleOffset = outIndices.size() - meshlet.triangleCount * 3;
             meshlet.vertexOffset = outVertices.size() - meshlet.vertexCount;
-            meshlet.triangleCount = indexCount / 3;
 
             meshlets.push_back(meshlet);
             memset(vertices.data(), 0xFF, verticesSize);
 
 			meshlet = {};
-
-            indexCount = 0;
         }
 
         if (av == 0xFF)
@@ -82,45 +75,40 @@ std::vector<NewMeshlet> MeshletGeneration::MeshletizeNv(uint32_t maxVerts, uint3
         }
 
         outIndices.emplace_back(av);
-        indexCount++;
-
         outIndices.emplace_back(bv);
-        indexCount++;
-
         outIndices.emplace_back(cv);
-        indexCount++;
+		
+		meshlet.triangleCount++;
     }
 
-    if (indexCount != 0)
+    if (meshlet.triangleCount != 0)
     {
-		ASSERT((outIndices.size() - indexCount) % 3 == 0, "The number of indices is not divisible by 3!")
-
-        meshlet.triangleOffset = (outIndices.size() - indexCount) / 3;
-        meshlet.triangleCount = indexCount / 3;
-        meshlet.vertexOffset = outVertices.size() - meshlet.vertexCount;
+		meshlet.triangleOffset = outIndices.size() - meshlet.triangleCount * 3;
+		meshlet.vertexOffset = outVertices.size() - meshlet.vertexCount;
 
         meshlets.push_back(meshlet);
     }
 
-    std::vector<uint32_t> packedMeshletTriangles;
-    packedMeshletTriangles.reserve(outIndices.size() / 3);
-
-
-    for (auto& meshlet : meshlets)
-    {
-
-		const uint32_t indexOffset = meshlet.triangleOffset * 3;
-        for (int i = indexOffset; i < indexOffset + meshlet.triangleCount * 3; i += 3)
-        {
-            uint32_t packedTriangle = ((uint32_t)outIndices.at(i));
-            packedTriangle |= ((uint32_t)outIndices.at(i + 1)) << 8;
-            packedTriangle |= ((uint32_t)outIndices.at(i + 2)) << 16;
-
-            packedMeshletTriangles.emplace_back(packedTriangle);
-        }
-    }
-
-	outIndices = packedMeshletTriangles;
+ //    std::vector<uint32_t> packedMeshletTriangles;
+ //    packedMeshletTriangles.reserve(outIndices.size() / 3);
+	//
+	//
+ //    for (auto& meshlet : meshlets)
+ //    {
+	//
+	// 	const uint32_t indexOffset = meshlet.triangleOffset * 3;
+	//
+ //        for (int i = indexOffset; i < indexOffset + meshlet.triangleCount * 3; i += 3)
+ //        {
+ //            uint32_t packedTriangle = (outIndices.at(i) & 0xFF);
+ //            packedTriangle |= (outIndices.at(i + 1) & 0xFF ) << 8;
+ //            packedTriangle |= (outIndices.at(i + 2) & 0xFF ) << 16;
+	//
+ //            packedMeshletTriangles.emplace_back(packedTriangle);
+ //        }
+ //    }
+	//
+	// outIndices = packedMeshletTriangles;
 
 
     // ---

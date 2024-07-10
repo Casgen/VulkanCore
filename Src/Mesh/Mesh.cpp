@@ -1,5 +1,6 @@
 #include "Mesh.h"
 
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <immintrin.h>
@@ -25,19 +26,19 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
     m_VertexBuffer.InitializeOnGpu(vertices.data(), vertices.size() * sizeof(MeshVertex));
 
     std::vector<uint32_t> meshletVertices;
-    std::vector<uint32_t> meshletIndices;
+    std::vector<uint32_t> meshletTriangles;
 
     std::vector<NewMeshlet> meshlets =
         MeshletGeneration::MeshletizeNv(Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, indices,
-                                        vertices.size(), meshletVertices, meshletIndices);
+                                        vertices.size(), meshletVertices, meshletTriangles);
 
     meshletVertices.shrink_to_fit();
-    meshletIndices.shrink_to_fit();
+    meshletTriangles.shrink_to_fit();
 
     m_MeshletCount = meshlets.size();
 
     m_MeshletVerticesBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
-    m_MeshletVerticesBuffer.InitializeOnGpu(meshletVertices.data(), meshletVertices.size() * sizeof(unsigned int));
+    m_MeshletVerticesBuffer.InitializeOnGpu(meshletVertices.data(), meshletVertices.size() * sizeof(uint32_t));
 
     std::vector<MeshletBounds> meshletBounds;
     meshletBounds.reserve(meshlets.size());
@@ -126,7 +127,7 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
 
 
     m_MeshletTrianglesBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
-    m_MeshletTrianglesBuffer.InitializeOnGpu(meshletIndices.data(), meshletIndices.size() * sizeof(uint32_t));
+    m_MeshletTrianglesBuffer.InitializeOnGpu(meshletTriangles.data(), meshletTriangles.size() * sizeof(uint32_t));
 
     m_MeshletBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
     m_MeshletBuffer.InitializeOnGpu(meshlets.data(), meshlets.size() * sizeof(NewMeshlet));
