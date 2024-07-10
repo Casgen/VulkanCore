@@ -6,10 +6,18 @@
 
 struct Meshlet
 {
-    uint32_t indices[Constants::MAX_MESHLET_INDICES];
-    uint32_t vertices[Constants::MAX_MESHLET_VERTICES];
-    uint32_t vertexCount;
-    uint32_t indicesCount;
+    uint32_t indices[Constants::MAX_MESHLET_INDICES] = {};
+    uint32_t vertices[Constants::MAX_MESHLET_VERTICES] = {};
+    uint32_t vertexCount = 0;
+    uint32_t indicesCount = 0;
+};
+
+struct NewMeshlet
+{
+	uint32_t vertexOffset = 0;
+	uint32_t vertexCount = 0;
+	uint32_t indexOffset = 0;
+	uint32_t triangleCount = 0;
 };
 
 struct MeshletBounds

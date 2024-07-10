@@ -12,6 +12,7 @@
 #include "../Vk/Descriptors/DescriptorBuilder.h"
 #include "../Vk/Devices/DeviceManager.h"
 #include "Mesh/Meshlet.h"
+#include "Mesh/MeshletGeneration.h"
 #include "Meshlet.h"
 #include "src/meshoptimizer.h"
 #include "vulkan/vulkan_enums.hpp"
@@ -25,6 +26,17 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
 
     size_t maxCountOfMeshlets =
         meshopt_buildMeshletsBound(indices.size(), Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_TRIANGLES);
+
+    std::vector<uint32_t> testVertices;
+    std::vector<uint32_t> testIndices;
+
+    std::vector<NewMeshlet> testNv =
+        MeshletGeneration::MeshletizeNv(Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, indices,
+                                        vertices.size(), testVertices, testIndices);
+
+	std::vector<Meshlet> testUnoptimized = MeshletGeneration::MeshletizeUnoptimized(Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, indices,
+                                        vertices.size());
+
 
     std::vector<meshopt_Meshlet> meshlets(maxCountOfMeshlets);
     std::vector<unsigned int> meshletVertices(maxCountOfMeshlets * Constants::MAX_MESHLET_VERTICES);
@@ -103,10 +115,10 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
                     coneNormal = normal;
                 }
             }
-			
-			// We have to account for the fact that a triangle is visible to it's entire hemisphere.
-			// Therefore we need to add a 90 degree angle to the the most diverging normal.
-			minDot = cos(3.141589 / 2 + acosf(minDot));
+
+            // We have to account for the fact that a triangle is visible to it's entire hemisphere.
+            // Therefore we need to add a 90 degree angle to the the most diverging normal.
+            minDot = cos(3.141589 / 2 + acosf(minDot));
 
             uint32_t middleIndex = meshlet.vertex_offset + (meshlet.vertex_count) * 0.5f;
 
@@ -121,7 +133,6 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
     }
 
     ASSERT(meshletBounds.size() == meshlets.size(), "Meshlet bounds and meshlets vectors don't have the same size!");
-
 
     m_MeshletBoundsBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
     m_MeshletBoundsBuffer.InitializeOnGpu(meshletBounds.data(), meshletBounds.size() * sizeof(MeshletBounds));
@@ -175,16 +186,18 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
 
     VkCore::DescriptorBuilder descBuilder = VkCore::DescriptorBuilder(VkCore::DeviceManager::GetDevice());
 
-    bool success =
-        descBuilder.BindBuffer(0, m_VertexBuffer, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eMeshNV)
-            .BindBuffer(1, m_MeshletBuffer, vk::DescriptorType::eStorageBuffer, vk::ShaderStageFlagBits::eMeshNV)
-            .BindBuffer(2, m_MeshletVerticesBuffer, vk::DescriptorType::eStorageBuffer,
-                        vk::ShaderStageFlagBits::eMeshNV)
-            .BindBuffer(3, m_MeshletTrianglesBuffer, vk::DescriptorType::eStorageBuffer,
-                        vk::ShaderStageFlagBits::eMeshNV)
-            .BindBuffer(4, m_MeshletBoundsBuffer, vk::DescriptorType::eStorageBuffer,
-                        vk::ShaderStageFlagBits::eMeshNV | vk::ShaderStageFlagBits::eMeshNV)
-            .Build(m_DescriptorSet, m_DescriptorSetLayout);
+    bool success = descBuilder
+                       .BindBuffer(0, m_VertexBuffer, vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eMeshNV | vk::ShaderStageFlagBits::eTaskEXT)
+                       .BindBuffer(1, m_MeshletBuffer, vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eMeshNV | vk::ShaderStageFlagBits::eTaskEXT)
+                       .BindBuffer(2, m_MeshletVerticesBuffer, vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eMeshNV | vk::ShaderStageFlagBits::eTaskEXT)
+                       .BindBuffer(3, m_MeshletTrianglesBuffer, vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eMeshNV | vk::ShaderStageFlagBits::eTaskEXT)
+                       .BindBuffer(4, m_MeshletBoundsBuffer, vk::DescriptorType::eStorageBuffer,
+                                   vk::ShaderStageFlagBits::eMeshNV | vk::ShaderStageFlagBits::eTaskEXT)
+                       .Build(m_DescriptorSet, m_DescriptorSetLayout);
 
     ASSERT(success, "Failed to build a descriptor set for a mesh!")
 }

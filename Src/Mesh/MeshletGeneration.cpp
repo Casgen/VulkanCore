@@ -10,86 +10,96 @@
 
 #include "Constants.h"
 #include "Log/Log.h"
+#include "Mesh/Meshlet.h"
 #include "Model/Structures/OcTree.h"
 #include "Model/Structures/IndexedTriangle.h"
+#include "Model/Structures/Stack.h"
 #include "glm/common.hpp"
+#include "MeshUtils.h"
 
-// std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts, uint32_t maxIndices,
-//                                                               const std::vector<uint32_t> indices)
-// {
-//
-//     Meshlet meshlet;
-//
-//     std::vector<Meshlet> meshlets;
-//
-//     std::vector<uint32_t> index_stack, vertex_stack;
-//
-//     index_stack.reserve(maxIndices);
-//
-//     for (uint32_t offset = 0; offset < indices.size();)
-//     {
-//
-//         meshlet = {};
-//
-//         size_t offsetEnd = glm::min(size_t(offset + maxIndices), indices.size());
-//
-//         uint32_t triangleCount = 0;
-//
-//         for (uint32_t i = offset; i < offsetEnd; i++)
-//         {
-//             triangleCount += uint32_t((i + 1) % 3 == 0);
-//
-//             bool isVertexPresent = false;
-//
-//             for (uint32_t j = 0; j < vertex_stack.size(); j++)
-//             {
-//                 isVertexPresent = indices[i] == vertex_stack[j];
-//                 if (isVertexPresent)
-//                     break;
-//             }
-//
-//             if (!isVertexPresent)
-//             {
-//                 if (maxVerts <= vertex_stack.size())
-//                     break;
-//
-//                 vertex_stack.emplace_back(indices[i]);
-//             }
-//
-//             index_stack.push_back(indices[i]);
-//         }
-//
-//         assert(maxVerts >= vertex_stack.size());
-//
-//         uint32_t i = 0;
-//
-//         for (auto& vert : vertex_stack)
-//         {
-//             meshlet.vertices[i] = vert;
-//             i++;
-//         }
-//
-//         assert(maxIndices >= index_stack.size());
-//
-//         meshlet.vertexCount = vertex_stack.size();
-//
-//         for (uint32_t i = 0; i < triangleCount * 3; i++)
-//         {
-//             meshlet.indices[i] = index_stack[i];
-//         }
-//
-//         meshlet.indicesCount = index_stack.size();
-//
-//         meshlets.push_back(meshlet);
-//
-//         index_stack.clear();
-//         vertex_stack.clear();
-//
-//         offset += triangleCount * 3;
-//     }
-//
-//     return meshlets;
-// }
+std::vector<NewMeshlet> MeshletGeneration::MeshletizeNv(uint32_t maxVerts, uint32_t maxIndices,
+                                                        const std::vector<uint32_t>& indices,
+                                                        const uint32_t verticesSize, std::vector<uint32_t>& outVertices,
+                                                        std::vector<uint32_t> outIndices)
+{
+    outVertices.reserve(verticesSize);
+    outIndices.reserve(indices.size());
+
+    std::vector<NewMeshlet> meshlets;
+    std::vector<uint8_t> vertices(verticesSize, 0xFF);
+
+    NewMeshlet meshlet;
+
+    uint16_t indexCount = 0;
+
+    for (uint32_t i = 0; i < indices.size(); i += 3)
+    {
+
+        uint32_t a = indices[i + 0];
+        uint32_t b = indices[i + 1];
+        uint32_t c = indices[i + 2];
+
+        uint8_t& av = vertices[a];
+        uint8_t& bv = vertices[b];
+        uint8_t& cv = vertices[c];
+
+        if ((meshlet.vertexCount + (av == 0xFF) + (bv == 0xFF) + (cv == 0xFF) > maxVerts) ||
+            (indexCount + 3 > maxIndices))
+        {
+            meshlet.indexOffset = outIndices.size() - indexCount;
+            meshlet.vertexOffset = outVertices.size() - meshlet.vertexCount;
+            meshlet.triangleCount = indexCount / 3;
+
+            meshlets.push_back(meshlet);
+            memset(vertices.data(), 0xFF, verticesSize);
+
+			meshlet = {};
+
+            indexCount = 0;
+        }
+
+        if (av == 0xFF)
+        {
+            av = meshlet.vertexCount;
+            outVertices.emplace_back(a);
+            meshlet.vertexCount++;
+        }
+
+        if (bv == 0xFF)
+        {
+            bv = meshlet.vertexCount;
+            outVertices.emplace_back(b);
+            meshlet.vertexCount++;
+        }
+
+        if (cv == 0xFF)
+        {
+            cv = meshlet.vertexCount;
+            outVertices.emplace_back(c);
+            meshlet.vertexCount++;
+        }
+
+        outIndices.emplace_back(av);
+        indexCount++;
+
+        outIndices.emplace_back(bv);
+        indexCount++;
+
+        outIndices.emplace_back(cv);
+        indexCount++;
+    }
+
+    if (indexCount != 0)
+    {
+        meshlet.indexOffset = outIndices.size() - indexCount;
+        meshlet.triangleCount = indexCount / 3;
+        meshlet.vertexOffset = outVertices.size() - meshlet.vertexCount;
+
+        meshlets.push_back(meshlet);
+    }
+
+    return meshlets;
+}
 
 std::vector<Meshlet> MeshletGeneration::MeshletizeUnoptimized(uint32_t maxVerts, uint32_t maxIndices,
                                                               const std::vector<uint32_t>& indices,
@@ -185,7 +195,7 @@ std::vector<Meshlet> MeshletGeneration::OcTreeMeshletizeMesh(uint32_t maxVerts, 
     }
 
     std::vector<OcTreeTriangles::Query> queries;
-	ocTree.GetAllNodeTriangles(queries);
+    ocTree.GetAllNodeTriangles(queries);
 
     std::vector<Meshlet> meshlets;
 
@@ -246,4 +256,134 @@ std::vector<Meshlet> MeshletGeneration::OcTreeMeshletizeMesh(uint32_t maxVerts, 
     }
 
     return meshlets;
+}
+std::vector<NewMeshlet> MeshletGeneration::TipsifyAndMeshlet(uint32_t maxVerts, uint32_t maxIndices,
+                                                             const std::vector<uint32_t>& indices,
+                                                             const uint32_t verticesCount)
+{
+    // Tipsify the mesh.
+    std::vector<uint32_t> tipsifiedIndices = MeshletGeneration::Tipsify(indices, verticesCount, maxVerts);
+}
+
+std::vector<uint32_t> MeshletGeneration::Tipsify(const std::vector<uint32_t>& indices, const uint32_t vertexCount,
+                                                 const uint32_t cacheSize)
+{
+    VertexTriangleAdjacency adj = MeshUtils::BuildVertexTriangleAdjecency(indices, vertexCount);
+
+    std::vector<uint32_t> liveTriangles(adj.vertexCount);
+
+    std::vector<uint32_t> cachingTimeStamps(vertexCount);
+
+    std::vector<uint32_t> deadEndStack;
+
+    std::vector<bool> emmitedTriangles(indices.size() / 3);
+
+    int f = 0;
+
+    uint32_t timeStamp = cacheSize + 1;
+    uint32_t cursor = 1;
+
+    std::vector<uint32_t> outputIndices;
+
+    while (f >= 0)
+    {
+        std::vector<uint32_t> ringCandidates;
+
+        std::vector<VertexTriangleAdjacency::Triangle> triangles = adj.GetTriangles(f);
+        std::vector<uint32_t> triangleIndices = adj.GetTriangleIndices(f);
+
+        for (size_t i = 0; i < triangles.size(); i++)
+        {
+            if (!emmitedTriangles[triangleIndices[i]])
+            {
+                for (size_t t = 0; t < 3; t++)
+                {
+                    const uint32_t v = triangles[i].vertices[t];
+                    outputIndices.emplace_back(v);
+                    deadEndStack.emplace_back(v);
+                    ringCandidates.emplace_back(v);
+
+                    liveTriangles[v]--;
+
+                    if (timeStamp - cachingTimeStamps[v] > cacheSize)
+                    {
+                        cachingTimeStamps[v] = ++timeStamp;
+                    }
+                }
+                emmitedTriangles[triangleIndices[i]] = true;
+            }
+        }
+
+        // Get next fanning vertex ----
+        f = MeshletGeneration::GetNextVertex(vertexCount, cursor, cacheSize, ringCandidates, cachingTimeStamps,
+                                             timeStamp, liveTriangles, deadEndStack);
+    }
+
+    return outputIndices;
+}
+
+int MeshletGeneration::GetNextVertex(const uint32_t vertexCount, uint32_t& i, const uint32_t cacheSize,
+                                     const std::vector<uint32_t>& candidates, const std::vector<uint32_t>& timeStamps,
+                                     uint32_t& timeStamp, const std::vector<uint32_t>& liveTriangles,
+                                     std::vector<uint32_t>& stack)
+{
+    int bestCandidate = -1;
+    int priority = -1;
+    int prevPriority = -1;
+
+    for (size_t v = 0; v < candidates.size(); v++)
+    {
+        if (liveTriangles[v] > 0)
+        {
+
+            const uint32_t candidate = candidates[v];
+            priority = 0;
+
+            if (timeStamp - candidate + 2 * liveTriangles[v] <= cacheSize)
+            {
+                priority = timeStamp - timeStamps[candidate];
+            }
+
+            if (priority > prevPriority)
+            {
+                prevPriority = priority;
+                bestCandidate = candidate;
+            }
+        }
+    }
+
+    if (bestCandidate == -1)
+    {
+        bestCandidate = MeshletGeneration::SkipDeadEnd(liveTriangles, stack, vertexCount, i);
+    }
+
+    return bestCandidate;
+}
+
+int MeshletGeneration::SkipDeadEnd(const std::vector<uint32_t>& liveTriangles, std::vector<uint32_t>& stack,
+                                   const uint32_t vertexCount, uint32_t& i)
+{
+    while (!stack.empty())
+    {
+
+        const uint32_t d = stack.back();
+        stack.pop_back();
+
+        if (liveTriangles[d] > 0)
+        {
+            return d;
+        }
+    }
+
+    while (i < vertexCount)
+    {
+        if (liveTriangles[i] > 0)
+        {
+            return i;
+        }
+
+        i++;
+    }
+
+    return -1;
 }

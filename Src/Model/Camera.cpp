@@ -1,3 +1,5 @@
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+
 #include "Camera.h"
 #include "Log/Log.h"
 #include "glm/common.hpp"
@@ -11,7 +13,7 @@
 Camera::Camera(const glm::vec3& position, const glm::vec3 lookAt, const float aspectRatio, const float fov)
     : m_Position(position), m_Fov(45.f), m_AspectRatio(aspectRatio)
 {
-    m_ProjectionMat = glm::perspective(fov, aspectRatio, .01f, 50.f);
+    m_ProjectionMat = glm::perspective(fov, aspectRatio, .01f, 5.f);
     m_FwdVector = -glm::normalize(lookAt - position);
 
     // The up vector is reversed due to the Vulkan Coordinate system having Y-Axis flipped
@@ -155,38 +157,40 @@ bool Camera::GetIsMovingBackward() const
     return m_MovingBitField.isBack;
 }
 
-FrustumNormals Camera::CalculateFrustumNormals() const
+Frustum Camera::CalculateFrustumNormals() const
 {
-    float fovRadians = (m_Fov / 180 * glm::pi<float>());
+    float fovRadians = (m_Fov * (glm::pi<float>() / 180));
 
-	glm::vec3 normalizedSide = glm::normalize(m_SideVector);
-	glm::vec3 normalizedUp = glm::normalize(m_UpVector);
-	glm::vec3 normalizedFwd = glm::normalize(m_FwdVector);
+    glm::vec3 normalizedSide = glm::normalize(m_SideVector);
+    glm::vec3 normalizedUp = glm::normalize(m_UpVector);
+    glm::vec3 normalizedFwd = glm::normalize(m_FwdVector);
 
-	// axis-angle rotation
+    // axis-angle rotation
     glm::vec3 rightPlaneNormal = normalizedSide * cosf(-fovRadians) +
                                  glm::dot(normalizedSide, normalizedUp) * normalizedUp * (1 - cosf(-fovRadians)) +
                                  glm::cross(normalizedUp, normalizedSide) * sinf(-fovRadians);
 
-    glm::vec3 leftPlaneNormal = -normalizedSide * cosf(m_Fov) +
-                                 glm::dot(-normalizedSide, normalizedUp) * normalizedUp * (1 - cosf(fovRadians)) +
-                                 glm::cross(normalizedUp, -normalizedSide) * sinf(fovRadians);
+    glm::vec3 leftPlaneNormal = -normalizedSide * cosf(fovRadians) +
+                                glm::dot(-normalizedSide, normalizedUp) * normalizedUp * (1 - cosf(fovRadians)) +
+                                glm::cross(normalizedUp, -normalizedSide) * sinf(fovRadians);
 
-    glm::vec3 topPlaneNormal = normalizedFwd * cosf(m_Fov) +
-                                 glm::dot(normalizedFwd, normalizedSide) * normalizedSide * (1 - cosf(fovRadians)) +
-                                 glm::cross(normalizedSide, normalizedFwd) * sinf(fovRadians);
+    glm::vec3 topPlaneNormal = normalizedFwd * cosf(-fovRadians) +
+                               glm::dot(normalizedFwd, normalizedSide) * normalizedSide * (1 - cosf(-fovRadians)) +
+                               glm::cross(normalizedFwd, normalizedSide) * sinf(-fovRadians);
 
-    glm::vec3 bottomPlaneNormal = -normalizedFwd * cosf(m_Fov) +
-                                 glm::dot(-normalizedFwd, normalizedSide) * normalizedSide * (1 - cosf(-fovRadians)) +
-                                 glm::cross(normalizedSide, -normalizedFwd) * sinf(-fovRadians);
+    glm::vec3 bottomPlaneNormal = normalizedFwd * cosf(fovRadians) +
+                                  glm::dot(normalizedFwd, normalizedSide) * normalizedSide * (1 - cosf(fovRadians)) +
+                                  glm::cross(normalizedFwd, normalizedSide) * sinf(fovRadians);
 
-	return {
-		.left = glm::normalize(leftPlaneNormal),
-		.right = glm::normalize(rightPlaneNormal),
-		.top = glm::normalize(topPlaneNormal),
-		.bottom = glm::normalize(bottomPlaneNormal),
-		.front = glm::normalize(-normalizedFwd),
-		.back = glm::normalize(normalizedFwd),
-	};
-
+    return {
+        .left = leftPlaneNormal,
+        .right = rightPlaneNormal,
+        .top = topPlaneNormal,
+        .bottom = bottomPlaneNormal,
+        .front = -normalizedFwd,
+        .back = normalizedFwd,
+        .pointSides = m_Position,
+        .pointFront = m_Position + (-normalizedFwd * .01f),
+        .pointBack = m_Position + (-normalizedFwd * 5.f),
+    };
 }

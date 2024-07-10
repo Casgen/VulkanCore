@@ -11,5 +11,5 @@ class MatrixBuffer
     glm::mat4 m_Model = glm::mat4(1.f);
     glm::mat4 m_View;
     glm::mat4 m_Proj;
-
+	Frustum frustum;
 };

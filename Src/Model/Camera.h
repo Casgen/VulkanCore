@@ -28,13 +28,16 @@ struct MovingBitField
     }
 };
 
-struct FrustumNormals {
-	glm::vec3 left;
-	glm::vec3 right;
-	glm::vec3 top;
-	glm::vec3 bottom;
-	glm::vec3 front;
-	glm::vec3 back;
+struct Frustum {
+	alignas(16) glm::vec3 left;
+	alignas(16) glm::vec3 right;
+	alignas(16) glm::vec3 top;
+	alignas(16) glm::vec3 bottom;
+	alignas(16) glm::vec3 front;
+	alignas(16) glm::vec3 back;
+	alignas(16) glm::vec3 pointSides;
+	alignas(16) glm::vec3 pointFront;
+	alignas(16) glm::vec3 pointBack;
 };
 
 class Camera
@@ -68,7 +71,7 @@ class Camera
     void Pitch(const float step);
 
     void RecreateProjection(const int width, const int height);
-	FrustumNormals CalculateFrustumNormals() const;
+	Frustum CalculateFrustumNormals() const;
 
     // ------------------ Getters ----------------------
 

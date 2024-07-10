@@ -220,7 +220,7 @@ namespace VkCore
             std::string fileExt = path.substr(splitIndex + 1, path.length() - splitIndex);
 
 #ifndef VK_MESH_EXT
-            bool isValidShader = fileExt == "nv.mesh" || fileExt == "task" || fileExt == "frag";
+            bool isValidShader = fileExt == "nv.mesh" || fileExt == "nv.task" || fileExt == "frag";
 #else
             bool isValidShader = fileExt == "mesh" || fileExt == "task" || fileExt == "frag";
 #endif
@@ -235,7 +235,7 @@ namespace VkCore
                 shaderc_shader_kind shaderKind = DetermineShaderType(path);
 
 #ifdef VK_MESH_EXT
-                if (shaderc_mesh_shader == shaderKind)
+                if (shaderc_mesh_shader == shaderKind || shaderc_task_shader == shaderKind)
                 {
                     compileOptions.SetTargetSpirv(shaderc_spirv_version_1_5);
                     compileOptions.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);

@@ -36,6 +36,11 @@ struct Vec3f
         simd = _mm_set_ps(0.f, x, x, x);
     }
 
+    Vec3f(const float* array) : x(array[0]), y(array[1]), z(array[2])
+    {
+        simd = _mm_set_ps(0.f, array[2], array[1], array[0]);
+    }
+
     Vec3f(const Vec3f& other) : x(other.x), y(other.y), z(other.z)
     {
         simd = _mm_set_ps(0.f, other.z, other.y, other.x);
@@ -51,9 +56,9 @@ struct Vec3f
         return Vec3f(_mm_add_ps(this->simd, other.simd));
     }
 
-	// Binary operators are typically implemented as non-members to maintain symmetry.
-	// This allows us to have any lhs type to allow compute the result and we are not restricted
-	// just to the Vec3f type.
+    // Binary operators are typically implemented as non-members to maintain symmetry.
+    // This allows us to have any lhs type to allow compute the result and we are not restricted
+    // just to the Vec3f type.
     friend Vec3f operator-(Vec3f const& other)
     {
         return Vec3f(_mm_set_ps(0.f, -other.z, -other.y, -other.x));
@@ -184,9 +189,9 @@ struct Vec3f
         __m128 magnitudeSimd = _mm_set_ps(0.0f, magnitude, magnitude, magnitude);
 
         Vec3f result = Vec3f(_mm_div_ps(simd, magnitudeSimd));
-		result.simd[3] = 0.f;
+        result.simd[3] = 0.f;
 
-		return result;
+        return result;
     }
 
     float Magnitude() const
