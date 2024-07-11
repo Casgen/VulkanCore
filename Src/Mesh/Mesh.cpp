@@ -33,6 +33,8 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
         MeshletGeneration::MeshletizeNv(Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, tipsifiedIndices,
                                         vertices.size(), meshletVertices, meshletTriangles);
 
+	LOGF(Rendering, Verbose, "Number of meshlets: %d", meshlets.size())
+
     meshletVertices.shrink_to_fit();
     meshletTriangles.shrink_to_fit();
 
@@ -41,90 +43,11 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
     m_MeshletVerticesBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
     m_MeshletVerticesBuffer.InitializeOnGpu(meshletVertices.data(), meshletVertices.size() * sizeof(uint32_t));
 
-    std::vector<MeshletBounds> meshletBounds;
-    meshletBounds.reserve(meshlets.size());
-
-    // compute meshlet cones, normals and bounding spheres.
-    {
-        uint accOffset = 0;
-
-        for (auto& meshlet : meshlets)
-        {
-
-            std::vector<Vec3f> normals;
-            normals.reserve(meshlet.vertexCount);
-
-            AABB boundingBox = {
-                .minPoint = Vec3f(std::numeric_limits<float>::max()),
-                .maxPoint = Vec3f(std::numeric_limits<float>::min()),
-            };
-
-            for (int i = meshlet.vertexOffset; i < (meshlet.vertexOffset) + meshlet.vertexCount; i++)
-            {
-                const glm::vec3& glmNormal = vertices[meshletVertices[i]].Normal;
-                const glm::vec3& glmPositions = vertices[meshletVertices[i]].Position;
-
-                normals.emplace_back(Vec3f(glmNormal.x, glmNormal.y, glmNormal.z));
-
-                boundingBox.maxPoint =
-                    Vec3f::Max(Vec3f(glmPositions.x, glmPositions.y, glmPositions.z), boundingBox.maxPoint);
-                boundingBox.minPoint =
-                    Vec3f::Min(Vec3f(glmPositions.x, glmPositions.y, glmPositions.z), boundingBox.minPoint);
-            }
-
-            Vec3f sphereCenter = boundingBox.CenterPoint();
-            Vec3f halfDimensions = boundingBox.Dimensions() / 2.f;
-
-            float sphereRadius = std::max(std::max(halfDimensions.x, halfDimensions.y), halfDimensions.z);
-
-            assert(meshlet.vertexCount == normals.size());
-
-            Vec3f avgNormal;
-
-            for (const auto& normal : normals)
-            {
-                avgNormal += normal;
-            }
-
-            avgNormal /= normals.size();
-            avgNormal = avgNormal.Normalize();
-
-            Vec3f coneNormal = avgNormal;
-            float minDot = 1.f;
-
-            for (const auto& normal : normals)
-            {
-                float dot = avgNormal.Dot(normal);
-
-                if (dot < minDot)
-                {
-                    minDot = dot;
-                    coneNormal = normal;
-                }
-            }
-
-            // We have to account for the fact that a triangle is visible to it's entire hemisphere.
-            // Therefore we need to add a 90 degree angle to the the most diverging normal.
-            minDot = cos(3.141589 / 2 + acosf(minDot));
-
-            uint32_t middleIndex = meshlet.vertexOffset + (meshlet.vertexCount) * 0.5f;
-
-            glm::vec3 normalPos = vertices[meshletVertices[middleIndex]].Position;
-
-            meshletBounds.emplace_back(MeshletBounds{.normal = {avgNormal.x, avgNormal.y, avgNormal.z},
-                                                     .coneAngle = minDot,
-                                                     .spherePos = {sphereCenter.x, sphereCenter.y, sphereCenter.z},
-                                                     .sphereRadius = sphereRadius,
-                                                     .normalPos = {normalPos.x, normalPos.y, normalPos.z}});
-        }
-    }
-
-    ASSERT(meshletBounds.size() == meshlets.size(), "Meshlet bounds and meshlets vectors don't have the same size!");
+	std::vector<MeshletBounds> meshletBounds = MeshletGeneration::ComputeMeshletBounds(vertices, meshletVertices, meshlets);
 
     m_MeshletBoundsBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
     m_MeshletBoundsBuffer.InitializeOnGpu(meshletBounds.data(), meshletBounds.size() * sizeof(MeshletBounds));
 
-    // --- Since GLSL doesn't support 8-bit integers we are packing triangles into an uint.
 
 
     m_MeshletTrianglesBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);

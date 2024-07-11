@@ -204,7 +204,7 @@ struct Vec3f
 
     void Print()
     {
-        std::printf("{%.4f, %.4f, %.4f}", x, y, z);
+        std::printf("{%.4f, %.4f, %.4f}\n", x, y, z);
     }
 
   private:

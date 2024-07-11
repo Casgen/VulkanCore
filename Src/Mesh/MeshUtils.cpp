@@ -1,5 +1,6 @@
 #include "MeshUtils.h"
 #include <cstring>
+#include <queue>
 #include <unordered_map>
 
 VertexTriangleAdjacency MeshUtils::BuildVertexTriangleAdjacency(const std::vector<uint32_t>& indices,
@@ -15,7 +16,7 @@ VertexTriangleAdjacency MeshUtils::BuildVertexTriangleAdjacency(const std::vecto
     }
 
     std::vector<uint32_t> offsets;
-	offsets.resize(numOfVertices);
+    offsets.resize(numOfVertices);
 
     uint32_t offset = 0;
 
@@ -33,7 +34,7 @@ VertexTriangleAdjacency MeshUtils::BuildVertexTriangleAdjacency(const std::vecto
     for (std::size_t i = 0; i < indices.size(); i += 3)
     {
 
-		const uint32_t triangleIndex = i / 3;
+        const uint32_t triangleIndex = i / 3;
         for (size_t j = 0; j < 3; j++)
         {
             const uint32_t vertexIndex = indices[i + j];
@@ -45,7 +46,7 @@ VertexTriangleAdjacency MeshUtils::BuildVertexTriangleAdjacency(const std::vecto
     }
 
     return {
-		.indices = indices,
+        .indices = indices,
         .vertexCount = vertexCount,
         .offsets = offsets,
         .adjacencyList = adjList,
@@ -53,13 +54,13 @@ VertexTriangleAdjacency MeshUtils::BuildVertexTriangleAdjacency(const std::vecto
 }
 
 std::vector<uint32_t> MeshUtils::Tipsify(const std::vector<uint32_t>& indices, const uint32_t vertexCount,
-                                                 const uint32_t cacheSize)
+                                         const uint32_t cacheSize)
 {
     VertexTriangleAdjacency adj = MeshUtils::BuildVertexTriangleAdjacency(indices, vertexCount);
 
     std::vector<uint32_t> liveTriangles(adj.vertexCount);
     std::vector<uint32_t> cachingTimeStamps(vertexCount);
-    std::vector<uint32_t> deadEndStack;
+    std::queue<uint32_t> deadEndStack;
 
     std::vector<bool> emmitedTriangles(indices.size() / 3);
 
@@ -75,9 +76,9 @@ std::vector<uint32_t> MeshUtils::Tipsify(const std::vector<uint32_t>& indices, c
         std::unordered_map<uint32_t, bool> ringCandidates;
 
         std::vector<VertexTriangleAdjacency::Triangle> triangles =
-            adj.GetTriangles(f);		// Obtains the triangles with the given indices.
+            adj.GetTriangles(f); // Obtains the triangles with the given indices.
         std::vector<uint32_t> triangleIndices =
-            adj.GetTriangleIndices(f);	// Indexes into the index buffer. Points at the different triangles.
+            adj.GetTriangleIndices(f); // Indexes into the index buffer. Points at the different triangles.
 
         for (size_t i = 0; i < triangles.size(); i++)
         {
@@ -87,7 +88,7 @@ std::vector<uint32_t> MeshUtils::Tipsify(const std::vector<uint32_t>& indices, c
                 {
                     const uint32_t v = triangles[i].vertices[t];
                     outputIndices.emplace_back(v);
-                    deadEndStack.emplace_back(v);
+                    deadEndStack.push(v);
                     ringCandidates.emplace(v, true);
 
                     liveTriangles[v]--;
@@ -102,17 +103,17 @@ std::vector<uint32_t> MeshUtils::Tipsify(const std::vector<uint32_t>& indices, c
         }
 
         // Get next fanning vertex ----
-        f = MeshUtils::GetNextVertex(vertexCount, cursor, cacheSize, ringCandidates, cachingTimeStamps,
-                                             timeStamp, liveTriangles, deadEndStack);
+        f = MeshUtils::GetNextVertex(vertexCount, cursor, cacheSize, ringCandidates, cachingTimeStamps, timeStamp,
+                                     liveTriangles, deadEndStack);
     }
 
     return outputIndices;
 }
 
 int MeshUtils::GetNextVertex(const uint32_t vertexCount, uint32_t i, const uint32_t cacheSize,
-                                     const std::unordered_map<uint32_t, bool>& candidates,
-                                     const std::vector<uint32_t>& timeStamps, uint32_t& timeStamp,
-                                     const std::vector<uint32_t>& liveTriangles, std::vector<uint32_t>& stack)
+                             const std::unordered_map<uint32_t, bool>& candidates,
+                             const std::vector<uint32_t>& timeStamps, uint32_t& timeStamp,
+                             const std::vector<uint32_t>& liveTriangles, std::queue<uint32_t>& stack)
 {
     int bestCandidate = -1;
     int priority = -1;
@@ -147,14 +148,14 @@ int MeshUtils::GetNextVertex(const uint32_t vertexCount, uint32_t i, const uint3
     return bestCandidate;
 }
 
-int MeshUtils::SkipDeadEnd(const std::vector<uint32_t>& liveTriangles, std::vector<uint32_t>& stack,
-                                   const uint32_t vertexCount, uint32_t i)
+int MeshUtils::SkipDeadEnd(const std::vector<uint32_t>& liveTriangles, std::queue<uint32_t>& stack,
+                           const uint32_t vertexCount, uint32_t i)
 {
     while (!stack.empty())
     {
 
         const uint32_t d = stack.back();
-        stack.pop_back();
+        stack.pop();
 
         if (liveTriangles[d] > 0)
         {
@@ -173,4 +174,14 @@ int MeshUtils::SkipDeadEnd(const std::vector<uint32_t>& liveTriangles, std::vect
     }
 
     return -1;
+}
+
+uint32_t MeshUtils::PackTriangleIntoUInt(const uint32_t a, const uint32_t b, const uint32_t c)
+{
+    return (a & 0xFF) | ((b & 0xFF) << 8) | ((c & 0xFF) << 16);
+}
+
+uint32_t MeshUtils::UnpackTriangleFromUInt(const uint32_t triangle)
+{
+    return (triangle & 0xFF) | ((triangle >> 8) & 0xFF) | ((triangle >> 16) & 0xFF);
 }

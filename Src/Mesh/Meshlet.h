@@ -22,12 +22,12 @@ struct NewMeshlet
 
 struct MeshletBounds
 {
-	glm::vec3 normal;
+	alignas(16) glm::vec3 normal;
 	float coneAngle;
-	glm::vec3 spherePos;
+	alignas(16) glm::vec3 spherePos;
 	float sphereRadius;
 
 	// We have to be carefull around the std430 layout since it is 4-base. (16 bytes)
 	// and in the array it would throw off the offsets
-	alignas(16) glm::vec3 normalPos;
+	//alignas(16) glm::vec3 normalPos;
 };
