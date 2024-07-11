@@ -1,6 +1,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <unordered_map>
 #include <vector>
 #include "VertexTriangleAdjacency.h"
 
@@ -8,5 +9,16 @@ class MeshUtils
 {
 
   public:
-    static VertexTriangleAdjacency BuildVertexTriangleAdjecency(const std::vector<uint32_t>& indices, const size_t numOfVertices);
+    static VertexTriangleAdjacency BuildVertexTriangleAdjacency(const std::vector<uint32_t>& indices, const size_t numOfVertices);
+
+    static std::vector<uint32_t> Tipsify(const std::vector<uint32_t>& indices, const uint32_t vertexCount,
+                                         const uint32_t cacheSize);
+
+    static int GetNextVertex(const uint32_t vertexCount, uint32_t i, const uint32_t cacheSize,
+                             const std::unordered_map<uint32_t, bool>& candidates, const std::vector<uint32_t>& timeStamps,
+                             uint32_t& timeStamp, const std::vector<uint32_t>& liveTriangles,
+                             std::vector<uint32_t>& stack);
+
+    static int SkipDeadEnd(const std::vector<uint32_t>& liveTriangles, std::vector<uint32_t>& stack,
+                           const uint32_t vertexCount, uint32_t i);
 };

@@ -5,7 +5,6 @@
 #include <cstdint>
 #include <immintrin.h>
 #include <limits>
-#include <stdexcept>
 
 #include "../Constants.h"
 #include "../Log/Log.h"
@@ -14,8 +13,8 @@
 #include "../Vk/Devices/DeviceManager.h"
 #include "Mesh/Meshlet.h"
 #include "Mesh/MeshletGeneration.h"
+#include "Mesh/MeshUtils.h"
 #include "Meshlet.h"
-#include "src/meshoptimizer.h"
 #include "vulkan/vulkan_enums.hpp"
 
 Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& vertices)
@@ -28,8 +27,10 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
     std::vector<uint32_t> meshletVertices;
     std::vector<uint32_t> meshletTriangles;
 
+    std::vector<uint32_t> tipsifiedIndices = MeshUtils::Tipsify(indices, vertices.size(), 24);
+
     std::vector<NewMeshlet> meshlets =
-        MeshletGeneration::MeshletizeNv(Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, indices,
+        MeshletGeneration::MeshletizeNv(Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, tipsifiedIndices,
                                         vertices.size(), meshletVertices, meshletTriangles);
 
     meshletVertices.shrink_to_fit();
