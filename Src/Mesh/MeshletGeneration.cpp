@@ -220,9 +220,6 @@ std::vector<MeshletBounds> MeshletGeneration::ComputeMeshletBounds(const std::ve
 				sphereRadius = std::max(sphereRadius, (sphereCenter - Vec3f(glmPositions.x, glmPositions.y, glmPositions.z)).Magnitude());
 			}
 
-			sphereCenter.Print();
-
-
             meshletBounds.emplace_back(MeshletBounds{
                 .normal = {avgNormal.x, avgNormal.y, avgNormal.z},
                 .coneAngle = minDot,

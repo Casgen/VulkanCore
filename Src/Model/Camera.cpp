@@ -174,13 +174,14 @@ Frustum Camera::CalculateFrustumNormals() const
                                 glm::dot(-normalizedSide, normalizedUp) * normalizedUp * (1 - cosf(fovRadians)) +
                                 glm::cross(normalizedUp, -normalizedSide) * sinf(fovRadians);
 
-    glm::vec3 topPlaneNormal = normalizedFwd * cosf(-fovRadians) +
-                               glm::dot(normalizedFwd, normalizedSide) * normalizedSide * (1 - cosf(-fovRadians)) +
-                               glm::cross(normalizedFwd, normalizedSide) * sinf(-fovRadians);
+    float horizontalFov = 2 * atan(tan(fovRadians) / m_AspectRatio);
 
-    glm::vec3 bottomPlaneNormal = normalizedFwd * cosf(fovRadians) +
-                                  glm::dot(normalizedFwd, normalizedSide) * normalizedSide * (1 - cosf(fovRadians)) +
-                                  glm::cross(normalizedFwd, normalizedSide) * sinf(fovRadians);
+    glm::vec3 topPlaneNormal =
+        normalizedFwd * cosf(-horizontalFov) +
+        glm::dot(normalizedFwd, normalizedSide) * normalizedSide * (1 - cosf(-horizontalFov)) +
+        glm::cross(normalizedFwd, normalizedSide) * sinf(-horizontalFov);
+
+    glm::vec3 bottomPlaneNormal = 2 * glm::dot(topPlaneNormal, normalizedFwd) * normalizedFwd - topPlaneNormal;
 
     return {
         .left = leftPlaneNormal,
