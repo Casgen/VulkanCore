@@ -123,6 +123,8 @@ class Camera
     float m_AspectRatio = 0.f;
     float m_Azimuth = 0.f;
     float m_Zenith = 0.f;
+	float m_Far = 10.f;
+	float m_Near = .01f;
     glm::vec3 m_CurrentMovingDir = glm::vec3(0.f);
     MovingBitField m_MovingBitField{};
 

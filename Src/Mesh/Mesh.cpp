@@ -17,8 +17,8 @@
 #include "Meshlet.h"
 #include "vulkan/vulkan_enums.hpp"
 
-Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& vertices)
-    : indices(indices), vertices(vertices)
+Mesh::Mesh(const std::vector<uint32_t>& indexBuffer, const std::vector<MeshVertex>& vertices)
+    : indices(indexBuffer), vertices(vertices)
 {
 
     m_VertexBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eStorageBuffer);
@@ -27,10 +27,10 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
     std::vector<uint32_t> meshletVertices;
     std::vector<uint32_t> meshletTriangles;
 
-    std::vector<uint32_t> tipsifiedIndices = MeshUtils::Tipsify(indices, vertices.size(), 24);
+    indices = MeshUtils::Tipsify(indices, vertices.size(), 24);
 
     std::vector<NewMeshlet> meshlets =
-        MeshletGeneration::MeshletizeNv(Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, tipsifiedIndices,
+        MeshletGeneration::MeshletizeNv(Constants::MAX_MESHLET_VERTICES, Constants::MAX_MESHLET_INDICES, indices,
                                         vertices.size(), meshletVertices, meshletTriangles);
 
 	LOGF(Rendering, Verbose, "Number of meshlets: %d", meshlets.size())
@@ -68,11 +68,13 @@ Mesh::Mesh(const std::vector<uint32_t>& indices, const std::vector<MeshVertex>& 
                        .BindBuffer(3, m_MeshletTrianglesBuffer, vk::DescriptorType::eStorageBuffer,
                                    vk::ShaderStageFlagBits::eMeshNV | vk::ShaderStageFlagBits::eTaskEXT)
                        .BindBuffer(4, m_MeshletBoundsBuffer, vk::DescriptorType::eStorageBuffer,
-                                   vk::ShaderStageFlagBits::eMeshNV | vk::ShaderStageFlagBits::eTaskEXT)
+                                   vk::ShaderStageFlagBits::eMeshNV | vk::ShaderStageFlagBits::eTaskEXT | vk::ShaderStageFlagBits::eVertex)
                        .Build(m_DescriptorSet, m_DescriptorSetLayout);
 
     ASSERT(success, "Failed to build a descriptor set for a mesh!")
 }
+
+
 OcTreeTriangles Mesh::OcTreeMesh(const Mesh& mesh, const uint32_t capacity)
 {
 

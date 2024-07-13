@@ -38,7 +38,7 @@ class Mesh
     static OcTreeTriangles OcTreeMesh(const Mesh& mesh, const uint32_t capacity);
     static AABB CreateBoundingBox(const Mesh& mesh);
 
-    const std::vector<uint32_t> indices;
+    std::vector<uint32_t> indices;
     const std::vector<MeshVertex> vertices;
 
   private:

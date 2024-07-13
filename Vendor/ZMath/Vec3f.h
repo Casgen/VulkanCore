@@ -202,6 +202,13 @@ struct Vec3f
         return sqrtf(sum);
     }
 
+    float MagnitudeSquared() const
+    {
+        __m128 compSquared = _mm_mul_ps(simd, simd);
+
+        return compSquared[0] + compSquared[1] + compSquared[2];
+    }
+
     void Print()
     {
         std::printf("{%.4f, %.4f, %.4f}\n", x, y, z);

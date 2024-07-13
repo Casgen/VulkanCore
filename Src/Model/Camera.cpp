@@ -13,7 +13,7 @@
 Camera::Camera(const glm::vec3& position, const glm::vec3 lookAt, const float aspectRatio, const float fov)
     : m_Position(position), m_Fov(45.f), m_AspectRatio(aspectRatio)
 {
-    m_ProjectionMat = glm::perspective(fov, aspectRatio, .01f, 5.f);
+    m_ProjectionMat = glm::perspective(fov, aspectRatio, m_Near, m_Far);
     m_FwdVector = -glm::normalize(lookAt - position);
 
     // The up vector is reversed due to the Vulkan Coordinate system having Y-Axis flipped
@@ -99,17 +99,21 @@ void Camera::Pitch(const float step)
 {
     float newZenith = (this->m_Zenith + (float)step * m_RotationSpeed);
 
-    this->m_Zenith = glm::clamp(newZenith, -(glm::pi<float>() / 2), (glm::pi<float>() / 2));
+    this->m_Zenith = glm::clamp(newZenith, -(glm::pi<float>() / 2), ((glm::pi<float>() - 0.001f) / 2));
+
     UpdateVectors();
+
     m_ViewMat = glm::lookTo(m_Position, m_FwdVector, m_UpVector);
 }
 
 void Camera::UpdateVectors()
 {
-    m_FwdVector = glm::vec3(sin(this->m_Azimuth) * cos(this->m_Zenith), sin(this->m_Zenith),
-                            -cos(this->m_Azimuth) * cos(this->m_Zenith));
+    m_FwdVector = glm::vec3(sin(m_Azimuth) * cos(m_Zenith), sin(m_Zenith), -cos(m_Azimuth) * cos(m_Zenith));
 
-    m_UpVector = glm::vec3(0, -1.f, 0.f);
+    // TODO: Has to be updated for plane normals to work!!!!
+    m_UpVector =
+        -glm::vec3(sin(m_Azimuth) * cos(m_Zenith + glm::pi<float>() / 2.f), sin(m_Zenith + glm::pi<float>() / 2.f),
+                  -cos(m_Azimuth) * cos(m_Zenith + glm::pi<float>() / 2.f));
 
     m_SideVector = glm::cross(m_UpVector, m_FwdVector);
 }
@@ -160,28 +164,21 @@ bool Camera::GetIsMovingBackward() const
 Frustum Camera::CalculateFrustumNormals() const
 {
     float fovRadians = (m_Fov * (glm::pi<float>() / 180));
-
+    //
     glm::vec3 normalizedSide = glm::normalize(m_SideVector);
     glm::vec3 normalizedUp = glm::normalize(m_UpVector);
-    glm::vec3 normalizedFwd = glm::normalize(m_FwdVector);
+    glm::vec3 normalizedFwd = glm::normalize(-m_FwdVector);
 
-    // axis-angle rotation
-    glm::vec3 rightPlaneNormal = normalizedSide * cosf(-fovRadians) +
-                                 glm::dot(normalizedSide, normalizedUp) * normalizedUp * (1 - cosf(-fovRadians)) +
-                                 glm::cross(normalizedUp, normalizedSide) * sinf(-fovRadians);
+    const float halfVSide = m_Far * tanf(m_Fov * 0.5f);
+    const float halfHSide = halfVSide * m_AspectRatio;
 
-    glm::vec3 leftPlaneNormal = -normalizedSide * cosf(fovRadians) +
-                                glm::dot(-normalizedSide, normalizedUp) * normalizedUp * (1 - cosf(fovRadians)) +
-                                glm::cross(normalizedUp, -normalizedSide) * sinf(fovRadians);
+    const glm::vec3 farFwdVec = m_Far * normalizedFwd;
 
-    float horizontalFov = 2 * atan(tan(fovRadians) / m_AspectRatio);
+    glm::vec3 rightPlaneNormal = glm::normalize(glm::cross(farFwdVec - m_SideVector * halfHSide, -m_UpVector));
+    glm::vec3 leftPlaneNormal = glm::normalize(glm::cross(-m_UpVector, farFwdVec + m_SideVector * halfHSide));
 
-    glm::vec3 topPlaneNormal =
-        normalizedFwd * cosf(-horizontalFov) +
-        glm::dot(normalizedFwd, normalizedSide) * normalizedSide * (1 - cosf(-horizontalFov)) +
-        glm::cross(normalizedFwd, normalizedSide) * sinf(-horizontalFov);
-
-    glm::vec3 bottomPlaneNormal = 2 * glm::dot(topPlaneNormal, normalizedFwd) * normalizedFwd - topPlaneNormal;
+    glm::vec3 topPlaneNormal = glm::normalize(glm::cross(m_SideVector, farFwdVec - (-m_UpVector) * halfVSide));
+    glm::vec3 bottomPlaneNormal = glm::normalize(glm::cross(farFwdVec + (-m_UpVector) * halfVSide, m_SideVector));
 
     return {
         .left = leftPlaneNormal,
@@ -191,7 +188,7 @@ Frustum Camera::CalculateFrustumNormals() const
         .front = -normalizedFwd,
         .back = normalizedFwd,
         .pointSides = m_Position,
-        .pointFront = m_Position + (-normalizedFwd * .01f),
-        .pointBack = m_Position + (-normalizedFwd * 5.f),
+        .pointFront = m_Position + (normalizedFwd * m_Near),
+        .pointBack = m_Position + (normalizedFwd * m_Far),
     };
 }
