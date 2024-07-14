@@ -1,3 +1,5 @@
+#include "Mesh/MeshVertex.h"
+#include "glm/ext/matrix_float4x4.hpp"
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 
 #include "Camera.h"
@@ -7,11 +9,10 @@
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/scalar_constants.hpp"
 #include "glm/geometric.hpp"
-#include "glm/trigonometric.hpp"
 #include <cstdio>
 
-Camera::Camera(const glm::vec3& position, const glm::vec3 lookAt, const float aspectRatio, const float fov)
-    : m_Position(position), m_Fov(45.f), m_AspectRatio(aspectRatio)
+Camera::Camera(const glm::vec3& position, const glm::vec3 lookAt, const float aspectRatio, const float fov, const float far)
+    : m_Position(position), m_Fov(45.f), m_AspectRatio(aspectRatio), m_Far(far)
 {
     m_ProjectionMat = glm::perspective(fov, aspectRatio, m_Near, m_Far);
     m_FwdVector = -glm::normalize(lookAt - position);
@@ -89,6 +90,26 @@ void Camera::AddMovementSpeed(const float value)
     m_MovementSpeed = glm::clamp(m_MovementSpeed + value, 0.f, m_MovementSpeedMax);
 }
 
+void Camera::SetAzimuth(const float angle)
+{
+    m_Azimuth = angle;
+    UpdateVectors();
+}
+
+void Camera::SetPosition(const glm::vec3 position)
+{
+    m_Position = position;
+    m_ViewMat = glm::lookTo(position, -m_FwdVector, m_UpVector);
+}
+
+void Camera::SetZenith(const float angle)
+{
+    this->m_Zenith = glm::clamp(angle, -(glm::pi<float>() / 2), ((glm::pi<float>() - 0.001f) / 2));
+    UpdateVectors();
+
+    m_ViewMat = glm::lookTo(m_Position, m_FwdVector, m_UpVector);
+}
+
 void Camera::Yaw(const float step)
 {
     m_Azimuth = fmod(m_Azimuth + (step) * -m_RotationSpeed, glm::pi<float>() * 2);
@@ -113,7 +134,7 @@ void Camera::UpdateVectors()
     // TODO: Has to be updated for plane normals to work!!!!
     m_UpVector =
         -glm::vec3(sin(m_Azimuth) * cos(m_Zenith + glm::pi<float>() / 2.f), sin(m_Zenith + glm::pi<float>() / 2.f),
-                  -cos(m_Azimuth) * cos(m_Zenith + glm::pi<float>() / 2.f));
+                   -cos(m_Azimuth) * cos(m_Zenith + glm::pi<float>() / 2.f));
 
     m_SideVector = glm::cross(m_UpVector, m_FwdVector);
 }
@@ -161,7 +182,7 @@ bool Camera::GetIsMovingBackward() const
     return m_MovingBitField.isBack;
 }
 
-Frustum Camera::CalculateFrustumNormals() const
+Frustum Camera::CalculateFrustum() const
 {
     float fovRadians = (m_Fov * (glm::pi<float>() / 180));
     //
@@ -180,15 +201,62 @@ Frustum Camera::CalculateFrustumNormals() const
     glm::vec3 topPlaneNormal = glm::normalize(glm::cross(m_SideVector, farFwdVec - (-m_UpVector) * halfVSide));
     glm::vec3 bottomPlaneNormal = glm::normalize(glm::cross(farFwdVec + (-m_UpVector) * halfVSide, m_SideVector));
 
-    return {
-        .left = leftPlaneNormal,
-        .right = rightPlaneNormal,
-        .top = topPlaneNormal,
-        .bottom = bottomPlaneNormal,
-        .front = -normalizedFwd,
-        .back = normalizedFwd,
-        .pointSides = m_Position,
-        .pointFront = m_Position + (normalizedFwd * m_Near),
-        .pointBack = m_Position + (normalizedFwd * m_Far),
-    };
+    return {.left = leftPlaneNormal,
+            .right = rightPlaneNormal,
+            .top = topPlaneNormal,
+            .bottom = bottomPlaneNormal,
+            .front = -normalizedFwd,
+            .back = normalizedFwd,
+            .pointSides = m_Position,
+            .pointFront = m_Position + (normalizedFwd * m_Near),
+            .pointBack = m_Position + (normalizedFwd * m_Far),
+			.sideVec = m_SideVector,
+            .azimuth = m_Azimuth,
+            .zenith = m_Zenith};
+}
+
+std::tuple<VkCore::Buffer, VkCore::Buffer> Camera::ConstructFrustumModel() const
+{
+    glm::vec3 oppositeFwd = -m_FwdVector;
+
+    float fovX = tan(m_Fov * glm::pi<float>() / 180);
+    float fovY = fovX / m_AspectRatio;
+
+    float nearHalfHeight = fovY * m_Near;
+    float nearHalfWidth = fovX * m_Near;
+
+    float farHalfHeight = fovY * m_Far;
+    float farHalfWidth = fovX * m_Far;
+
+	glm::vec3 nearVector = -m_FwdVector * m_Near;
+	glm::vec3 farVector = -m_FwdVector * m_Far;
+
+    std::vector<LineVertex> vertices;
+	vertices.resize(9);
+
+    // Set the position first.
+    vertices[0] =
+        {.Position = glm::vec3(0.f), .Normal = glm::vec3(), .Color = glm::vec3(1.0f / 0x89, 1.0f / 0x89, 1.0f / 0x89)};
+
+    // Add all the other frustum vertices.
+    vertices[1] = {.Position = nearVector - (m_UpVector * nearHalfHeight) - (m_SideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
+    vertices[2] = {.Position = nearVector + (m_UpVector * nearHalfHeight) - (m_SideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
+    vertices[3] = {.Position = nearVector + (m_UpVector * nearHalfHeight) + (m_SideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
+    vertices[4] = {.Position = nearVector - (m_UpVector * nearHalfHeight) + (m_SideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
+
+    vertices[5] = {.Position = farVector - (m_UpVector * farHalfHeight) - (m_SideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
+    vertices[6] = {.Position = farVector + (m_UpVector * farHalfHeight) - (m_SideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
+    vertices[7] = {.Position = farVector + (m_UpVector * farHalfHeight) + (m_SideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
+    vertices[8] = {.Position = farVector - (m_UpVector * farHalfHeight) + (m_SideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
+
+    std::vector<uint32_t> indices = {0, 1, 0, 2, 0, 3, 0, 4, 1, 2, 2, 3, 3, 4, 4, 1,
+                                     1, 5, 2, 6, 3, 7, 4, 8, 5, 6, 6, 7, 7, 8, 8, 5};
+
+    VkCore::Buffer indexBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eIndexBuffer);
+    indexBuffer.InitializeOnGpu(indices.data(), indices.size() * sizeof(uint32_t));
+
+    VkCore::Buffer vertexBuffer = VkCore::Buffer(vk::BufferUsageFlagBits::eVertexBuffer);
+    vertexBuffer.InitializeOnGpu(vertices.data(), vertices.size() * sizeof(LineVertex));
+
+    return {std::move(vertexBuffer), std::move(indexBuffer)};
 }

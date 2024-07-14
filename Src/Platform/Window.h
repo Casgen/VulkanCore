@@ -58,6 +58,16 @@ namespace VkCore
             m_Height = height;
         }
 
+		void DisableCursor()
+		{
+			glfwSetInputMode(m_GlfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+
+		void EnabledCursor()
+		{
+			glfwSetInputMode(m_GlfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+
         void RefreshResolution()
         {
             int32_t width, height = 0;

@@ -75,6 +75,7 @@ namespace VkCore
 
         vk::PhysicalDeviceFeatures2 deviceFeatures2{};
         deviceFeatures2.setPNext(&vulkan12Features);
+		deviceFeatures2.features.setWideLines(true);
 
         // Enable Device Buffer Address
 

@@ -138,7 +138,7 @@ struct Vec3f
         return *this = Vec3f(_mm_div_ps(this->simd, _mm_set_ps(value, value, value, value)));
     }
 
-    float Dot(const Vec3f& other)
+    float Dot(const Vec3f& other) const
     {
         __m128 mul = _mm_mul_ps(simd, other.simd);
 
@@ -168,7 +168,7 @@ struct Vec3f
         return Max(Max(vec1, vec2), vec3);
     }
 
-    Vec3f Cross(const Vec3f& other)
+    Vec3f Cross(const Vec3f& other) const
     {
         __m256 firstMul = _mm256_set_ps(0.f, 0.f, y, x, x, z, z, y);
         __m256 secondMul = _mm256_set_ps(0.f, 0.f, other.x, other.y, other.z, other.x, other.y, other.z);
