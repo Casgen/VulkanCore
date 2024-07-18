@@ -10,7 +10,7 @@ class Model
 {
 
   public:
-    Model();
+    Model() {};
     Model(const std::string& filePath);
 
     std::vector<Mesh>& GetMeshes()

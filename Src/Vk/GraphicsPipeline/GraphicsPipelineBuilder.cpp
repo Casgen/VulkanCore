@@ -315,6 +315,10 @@ vk::Pipeline GraphicsPipelineBuilder::Build(vk::PipelineLayout& pipelineLayout) 
 
     m_BlendStateCreateInfo.setAttachments(m_ColorBlendAttachmentStates);
 
+	for (const auto& setLayout : m_DescriptorSetLayouts) {
+		ASSERT(setLayout != nullptr, "Failed to create pipeline layout! Descriptor set layout is NULL!")
+	}
+
     // Create pipeline layout
     vk::PipelineLayoutCreateInfo layoutCreateInfo;
 

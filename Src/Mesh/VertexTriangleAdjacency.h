@@ -48,7 +48,7 @@ struct VertexTriangleAdjacency
         size_t triangleCount = vertexCount[vertexIndex];
 
         ASSERT(offset < adjacencyList.size() && (offset + triangleCount) <= adjacencyList.size(),
-               "Failed to get triangles! Triangle accessing out of bonds of the indices array!");
+               "Failed to get triangles! Triangle accessing out of bounds of the indices array!");
 
         for (int i = offset; i < offset + triangleCount; i++)
         {

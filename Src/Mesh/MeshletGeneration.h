@@ -14,7 +14,7 @@ class MeshletGeneration
   public:
     static std::vector<NewMeshlet> MeshletizeNv(uint32_t maxVerts, uint32_t maxIndices,
                                                 const std::vector<uint32_t>& indices, const uint32_t verticesSize,
-                                                std::vector<uint32_t>& outVertices, std::vector<uint32_t>& outIndices);
+                                                std::vector<uint32_t>& outVertices, std::vector<uint32_t>& outIndices, const uint32_t vertexOffset = 0, const uint32_t triangleOffset = 0);
 
     static std::vector<Meshlet> MeshletizeUnoptimized(uint32_t maxVerts, uint32_t maxIndices,
                                                       const std::vector<uint32_t>& indices,

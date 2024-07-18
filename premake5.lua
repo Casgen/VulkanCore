@@ -54,22 +54,22 @@ project("VulkanCore")
 
 	filter{ "system:linux" }
 
-	-- In case of using with VulkanSDK make sure that you have VULKAN_SDK environment variable set! (for ex. /home/username/Development/VulkanSDK/1.3.250.0/x86_64)
-	-- But on linux, if Vulkan is installed correctly, VulkanSDK is not needed.
-	includedirs{
-		"$(VULKAN_SDK)/include/",
-	}
+		-- In case of using with VulkanSDK make sure that you have VULKAN_SDK environment variable set! (for ex. /home/username/Development/VulkanSDK/1.3.250.0/x86_64)
+		-- But on linux, if Vulkan is installed correctly, VulkanSDK is not needed.
+		includedirs{
+			"$(VULKAN_SDK)/include/",
+		}
 
-	libdirs{
-		"$(VULKAN_SDK)/lib/",
-	}
+		libdirs{
+			"$(VULKAN_SDK)/lib/",
+		}
 
-	-- On linux, make sure that you have installed libvulkan-dev through your package manager!
-	links{ "vulkan", "pthread", "libshaderc_shared", "assimp" }
+		-- On linux, make sure that you have installed libvulkan-dev through your package manager!
+		links{ "vulkan", "pthread", "libshaderc_shared", "assimp" }
 
-	defines{
-		"_X11",
-	}
+		defines{
+			"_X11",
+		}
 
 	filter{ "system:windows" }
 

@@ -11,27 +11,14 @@
 #include "assimp/scene.h"
 #include "vulkan/vulkan.hpp"
 
-Model::Model()
-{
-}
-
 Model::Model(const std::string& filePath)
 {
-
-    std::cout << "Offset of position: " << offsetof(MeshVertex, Position) << std::endl;
-    std::cout << "Offset of normal: " << offsetof(MeshVertex, Normal) << std::endl;
-    std::cout << "Offset of tangent: " << offsetof(MeshVertex, Tangent) << std::endl;
-    std::cout << "Offset of bitangent: " << offsetof(MeshVertex, BiTangent) << std::endl;
-    std::cout << "Offset of texCoords: " << offsetof(MeshVertex, TexCoords) << std::endl;
-
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(filePath.data(), aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices);
+    const aiScene* scene = importer.ReadFile(filePath.data(), aiProcess_Triangulate | aiProcess_GenNormals |
+                                                                  aiProcess_JoinIdenticalVertices);
 
-    if (scene == nullptr || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || scene->mRootNode == nullptr)
-    {
-        LOGF(Assimp, Fatal, "Failed to import a scene! %s\n", importer.GetErrorString())
-        throw std::runtime_error("Failed to import a scene! Filepath: " + filePath);
-    }
+    ASSERTF(scene != nullptr && !(scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) && scene->mRootNode != nullptr,
+            "Failed to import a scene! %s", importer.GetErrorString())
 
     ProcessNode(scene->mRootNode, scene);
 }

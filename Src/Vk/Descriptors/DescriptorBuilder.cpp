@@ -4,8 +4,6 @@
 #include "vulkan/vulkan_structs.hpp"
 #include "../../Log/Log.h"
 
-#include <memory>
-
 namespace VkCore
 {
 

@@ -128,6 +128,6 @@ class Logger
 #define ASSERTF(Expression, Format, ...)                                                                               \
     if (!(Expression))                                                                                                 \
     {                                                                                                                  \
-        Logger::GetLogger()->Print(ECategory::Assert, ESeverity::Fatal, Format, __VA_ARGS__);                          \
+        Logger::GetLogger()->Printf(ECategory::Assert, ESeverity::Fatal, Format, __VA_ARGS__);                    \
         DEBUGBREAK();                                                                                                  \
     }

@@ -16,7 +16,8 @@
 std::vector<NewMeshlet> MeshletGeneration::MeshletizeNv(uint32_t maxVerts, uint32_t maxIndices,
                                                         const std::vector<uint32_t>& indices,
                                                         const uint32_t verticesSize, std::vector<uint32_t>& outVertices,
-                                                        std::vector<uint32_t>& outIndices)
+                                                        std::vector<uint32_t>& outIndices, const uint32_t vertexOffset,
+                                                        const uint32_t triangleOffset)
 {
     outVertices.reserve(verticesSize);
     outIndices.reserve(indices.size());
@@ -40,8 +41,8 @@ std::vector<NewMeshlet> MeshletGeneration::MeshletizeNv(uint32_t maxVerts, uint3
         if ((meshlet.vertexCount + (av == 0xFF) + (bv == 0xFF) + (cv == 0xFF) > maxVerts) ||
             (meshlet.triangleCount + 1 > maxIndices / 3))
         {
-            meshlet.triangleOffset = outIndices.size() - meshlet.triangleCount;
-            meshlet.vertexOffset = outVertices.size() - meshlet.vertexCount;
+            meshlet.triangleOffset = (outIndices.size() - meshlet.triangleCount) + triangleOffset;
+            meshlet.vertexOffset = (outVertices.size() - meshlet.vertexCount) - vertexOffset;
 
             meshlets.push_back(meshlet);
             memset(vertices.data(), 0xFF, verticesSize);
@@ -78,8 +79,8 @@ std::vector<NewMeshlet> MeshletGeneration::MeshletizeNv(uint32_t maxVerts, uint3
 
     if (meshlet.triangleCount != 0)
     {
-        meshlet.triangleOffset = outIndices.size() - meshlet.triangleCount;
-        meshlet.vertexOffset = outVertices.size() - meshlet.vertexCount;
+        meshlet.triangleOffset = (outIndices.size() - meshlet.triangleCount) + triangleOffset;
+        meshlet.vertexOffset = (outVertices.size() - meshlet.vertexCount) + vertexOffset;
 
         meshlets.push_back(meshlet);
     }
@@ -165,8 +166,8 @@ std::vector<MeshletBounds> MeshletGeneration::ComputeMeshletBounds(const std::ve
             normals.reserve(meshlet.vertexCount);
             vertices.reserve(meshlet.vertexCount);
 
-			Vec3f maxPoint = Vec3f(std::numeric_limits<float>::min());
-			Vec3f minPoint = Vec3f(std::numeric_limits<float>::max());
+            Vec3f maxPoint = Vec3f(std::numeric_limits<float>::min());
+            Vec3f minPoint = Vec3f(std::numeric_limits<float>::max());
 
             uint32_t maxOffset = meshlet.vertexOffset + meshlet.vertexCount;
 
@@ -178,8 +179,8 @@ std::vector<MeshletBounds> MeshletGeneration::ComputeMeshletBounds(const std::ve
                 normals.emplace_back(Vec3f(glmNormal.x, glmNormal.y, glmNormal.z));
                 vertices.emplace_back(Vec3f(glmPosition.x, glmPosition.y, glmPosition.z));
 
-				maxPoint = Vec3f::Max(maxPoint, Vec3f(glmPosition.x, glmPosition.y, glmPosition.z));
-				minPoint = Vec3f::Min(minPoint, Vec3f(glmPosition.x, glmPosition.y, glmPosition.z));
+                maxPoint = Vec3f::Max(maxPoint, Vec3f(glmPosition.x, glmPosition.y, glmPosition.z));
+                minPoint = Vec3f::Min(minPoint, Vec3f(glmPosition.x, glmPosition.y, glmPosition.z));
             }
 
             assert(meshlet.vertexCount == normals.size());
@@ -215,14 +216,15 @@ std::vector<MeshletBounds> MeshletGeneration::ComputeMeshletBounds(const std::ve
 
             // Compute Bounding sphere.
 
-			//Sphere boundingSphere = CreateBoundingSphere(vertices);
+            // Sphere boundingSphere = CreateBoundingSphere(vertices);
 
             Vec3f sphereCenter = (maxPoint + minPoint) / 2.0;
             float sphereRadius = std::numeric_limits<float>::min();
 
-			for (const auto& position : vertices) {
-				sphereRadius = std::max(sphereRadius, (sphereCenter - position).Magnitude());
-			}
+            for (const auto& position : vertices)
+            {
+                sphereRadius = std::max(sphereRadius, (sphereCenter - position).Magnitude());
+            }
 
             meshletBounds.emplace_back(MeshletBounds{
                 .normal = {avgNormal.x, avgNormal.y, avgNormal.z},
@@ -230,8 +232,6 @@ std::vector<MeshletBounds> MeshletGeneration::ComputeMeshletBounds(const std::ve
                 .spherePos = {sphereCenter.x, sphereCenter.y, sphereCenter.z},
                 .sphereRadius = sphereRadius,
             });
-
-
         }
     }
 
@@ -311,36 +311,38 @@ Sphere MeshletGeneration::CreateBoundingSphere(const std::vector<Vec3f> points)
         dia1 = zmin;
         dia2 = zmax;
     }
-	
-	// Dia1 and Dia2 will create the initial sphere.
 
-	Vec3f sphereCenter = (dia1 + dia2) / 2.f;
-	float radiusSq = (dia2 - sphereCenter).MagnitudeSquared();
-	float radius = (dia2 - sphereCenter).Magnitude();
+    // Dia1 and Dia2 will create the initial sphere.
 
-	// Second Pass: Increment the current sphere;
-	
-	float oldToPSq = 0.f;
-	float oldToP = 0.f;
-	float oldToNew = 0.f;
-	
-	for (uint i = 0; i < points.size(); i++) {
+    Vec3f sphereCenter = (dia1 + dia2) / 2.f;
+    float radiusSq = (dia2 - sphereCenter).MagnitudeSquared();
+    float radius = (dia2 - sphereCenter).Magnitude();
 
-		const Vec3f& p = points[i];
-		
-		Vec3f diff = p - sphereCenter;
+    // Second Pass: Increment the current sphere;
 
-		oldToPSq = diff.MagnitudeSquared();
+    float oldToPSq = 0.f;
+    float oldToP = 0.f;
+    float oldToNew = 0.f;
 
-		if (oldToPSq > radiusSq) {
-			oldToP = sqrtf(oldToPSq);
-			radius = (radius + oldToP) / 2.0;
-			radiusSq = radius * radius;
-			oldToNew = oldToP - radius;
+    for (uint i = 0; i < points.size(); i++)
+    {
 
-			sphereCenter = (sphereCenter * radius + p * oldToNew) / oldToP;
-		}
-	}
+        const Vec3f& p = points[i];
 
-	return Sphere(sphereCenter, radius);
+        Vec3f diff = p - sphereCenter;
+
+        oldToPSq = diff.MagnitudeSquared();
+
+        if (oldToPSq > radiusSq)
+        {
+            oldToP = sqrtf(oldToPSq);
+            radius = (radius + oldToP) / 2.0;
+            radiusSq = radius * radius;
+            oldToNew = oldToP - radius;
+
+            sphereCenter = (sphereCenter * radius + p * oldToNew) / oldToP;
+        }
+    }
+
+    return Sphere(sphereCenter, radius);
 }

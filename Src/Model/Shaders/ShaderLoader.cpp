@@ -34,7 +34,7 @@ namespace VkCore
                                                const shaderc::CompileOptions& compileOptions)
     {
         size_t fileSize = 0;
-        char* data = FileUtils::ReadFileC(path.string().data(), fileSize);
+        const char* data = FileUtils::ReadFileC(path.string().data(), fileSize);
 
         shaderc_shader_kind shaderKind = DetermineShaderType(path.string());
 

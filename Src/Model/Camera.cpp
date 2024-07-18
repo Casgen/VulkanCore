@@ -21,6 +21,9 @@ Camera::Camera(const glm::vec3& position, const glm::vec3 lookAt, const float as
     m_UpVector = glm::vec3(0.f, -1.f, 0.f);
     m_SideVector = glm::cross(m_UpVector, m_FwdVector);
     m_ViewMat = glm::lookTo(position, -m_FwdVector, m_UpVector);
+
+	m_Azimuth = (float) -atan2(-m_FwdVector.x, -m_FwdVector.z);
+	m_Zenith = acosf(-m_FwdVector.y) - (glm::pi<float>() / 2.f);
 }
 
 void Camera::Update()
@@ -83,11 +86,19 @@ void Camera::SetIsMovingBackward(const bool value)
 void Camera::SetMovementSpeed(const float value)
 {
     m_MovementSpeed = glm::clamp(value, 0.f, m_MovementSpeedMax);
+
+	if (m_MovementSpeed <= m_MovementSpeedMax && m_MovementSpeed > 0.f ) {
+		m_AccelerationInc += value / 4.f;
+	}
 }
 
 void Camera::AddMovementSpeed(const float value)
 {
     m_MovementSpeed = glm::clamp(m_MovementSpeed + value, 0.f, m_MovementSpeedMax);
+
+	if (m_MovementSpeed <= m_MovementSpeedMax && m_MovementSpeed > 0.f ) {
+		m_AccelerationInc += value / 4.f;
+	}
 }
 
 void Camera::SetAzimuth(const float angle)
@@ -217,7 +228,9 @@ Frustum Camera::CalculateFrustum() const
 
 std::tuple<VkCore::Buffer, VkCore::Buffer> Camera::ConstructFrustumModel() const
 {
-    glm::vec3 oppositeFwd = -m_FwdVector;
+    glm::vec3 oppositeFwd = glm::vec3(0.f, 0.f, 1.f);
+	glm::vec3 upVector = glm::vec3(0.f, -1.f, 0.f);
+	glm::vec3 sideVector = glm::vec3(1.f, 0.f, 0.f);
 
     float fovX = tan(m_Fov * glm::pi<float>() / 180);
     float fovY = fovX / m_AspectRatio;
@@ -228,8 +241,8 @@ std::tuple<VkCore::Buffer, VkCore::Buffer> Camera::ConstructFrustumModel() const
     float farHalfHeight = fovY * m_Far;
     float farHalfWidth = fovX * m_Far;
 
-	glm::vec3 nearVector = -m_FwdVector * m_Near;
-	glm::vec3 farVector = -m_FwdVector * m_Far;
+	glm::vec3 nearVector = oppositeFwd * m_Near;
+	glm::vec3 farVector = oppositeFwd * m_Far;
 
     std::vector<LineVertex> vertices;
 	vertices.resize(9);
@@ -239,15 +252,15 @@ std::tuple<VkCore::Buffer, VkCore::Buffer> Camera::ConstructFrustumModel() const
         {.Position = glm::vec3(0.f), .Normal = glm::vec3(), .Color = glm::vec3(1.0f / 0x89, 1.0f / 0x89, 1.0f / 0x89)};
 
     // Add all the other frustum vertices.
-    vertices[1] = {.Position = nearVector - (m_UpVector * nearHalfHeight) - (m_SideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
-    vertices[2] = {.Position = nearVector + (m_UpVector * nearHalfHeight) - (m_SideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
-    vertices[3] = {.Position = nearVector + (m_UpVector * nearHalfHeight) + (m_SideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
-    vertices[4] = {.Position = nearVector - (m_UpVector * nearHalfHeight) + (m_SideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
+    vertices[1] = {.Position = nearVector - (upVector * nearHalfHeight) - (sideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
+    vertices[2] = {.Position = nearVector + (upVector * nearHalfHeight) - (sideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
+    vertices[3] = {.Position = nearVector + (upVector * nearHalfHeight) + (sideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
+    vertices[4] = {.Position = nearVector - (upVector * nearHalfHeight) + (sideVector * nearHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0x89 / 255.0)};
 
-    vertices[5] = {.Position = farVector - (m_UpVector * farHalfHeight) - (m_SideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
-    vertices[6] = {.Position = farVector + (m_UpVector * farHalfHeight) - (m_SideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
-    vertices[7] = {.Position = farVector + (m_UpVector * farHalfHeight) + (m_SideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
-    vertices[8] = {.Position = farVector - (m_UpVector * farHalfHeight) + (m_SideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
+    vertices[5] = {.Position = farVector - (upVector * farHalfHeight) - (sideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
+    vertices[6] = {.Position = farVector + (upVector * farHalfHeight) - (sideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
+    vertices[7] = {.Position = farVector + (upVector * farHalfHeight) + (sideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
+    vertices[8] = {.Position = farVector - (upVector * farHalfHeight) + (sideVector * farHalfWidth), .Normal = glm::vec3(), .Color = glm::vec3(0xE3 / 255.0)};
 
     std::vector<uint32_t> indices = {0, 1, 0, 2, 0, 3, 0, 4, 1, 2, 2, 3, 3, 4, 4, 1,
                                      1, 5, 2, 6, 3, 7, 4, 8, 5, 6, 6, 7, 7, 8, 8, 5};
