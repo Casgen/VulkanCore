@@ -32,10 +32,8 @@ LODModel::LODModel(const std::string& filePath)
 
     ASSERT(modelNameSize > 0, "Failed to format the modelname!")
 
-    char* modelName = new char[modelNameSize];
+    char* modelName = new char[modelNameSize + 1];
     std::sprintf(modelName, "%s_lod", temp); // Format it to not have a LOD count;
-
-    uint8_t lodCount = 1;
 
     std::vector<fs::path> lodModelPaths = {};
 
@@ -73,7 +71,7 @@ LODModel::LODModel(const std::string& filePath)
     }
 
 
-    ASSERT(m_LodData.size() > 0 && m_LodData.size() == lodModelPaths.size(), "There is no lod Data to process!");
+    ASSERT(m_LodData.size() > 0 && m_LodData.size() == lodModelPaths.size(), "There are not that many or no lod scenes to process!");
 
     // Construct the LOD meshes
     const uint32_t expectedSize = m_LodData[0].size();

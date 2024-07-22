@@ -29,7 +29,7 @@ VertexTriangleAdjacency MeshUtils::BuildVertexTriangleAdjacency(const std::vecto
     std::vector<uint32_t> copyOffsets(offsets);
 
     std::vector<uint32_t> adjList;
-    adjList.resize(offsets[offsets.size() - 1] + 1);
+    adjList.resize(offset);
 
     for (std::size_t i = 0; i < indices.size(); i += 3)
     {
@@ -51,6 +51,75 @@ VertexTriangleAdjacency MeshUtils::BuildVertexTriangleAdjacency(const std::vecto
         .offsets = offsets,
         .adjacencyList = adjList,
     };
+
+	
+	// uint32_t* vertexCounts = (uint32_t*) std::calloc(numOfVertices, sizeof(uint32_t));
+	//
+	// ASSERT(vertexCounts != nullptr, "Failed to allocate vertexCounts!")
+	//
+	//
+	// for (size_t i = 0; i < indices.size(); i++){
+	// 	vertexCounts[indices[i]]++;
+	// }
+	//
+	//
+	// uint32_t* offsets = (uint32_t*)(std::calloc(numOfVertices, sizeof(uint32_t)));
+	// ASSERT(offsets != nullptr, "Tipsify: Failed to allocate offsets!")
+	//
+	// uint32_t accOffset = 0;
+	//
+	// for (size_t i = 0; i < numOfVertices; i++) {
+	// 	offsets[i] = accOffset;
+	// 	accOffset += vertexCounts[i];
+	// }
+	//
+	// uint32_t* copyOffsets = (uint32_t*)(std::calloc(numOfVertices, sizeof(uint32_t)));
+	// ASSERT(copyOffsets != nullptr, "Tipsify: Failed to allocate copyOffsets!")
+	//
+	// std::memcpy(copyOffsets, offsets, sizeof(uint32_t) * numOfVertices);
+	//
+	// uint32_t adjLength = offsets[numOfVertices - 1] + 1;
+	// uint32_t* adjList = (uint32_t*)(std::calloc(adjLength, sizeof(uint32_t)));
+	//
+	// ASSERT(adjList != nullptr, "Tipsify: Failed to allocate adjacency list!")
+	//
+	// for (size_t i = 0; i < indices.size(); i += 3) {
+ //        const uint32_t triangleIndex = i / 3;
+	//
+ //        for (size_t j = 0; j < 3; j++)
+ //        {
+ //            const uint32_t vertexIndex = indices[i + j];
+ //            const uint32_t position = copyOffsets[vertexIndex];
+	//
+ //            adjList[position] = triangleIndex;
+ //            copyOffsets[vertexIndex]++;
+ //        }
+	// }
+	//
+	// std::vector<uint32_t> vecOffsets(numOfVertices);
+	// vecOffsets.resize(numOfVertices);
+	//
+	// std::vector<uint32_t> vecAdjList;
+	// vecAdjList.resize(adjLength);
+	//
+	// std::vector<uint32_t> vecVertexCounts;
+	// vecVertexCounts.resize(numOfVertices);
+	//
+	// std::memcpy(vecOffsets.data(), offsets, sizeof(uint32_t) * numOfVertices);
+	// std::memcpy(vecAdjList.data(), adjList, sizeof(uint32_t) * adjLength);
+	// std::memcpy(vecVertexCounts.data(), vertexCounts, sizeof(uint32_t) * numOfVertices);
+	//
+	// std::free(offsets);
+	// std::free(vertexCounts);
+	// std::free(copyOffsets);
+	// std::free(adjList);
+	//
+	// return {
+	// 	.indices = indices,
+	// 	.vertexCount = vecVertexCounts,
+	// 	.offsets = vecOffsets,
+	// 	.adjacencyList = vecAdjList
+	// };
 }
 
 std::vector<uint32_t> MeshUtils::Tipsify(const std::vector<uint32_t>& indices, const uint32_t vertexCount,

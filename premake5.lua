@@ -102,6 +102,10 @@ project("VulkanCore")
 	filter("options:with-vulkan")
 		defines{ "VK_MESH_EXT"}
 
+	filter("options:sanitize")
+		buildoptions { "-fsanitize=address -lasan -fno-sanitize-address-use-after-scope"}
+		linkoptions { "-fsanitize=address -lasan -fno-sanitize-address-use-after-scope"}
+
 	 -- GCC and Clang
     filter { "action:gmake2", "architecture:x86_64" }
         buildoptions { "-mavx" }

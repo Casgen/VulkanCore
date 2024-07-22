@@ -15,7 +15,6 @@ struct LODMeshInfo
         0, 0, 0, 0, 0, 0, 0, 0,
     };
     alignas(16) uint32_t LodCount = 0;
-
 };
 
 struct LODData;

@@ -87,12 +87,6 @@ namespace VkCore
     void DescriptorBuilder::Clear()
     {
         m_Bindings.clear();
-
-        for (vk::WriteDescriptorSet& write : m_Writes)
-        {
-            delete[] write.pBufferInfo;
-        }
-
         m_Writes.clear();
     }
 

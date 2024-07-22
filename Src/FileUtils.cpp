@@ -14,8 +14,9 @@ std::vector<char> FileUtils::ReadFile(const std::string& filename)
     if (!file.is_open())
         throw std::runtime_error("Failed to open file!");
 
-    size_t fileSize = (size_t)file.tellg();
-    std::vector<char> buffer(fileSize);
+    size_t fileSize = (size_t)file.tellg() + 1;
+    std::vector<char> buffer;
+	buffer.resize(fileSize);
 
     file.seekg(0);
     file.read(buffer.data(), fileSize);

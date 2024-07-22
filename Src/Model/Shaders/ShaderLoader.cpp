@@ -34,11 +34,11 @@ namespace VkCore
                                                const shaderc::CompileOptions& compileOptions)
     {
         size_t fileSize = 0;
-        const char* data = FileUtils::ReadFileC(path.string().data(), fileSize);
+		std::vector<char> data = FileUtils::ReadFile(path.string().data());
 
         shaderc_shader_kind shaderKind = DetermineShaderType(path.string());
 
-        shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(data, shaderKind, path.stem().string().data());
+        shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data());
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success)
         {
@@ -61,8 +61,6 @@ namespace VkCore
         ShaderData shaderData;
         shaderData.m_Data = {result.cbegin(), result.cend()};
         shaderData.m_StageFlags = ShaderKindToClassicShaderStageFlag(shaderKind);
-
-        delete[] data;
 
         return shaderData;
     }
@@ -205,10 +203,10 @@ namespace VkCore
         shaderc::Compiler compiler;
         shaderc::CompileOptions compileOptions;
 
-        // if (isOptimized)
-        // {
-        //     compileOptions.SetOptimizationLevel(shaderc_optimization_level_size);
-        // }
+        if (isOptimized)
+        {
+            compileOptions.SetOptimizationLevel(shaderc_optimization_level_size);
+        }
 
         std::vector<ShaderData> modulesMap;
 
@@ -230,7 +228,7 @@ namespace VkCore
                 LOGF(Shader, Info, "Found a file: %s", path.data())
 
                 size_t fileSize = 0;
-                char* data = FileUtils::ReadFileC(path.data(), fileSize);
+				std::vector<char> data = FileUtils::ReadFile(path.data());
 
                 shaderc_shader_kind shaderKind = DetermineShaderType(path);
 
@@ -243,7 +241,7 @@ namespace VkCore
 #endif
 
                 shaderc::SpvCompilationResult result =
-                    compiler.CompileGlslToSpv(data, shaderKind, dirEntry.path().stem().string().data(), compileOptions);
+                    compiler.CompileGlslToSpv(data.data(), shaderKind, dirEntry.path().stem().string().data(), compileOptions);
 
                 if (result.GetCompilationStatus() != shaderc_compilation_status_success)
                 {
@@ -269,8 +267,6 @@ namespace VkCore
                 shaderData.m_StageFlags = ShaderKindToMeshShaderStageFlag(shaderKind);
 
                 modulesMap.emplace_back(shaderData);
-
-                delete[] data;
 
                 continue;
             }

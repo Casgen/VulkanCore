@@ -42,7 +42,7 @@ std::vector<NewMeshlet> MeshletGeneration::MeshletizeNv(uint32_t maxVerts, uint3
             (meshlet.triangleCount + 1 > maxIndices / 3))
         {
             meshlet.triangleOffset = (outIndices.size() - meshlet.triangleCount) + triangleOffset;
-            meshlet.vertexOffset = (outVertices.size() - meshlet.vertexCount) - vertexOffset;
+            meshlet.vertexOffset = (outVertices.size() - meshlet.vertexCount) + vertexOffset;
 
             meshlets.push_back(meshlet);
             memset(vertices.data(), 0xFF, verticesSize);
@@ -173,6 +173,10 @@ std::vector<MeshletBounds> MeshletGeneration::ComputeMeshletBounds(const std::ve
 
             for (uint32_t i = meshlet.vertexOffset; i < maxOffset; i++)
             {
+				if (i >= meshletVertices.size()) {
+					LOG(Rendering, Error, "Fuck!")
+				}
+
                 const glm::vec3& glmNormal = meshVertices[meshletVertices[i]].Normal;
                 const glm::vec3& glmPosition = meshVertices[meshletVertices[i]].Position;
 
