@@ -13,6 +13,7 @@
 #include "../Swapchain.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_enums.hpp"
 #include "vulkan/vulkan_handles.hpp"
 #include "vulkan/vulkan_structs.hpp"
 
@@ -59,23 +60,28 @@ namespace VkCore
             queueCreateInfos.emplace_back(createInfo);
         }
 
-        TRY_CATCH_BEGIN()
-
-        vk::PhysicalDeviceFeatures2 features2 = physicalDevice.GetPhysicalDeviceFeatures2();
 
 #ifndef VK_MESH_EXT
         vk::PhysicalDeviceMeshShaderFeaturesNV meshShaderFeatures(true, true);
 #else
         vk::PhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures(true, true, false, false, false);
 #endif
+			
 
         vk::PhysicalDeviceVulkan12Features vulkan12Features{};
         vulkan12Features.setBufferDeviceAddress(true);
         vulkan12Features.setPNext(&meshShaderFeatures);
 
+		vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT dynamicStateFeatures;
+		dynamicStateFeatures.setPNext(&vulkan12Features);
+		dynamicStateFeatures.extendedDynamicState3PolygonMode = true;
+
+
         vk::PhysicalDeviceFeatures2 deviceFeatures2{};
-        deviceFeatures2.setPNext(&vulkan12Features);
-		deviceFeatures2.features.setWideLines(true);
+        deviceFeatures2.setPNext(&dynamicStateFeatures);
+        deviceFeatures2.features.setWideLines(true);
+		deviceFeatures2.features.setFillModeNonSolid(true);
+
 
         // Enable Device Buffer Address
 
@@ -91,18 +97,9 @@ namespace VkCore
         deviceCreateInfo.setPEnabledExtensionNames(deviceExtensions)
             .setQueueCreateInfos(queueCreateInfos)
             .setPEnabledLayerNames(layerExtensions)
-            .setPNext(&meshShaderFeatures);
+            .setPNext(&deviceFeatures2);
 
-        for (auto& ext : deviceExtensions)
-        {
-
-            if (strcmp(ext, VK_NV_MESH_SHADER_EXTENSION_NAME) == 0 ||
-                strcmp(ext, VK_EXT_MESH_SHADER_EXTENSION_NAME) == 0)
-            {
-                deviceCreateInfo.setPNext(&meshShaderFeatures);
-                break;
-            }
-        }
+        TRY_CATCH_BEGIN()
 
         m_Device = physicalDevice.CreateDevice(deviceCreateInfo);
 
@@ -183,6 +180,27 @@ namespace VkCore
         return m_Device.createFence(createInfo);
     }
 
+    vk::QueryPool Device::CreateQueryPool(const vk::QueryPoolCreateInfo createInfo) const
+    {
+        return m_Device.createQueryPool(createInfo);
+    }
+
+    vk::ResultValue<vk::Pipeline> Device::CreateComputePipeline(const vk::ComputePipelineCreateInfo createInfo,
+                                                                const vk::PipelineCache cache) const
+    {
+        return m_Device.createComputePipeline(cache, createInfo);
+    }
+
+    vk::Sampler Device::CreateSampler(const vk::SamplerCreateInfo createInfo) const
+    {
+        return m_Device.createSampler(createInfo);
+    }
+
+    void Device::DestroyQueryPool(const vk::QueryPool& queryPool) const
+    {
+        return m_Device.destroyQueryPool(queryPool);
+    }
+
     void Device::DestroyRenderPass(const vk::RenderPass& renderPass)
     {
         m_Device.destroyRenderPass(renderPass);
@@ -204,6 +222,11 @@ namespace VkCore
     void Device::DestroyImageView(const vk::ImageView& imageView)
     {
         m_Device.destroyImageView(imageView);
+    }
+
+    void Device::DestroySampler(const vk::Sampler& sampler)
+    {
+        m_Device.destroySampler(sampler);
     }
 
     void Device::DestroyImage(const vk::Image& image)

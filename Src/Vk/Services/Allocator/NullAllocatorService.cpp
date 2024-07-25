@@ -28,6 +28,17 @@ namespace VkCore
 
         return VK_NULL_HANDLE;
     }
+
+    VkImage NullAllocatorService::CreateImage(const VkDeviceSize size,
+                                              const vk::ImageCreateInfo& createInfo,
+                                              const VmaAllocationCreateInfo& allocCreateInfo,
+                                              VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo)
+    {
+        LOG(Allocation, Fatal,
+            "Allocation service couldn't be located! Please make sure you have provided an allocation service!")
+
+        return VK_NULL_HANDLE;
+    }
     VkImage NullAllocatorService::CreateImage(const uint32_t width, const uint32_t height, const vk::Format format,
                                               vk::ImageTiling imageTiling, vk::ImageUsageFlags usageFlags,
                                               const VmaAllocationCreateInfo& allocCreateInfo,

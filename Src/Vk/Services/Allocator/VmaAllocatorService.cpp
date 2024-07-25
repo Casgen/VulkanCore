@@ -177,12 +177,33 @@ namespace VkCore
 
         VkImage image = VK_NULL_HANDLE;
 
-        TRY_CATCH_BEGIN()
 
-        vmaCreateImage(m_VmaAllocator, reinterpret_cast<const VkImageCreateInfo*>(&createInfo), &allocCreateInfo,
-                       &image, &outAllocation, outAllocationInfo);
+        Utils::CheckVkResult(vmaCreateImage(m_VmaAllocator, reinterpret_cast<const VkImageCreateInfo*>(&createInfo), &allocCreateInfo,
+                       &image, &outAllocation, outAllocationInfo));
 
-        TRY_CATCH_END()
+		LOG(Vulkan, Error, "The creation of a VkImage with the data is not yet implemented!")
+
+        return image;
+    }
+
+    VkImage VmaAllocatorService::CreateImage(const VkDeviceSize size,
+                                             const vk::ImageCreateInfo& createInfo,
+                                             const VmaAllocationCreateInfo& allocCreateInfo,
+                                             VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo)
+    {
+        if (size <= 0)
+        {
+            LOGF(Vulkan, Fatal,
+                 "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d", size)
+            throw std::runtime_error("Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)!");
+        }
+
+        VkImage image = VK_NULL_HANDLE;
+
+		VkImageCreateInfo vkCreateInfo = static_cast<VkImageCreateInfo>(createInfo);
+
+        Utils::CheckVkResult(vmaCreateImage(m_VmaAllocator, &vkCreateInfo, &allocCreateInfo,
+                       &image, &outAllocation, outAllocationInfo));
 
         return image;
     }

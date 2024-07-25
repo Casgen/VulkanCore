@@ -23,6 +23,10 @@ namespace VkCore
         VkImage CreateImage(const void* data, const VkDeviceSize size, const vk::ImageCreateInfo& createInfo,
                             const VmaAllocationCreateInfo& allocCreateInfo, VmaAllocation& outAllocation,
                             VmaAllocationInfo* outAllocationInfo = nullptr) override;
+
+        VkImage CreateImage(const VkDeviceSize size, const vk::ImageCreateInfo& createInfo,
+                            const VmaAllocationCreateInfo& allocCreateInfo, VmaAllocation& outAllocation,
+                            VmaAllocationInfo* outAllocationInfo) override;
         /**
          * @brief Allocates creates a new VkImage.
          * @param width

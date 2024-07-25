@@ -49,6 +49,8 @@ namespace VkCore
         static QueueFamilyIndices FindQueueFamilyIndices(const vk::PhysicalDevice& physicalDevice,
                                                          const vk::SurfaceKHR& surface);
 
+		vk::PhysicalDeviceLimits GetDeviceLimits() const;
+
         vk::PhysicalDeviceFeatures2 GetPhysicalDeviceFeatures2() const;
 
         // ------------ GETTERS ------------

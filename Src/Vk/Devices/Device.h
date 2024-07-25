@@ -6,6 +6,7 @@
 #include "PhysicalDevice.h"
 #include "vulkan/vulkan.hpp"
 #include "vulkan/vulkan_handles.hpp"
+#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {
@@ -40,6 +41,10 @@ namespace VkCore
             const std::vector<vk::GraphicsPipelineCreateInfo>& createInfo);
         vk::Semaphore CreateSemaphore(const vk::SemaphoreCreateInfo& createInfo);
         vk::Fence CreateFence(const vk::FenceCreateInfo& createInfo);
+        vk::QueryPool CreateQueryPool(const vk::QueryPoolCreateInfo createInfo) const;
+        vk::ResultValue<vk::Pipeline> CreateComputePipeline(const vk::ComputePipelineCreateInfo createInfo,
+                                                            const vk::PipelineCache cache = nullptr) const;
+        vk::Sampler CreateSampler(const vk::SamplerCreateInfo createInfo) const;
 
         // ---------- DESTROYERS -----------
 
@@ -47,6 +52,7 @@ namespace VkCore
         void DestroyFrameBuffer(const vk::Framebuffer& frameBuffer);
         void DestroyFrameBuffers(const std::vector<vk::Framebuffer>& frameBuffers);
         void DestroyImageView(const vk::ImageView& imageView);
+        void DestroySampler(const vk::Sampler& sampler);
         void DestroyImage(const vk::Image& image);
 
         void DestroyFences(const std::vector<vk::Fence>& fences);
@@ -62,6 +68,7 @@ namespace VkCore
         void DestroyCommandPool(const vk::CommandPool& commandPool);
         void DestroyPipeline(const vk::Pipeline& pipeline);
         void DestroyPipelineLayout(const vk::PipelineLayout& pipelineLayout);
+        void DestroyQueryPool(const vk::QueryPool& queryPool) const;
         void FreeDescriptorSet(const vk::DescriptorPool descPool, const vk::DescriptorSet& descSet);
         void Destroy();
 

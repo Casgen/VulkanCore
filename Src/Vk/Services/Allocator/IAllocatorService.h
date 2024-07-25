@@ -34,7 +34,7 @@ namespace VkCore
                                       const VmaMemoryUsage memoryUsage, const VmaAllocationCreateFlags allocFlags,
                                       VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo) = 0;
         /**
-         * @brief Allocates and creates a new VkImage.
+         * @brief Allocates and creates a new VkImage. Data is also transferred.
          * @param data - pointer to the data
          * @param size - size of the data
          * @param createInfo
@@ -42,6 +42,17 @@ namespace VkCore
          * #param outAlloationInfo - optional
          */
         virtual VkImage CreateImage(const void* data, const VkDeviceSize size, const vk::ImageCreateInfo& createInfo,
+                                    const VmaAllocationCreateInfo& allocCreateInfo, VmaAllocation& outAllocation,
+                                    VmaAllocationInfo* outAllocationInfo = nullptr) = 0;
+        /**
+         * @brief Allocates and creates a new VkImage.
+         * @param data - pointer to the data
+         * @param size - size of the data
+         * @param createInfo
+         * @param outAllocation
+         * #param outAlloationInfo - optional
+         */
+        virtual VkImage CreateImage(const VkDeviceSize size, const vk::ImageCreateInfo& createInfo,
                                     const VmaAllocationCreateInfo& allocCreateInfo, VmaAllocation& outAllocation,
                                     VmaAllocationInfo* outAllocationInfo = nullptr) = 0;
         /**

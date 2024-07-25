@@ -34,11 +34,12 @@ namespace VkCore
                                                const shaderc::CompileOptions& compileOptions)
     {
         size_t fileSize = 0;
-		std::vector<char> data = FileUtils::ReadFile(path.string().data());
+        std::vector<char> data = FileUtils::ReadFile(path.string().data());
 
         shaderc_shader_kind shaderKind = DetermineShaderType(path.string());
 
-        shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data());
+        shaderc::SpvCompilationResult result =
+            compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data());
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success)
         {
@@ -63,6 +64,50 @@ namespace VkCore
         shaderData.m_StageFlags = ShaderKindToClassicShaderStageFlag(shaderKind);
 
         return shaderData;
+    }
+
+    VkCore::ShaderData ShaderLoader::LoadComputeShader(const std::filesystem::path& path,
+                                                                    const bool isOptimized)
+    {
+        shaderc::Compiler compiler;
+        shaderc::CompileOptions compileOptions;
+
+        if (isOptimized)
+        {
+            compileOptions.SetOptimizationLevel(shaderc_optimization_level_size);
+        }
+
+        std::vector<char> data = FileUtils::ReadFile(path.string().data());
+
+        shaderc_shader_kind shaderKind = DetermineShaderType(path.string());
+
+        shaderc::SpvCompilationResult result =
+            compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data());
+
+        if (result.GetCompilationStatus() != shaderc_compilation_status_success)
+        {
+            std::string errorMsg = "Failed to compile a shader!\nGiven file: " + path.string() +
+                                   ",\nCompilation status " +
+                                   ShadercCompilationStatusToString(result.GetCompilationStatus());
+
+            LOGF(Shader, Fatal,
+                 "Failed to compile a shader!\n\tGiven file: %s\n\tCompilation status: %s\n\tNumber of errors: %d "
+                 "\n\tError message: %s \n\t Num of warnings: %d\n",
+                 path.string().data(), ShadercCompilationStatusToString(result.GetCompilationStatus()),
+                 result.GetNumErrors(), result.GetErrorMessage().data(), result.GetNumWarnings())
+
+            throw std::runtime_error(errorMsg);
+        }
+
+        LOGF(Shader, Info, "Shader compilation was successful!\n\tGiven file: %s\n\tNum of warnings: %d\n",
+             path.string().data(), result.GetNumWarnings())
+
+        ShaderData shaderData;
+        shaderData.m_Data = {result.cbegin(), result.cend()};
+        shaderData.m_StageFlags = ShaderKindToClassicShaderStageFlag(shaderKind);
+
+        return shaderData;
+
     }
 
     const char* ShaderLoader::ShadercCompilationStatusToString(shaderc_compilation_status status)
@@ -228,7 +273,7 @@ namespace VkCore
                 LOGF(Shader, Info, "Found a file: %s", path.data())
 
                 size_t fileSize = 0;
-				std::vector<char> data = FileUtils::ReadFile(path.data());
+                std::vector<char> data = FileUtils::ReadFile(path.data());
 
                 shaderc_shader_kind shaderKind = DetermineShaderType(path);
 
@@ -240,8 +285,8 @@ namespace VkCore
                 }
 #endif
 
-                shaderc::SpvCompilationResult result =
-                    compiler.CompileGlslToSpv(data.data(), shaderKind, dirEntry.path().stem().string().data(), compileOptions);
+                shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(
+                    data.data(), shaderKind, dirEntry.path().stem().string().data(), compileOptions);
 
                 if (result.GetCompilationStatus() != shaderc_compilation_status_success)
                 {

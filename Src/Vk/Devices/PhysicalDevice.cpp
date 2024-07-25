@@ -211,4 +211,9 @@ namespace VkCore
         return m_PhysicalDevice.getFeatures2();
     }
 
+    vk::PhysicalDeviceLimits PhysicalDevice::GetDeviceLimits() const
+    {
+		return m_PhysicalDevice.getProperties().limits;
+    }
+
 } // namespace VkCore
