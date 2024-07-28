@@ -223,12 +223,8 @@ std::vector<MeshletBounds> MeshletGeneration::ComputeMeshletBounds(const std::ve
             // Sphere boundingSphere = CreateBoundingSphere(vertices);
 
             Vec3f sphereCenter = (maxPoint + minPoint) / 2.0;
-            float sphereRadius = std::numeric_limits<float>::min();
+            float sphereRadius = (sphereCenter - maxPoint).Magnitude();
 
-            for (const auto& position : vertices)
-            {
-                sphereRadius = std::max(sphereRadius, (sphereCenter - position).Magnitude());
-            }
 
             meshletBounds.emplace_back(MeshletBounds{
                 .normal = {avgNormal.x, avgNormal.y, avgNormal.z},

@@ -206,11 +206,11 @@ Frustum Camera::CalculateFrustum() const
 
     const glm::vec3 farFwdVec = m_Far * normalizedFwd;
 
-    glm::vec3 rightPlaneNormal = glm::normalize(glm::cross(farFwdVec - m_SideVector * halfHSide, -m_UpVector));
-    glm::vec3 leftPlaneNormal = glm::normalize(glm::cross(-m_UpVector, farFwdVec + m_SideVector * halfHSide));
+    glm::vec3 leftPlaneNormal = glm::normalize(glm::cross(farFwdVec - m_SideVector * halfHSide, -m_UpVector));
+    glm::vec3 rightPlaneNormal = glm::normalize(glm::cross(-m_UpVector, farFwdVec + m_SideVector * halfHSide));
 
-    glm::vec3 topPlaneNormal = glm::normalize(glm::cross(m_SideVector, farFwdVec - (-m_UpVector) * halfVSide));
-    glm::vec3 bottomPlaneNormal = glm::normalize(glm::cross(farFwdVec + (-m_UpVector) * halfVSide, m_SideVector));
+    glm::vec3 bottomPlaneNormal = glm::normalize(glm::cross(m_SideVector, farFwdVec - (-m_UpVector) * halfVSide));
+    glm::vec3 topPlaneNormal = glm::normalize(glm::cross(farFwdVec + (-m_UpVector) * halfVSide, m_SideVector));
 
     return {.left = leftPlaneNormal,
             .right = rightPlaneNormal,
