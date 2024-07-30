@@ -4,37 +4,35 @@
 #include <string>
 
 #include <vector>
+#include "Mesh/ClassicLODMesh.h"
 #include "Mesh/LODMesh.h"
 #include "MeshVertex.h"
-#include "vulkan/vulkan.hpp"
 
 struct LODData
 {
     std::vector<uint32_t> indices;
-    std::vector<MeshVertex> vertices;
+    std::vector<Vertex> vertices;
 };
 
-class LODModel
+class ClassicLODModel
 {
 
   public:
-    LODModel() = default;
-    LODModel(const std::string& filePath);
+    ClassicLODModel() = default;
+    ClassicLODModel(const std::string& filePath);
 
     size_t GetMeshCount()
     {
         return m_Meshes.size();
     }
 
-    LODMesh& GetMesh(const size_t index);
-    vk::DescriptorSetLayout GetMeshSetLayout(const size_t index);
-    vk::DescriptorSet GetMeshSet(const size_t index);
+    ClassicLODMesh& GetMesh(const size_t index);
 
     void Destroy();
 
   private:
     std::vector<std::vector<LODData>> m_LodData = {};
-    std::vector<LODMesh> m_Meshes = {};
+    std::vector<ClassicLODMesh> m_Meshes = {};
 
     void ProcessNode(const aiNode* node, const aiScene* scene, const uint32_t lodDataIndex);
     LODData ProcessMesh(const aiMesh* mesh, const aiScene* scene);

@@ -21,19 +21,6 @@ struct LODData;
 class LODMesh
 {
   public:
-    // LODMesh(LODMesh&& other) {
-    //
-    // 	if (this != &other) {
-    // 		m_VertexBuffer = std::move(other.m_VertexBuffer);
-    // 		m_MeshletBuffer = std::move(other.m_MeshletBuffer);
-    // 		m_MeshletBoundsBuffer = std::move(other.m_MeshletBoundsBuffer);
-    // 		m_LodBuffer = std::move(other.m_LodBuffer);
-    // 		m_MeshletVerticesBuffer = std::move(other.m_MeshletVerticesBuffer);
-    // 		m_MeshletTrianglesBuffer = std::move(other.m_MeshletTrianglesBuffer);
-    // 		m_LodInfo = other.m_LodInfo;
-    // 	}
-    // }
-
     LODMesh(const std::vector<LODData>& lodData);
 
     vk::DescriptorSet GetDescriptorSet() const

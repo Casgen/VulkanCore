@@ -1,4 +1,5 @@
-#include "LODModel.h"
+
+#include "ClassicLODModel.h"
 
 #include <algorithm>
 #include <cstdio>
@@ -7,7 +8,6 @@
 #include <filesystem>
 
 #include "../Log/Log.h"
-#include "Mesh/LODMesh.h"
 #include "MeshVertex.h"
 #include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
@@ -15,7 +15,7 @@
 
 namespace fs = std::filesystem;
 
-LODModel::LODModel(const std::string& filePath)
+ClassicLODModel::ClassicLODModel(const std::string& filePath)
 {
 
     fs::path modelPath(filePath);
@@ -95,7 +95,7 @@ LODModel::LODModel(const std::string& filePath)
     }
 }
 
-void LODModel::ProcessNode(const aiNode* node, const aiScene* scene, const uint32_t lodDataIndex)
+void ClassicLODModel::ProcessNode(const aiNode* node, const aiScene* scene, const uint32_t lodDataIndex)
 {
 
     for (uint32_t i = 0; i < node->mNumMeshes; i++)
@@ -109,30 +109,20 @@ void LODModel::ProcessNode(const aiNode* node, const aiScene* scene, const uint3
     }
 }
 
-void LODModel::Destroy()
+void ClassicLODModel::Destroy()
 {
-    for (LODMesh& mesh : m_Meshes)
+    for (uint32_t i = 0; i < m_Meshes.size(); i++)
     {
-        mesh.Destroy();
+        m_Meshes[i].Destroy();
     }
 }
 
-LODMesh& LODModel::GetMesh(const size_t index)
+ClassicLODMesh& ClassicLODModel::GetMesh(const size_t index)
 {
     return m_Meshes.at(index);
 }
 
-vk::DescriptorSetLayout LODModel::GetMeshSetLayout(const size_t index)
-{
-    return m_Meshes.at(index).GetDescriptorSetLayout();
-}
-
-vk::DescriptorSet LODModel::GetMeshSet(const size_t index)
-{
-    return m_Meshes.at(index).GetDescriptorSet();
-}
-
-LODData LODModel::ProcessMesh(const aiMesh* mesh, const aiScene* scene)
+LODData ClassicLODModel::ProcessMesh(const aiMesh* mesh, const aiScene* scene)
 {
 
     if (mesh == nullptr)
@@ -141,7 +131,7 @@ LODData LODModel::ProcessMesh(const aiMesh* mesh, const aiScene* scene)
         throw std::runtime_error("Failed to process a mesh! aiMesh is null!");
     }
 
-    std::vector<MeshVertex> meshVertices{};
+    std::vector<Vertex> meshVertices{};
     meshVertices.reserve(mesh->mNumVertices);
 
     for (uint32_t i = 0; i < mesh->mNumVertices; i++)
@@ -172,7 +162,7 @@ LODData LODModel::ProcessMesh(const aiMesh* mesh, const aiScene* scene)
             }
         }
 
-        meshVertices.emplace_back(MeshVertex{position, normals, tangent, biTangent, textureCoord});
+        meshVertices.emplace_back(Vertex{position, normals, tangent, biTangent, textureCoord});
     }
 
     std::vector<uint32_t> indices;
