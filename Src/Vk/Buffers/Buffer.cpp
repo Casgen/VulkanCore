@@ -7,6 +7,7 @@
 #include "vulkan/vulkan_enums.hpp"
 #include "../Services/ServiceLocator.h"
 #include "../../Log/Log.h"
+#include "vulkan/vulkan_structs.hpp"
 
 namespace VkCore
 {
@@ -57,11 +58,18 @@ namespace VkCore
         }
     }
 
-	
     void Buffer::InitializeOnGpu(const void* data, const size_t size)
     {
         m_Buffer = ServiceLocator::GetAllocatorService().CreateBufferOnGpu(data, size, m_UsageFlags, m_Allocation,
                                                                            &m_AllocationInfo);
+        m_Size = size;
+    }
+
+    void Buffer::InitializeOnGpu(const size_t size)
+    {
+        m_Buffer = ServiceLocator::GetAllocatorService().CreateBuffer(
+            size, {}, m_UsageFlags, {}, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, 0, m_Allocation, &m_AllocationInfo);
+
         m_Size = size;
     }
 
@@ -120,6 +128,23 @@ namespace VkCore
         ServiceLocator::GetAllocatorService().MapMemory(m_Allocation, mappedPtr);
         std::memcpy(mappedPtr, data, size);
         ServiceLocator::GetAllocatorService().UnmapMemory(m_Allocation);
+    }
+
+    vk::BufferMemoryBarrier Buffer::CreateBufferMemoryBarrier(vk::AccessFlags srcAccessMask,
+                                                              vk::AccessFlags dstAccessMask)
+    {
+
+        vk::BufferMemoryBarrier memoryBarrier{};
+
+        memoryBarrier.srcAccessMask = srcAccessMask;
+        memoryBarrier.dstAccessMask = dstAccessMask;
+        memoryBarrier.size = m_Size;
+        memoryBarrier.offset = 0;
+        memoryBarrier.dstQueueFamilyIndex = {};
+        memoryBarrier.srcQueueFamilyIndex = {};
+        memoryBarrier.buffer = m_Buffer;
+
+        return memoryBarrier;
     }
 
     vk::BufferUsageFlags Buffer::GetUsageFlags() const

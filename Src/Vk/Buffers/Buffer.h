@@ -5,6 +5,7 @@
 
 #include "vulkan/vulkan.hpp"
 #include "vk_mem_alloc.h"
+#include "vulkan/vulkan_enums.hpp"
 
 namespace VkCore
 {
@@ -44,6 +45,14 @@ namespace VkCore
         void InitializeOnGpu(const void* data, const size_t size);
 
         /**
+         * @brief Allocates a new buffer on the GPU. The buffer won't be visible to the host (CPU)!
+         * This kind of initialization expects that you won't transfer any data to it from the cpu.
+         * the data will changed on the GPU's side.
+         * @param size - size of data in BYTES
+         */
+        void InitializeOnGpu(const size_t size);
+
+        /**
          * @brief Allocates a new buffer, puts it on the CPU and fills it with the given data. The buffer will be
          * visible both to the device (GPU) and host (CPU)
          * @param data - Pointer to a block of data to allocate on the buffer. Note that the data is being copied!
@@ -73,6 +82,9 @@ namespace VkCore
          * exceeds the size set at the initialization stage, it will throw an exception!
          */
         void UpdateData(const void* data, const size_t size);
+
+        vk::BufferMemoryBarrier CreateBufferMemoryBarrier(
+                                                          vk::AccessFlags srcAccessMask, vk::AccessFlags dstAccessMask);
 
         vk::BufferUsageFlags GetUsageFlags() const;
         uint32_t GetSize() const;

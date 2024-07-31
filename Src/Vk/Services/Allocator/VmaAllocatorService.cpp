@@ -108,12 +108,8 @@ namespace VkCore
                                                const VmaAllocationCreateFlags allocFlags, VmaAllocation& outAllocation,
                                                VmaAllocationInfo* outAllocationInfo)
     {
-        if (size <= 0)
-        {
-            LOGF(Vulkan, Fatal,
-                 "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d", size)
-            throw std::runtime_error("Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)!");
-        }
+		
+		ASSERTF(size > 0, "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d", size)
 
         VkBufferCreateInfo bufferCreateInfo{};
         bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -247,24 +243,15 @@ namespace VkCore
         return image;
     }
 
+
+
     VkBuffer VmaAllocatorService::CreateBufferOnGpu(const void* data, const size_t size,
                                                     const vk::BufferUsageFlags usageFlags, VmaAllocation& allocation,
                                                     VmaAllocationInfo* allocationInfo)
     {
 
-        if (data == nullptr)
-        {
-            const char* errorMsg = "Couldn't allocate buffer on the GPU! Pointer to the data is nullptr!";
-            LOG(Vulkan, Fatal, errorMsg)
-            throw std::runtime_error(errorMsg);
-        }
-
-        if (size <= 0)
-        {
-            LOGF(Vulkan, Fatal,
-                 "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d", size)
-            throw std::runtime_error("Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)!");
-        }
+		ASSERT(data != nullptr, "Allocating an empty buffer on the GPU! Pointer to the data is nullptr!")
+		ASSERTF(size > 0, "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d", size)
 
         // First create a staging Buffer to act as a CPU visible buffer.
         VmaAllocation stagingAllocation;
@@ -277,7 +264,7 @@ namespace VkCore
             stagingAllocation, &stagingAllocationInfo);
 
         // Copy the data from the memory to the staging buffer.
-        std::memcpy(stagingAllocationInfo.pMappedData, data, size);
+		std::memcpy(stagingAllocationInfo.pMappedData, data, size);
 
         // Create the GPU Buffer.
         VkBuffer gpuBuffer = CreateBuffer(size, {}, usageFlags | vk::BufferUsageFlagBits::eTransferDst, {},
