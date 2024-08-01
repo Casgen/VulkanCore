@@ -60,28 +60,25 @@ namespace VkCore
             queueCreateInfos.emplace_back(createInfo);
         }
 
-
 #ifndef VK_MESH_EXT
         vk::PhysicalDeviceMeshShaderFeaturesNV meshShaderFeatures(true, true);
 #else
         vk::PhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures(true, true, false, false, false);
 #endif
-			
 
         vk::PhysicalDeviceVulkan12Features vulkan12Features{};
         vulkan12Features.setBufferDeviceAddress(true);
         vulkan12Features.setPNext(&meshShaderFeatures);
 
-		vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT dynamicStateFeatures;
-		dynamicStateFeatures.setPNext(&vulkan12Features);
-		dynamicStateFeatures.extendedDynamicState3PolygonMode = true;
-
+        vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT dynamicStateFeatures;
+        dynamicStateFeatures.setPNext(&vulkan12Features);
+        dynamicStateFeatures.extendedDynamicState3PolygonMode = true;
 
         vk::PhysicalDeviceFeatures2 deviceFeatures2{};
         deviceFeatures2.setPNext(&dynamicStateFeatures);
         deviceFeatures2.features.setWideLines(true);
-		deviceFeatures2.features.setFillModeNonSolid(true);
-
+        deviceFeatures2.features.setMultiDrawIndirect(true);
+        deviceFeatures2.features.setFillModeNonSolid(true);
 
         // Enable Device Buffer Address
 

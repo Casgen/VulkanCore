@@ -30,7 +30,7 @@ ClassicLODMesh::ClassicLODMesh(const std::vector<LODData>& lodData)
 		std::vector<uint32_t> indices = MeshUtils::Tipsify(lodData.at(l).indices, lodData.at(l).vertices.size(), 32);
 
 		m_LodInfo.indexCount[l] = indices.size();
-		m_LodInfo.indexOffset[l] = allVertices.size();
+		m_LodInfo.indexOffset[l] = allIndices.size();
 		m_LodInfo.vertexCount[l] = lodData[l].vertices.size();
 
 		for (uint32_t i = 0; i < indices.size(); i++) {

@@ -83,8 +83,7 @@ namespace VkCore
          */
         void UpdateData(const void* data, const size_t size);
 
-        vk::BufferMemoryBarrier CreateBufferMemoryBarrier(
-                                                          vk::AccessFlags srcAccessMask, vk::AccessFlags dstAccessMask);
+        vk::BufferMemoryBarrier CreateBufferMemoryBarrier(vk::AccessFlags srcAccessMask, vk::AccessFlags dstAccessMask);
 
         vk::BufferUsageFlags GetUsageFlags() const;
         uint32_t GetSize() const;
