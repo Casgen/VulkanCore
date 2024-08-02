@@ -34,7 +34,10 @@ namespace VkCore
                                                                const bool isOptimized = true);
 
         static VkCore::ShaderData LoadComputeShader(const std::filesystem::path& path,
-                                                                 const bool isOptimized = true);
+                                                    const shaderc::Compiler& compiler,
+                                                    const shaderc::CompileOptions& compileOptions);
+
+        static VkCore::ShaderData LoadComputeShader(const std::filesystem::path& path, const bool isOptimized = true);
 
         static const char* ShadercCompilationStatusToString(shaderc_compilation_status status);
 

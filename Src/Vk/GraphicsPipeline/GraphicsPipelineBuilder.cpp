@@ -633,6 +633,8 @@ namespace VkCore
         m_ShaderStageCreateInfo.setModule(module);
         m_ShaderStageCreateInfo.setStage(shaderData.m_StageFlags);
 
+        m_ShaderWasBound = true;
+
         return *this;
     }
 
@@ -647,6 +649,8 @@ namespace VkCore
 
     vk::Pipeline ComputePipelineBuilder::Build(vk::PipelineLayout& pipelineLayout)
     {
+        ASSERT(m_ShaderWasBound, "No shader has been bound!")
+
         // Create pipeline layout
         vk::PipelineLayoutCreateInfo layoutCreateInfo{};
 
@@ -674,6 +678,14 @@ namespace VkCore
         Utils::CheckVkResult(result.result);
 
         return result.value;
+    }
+
+    void ComputePipelineBuilder::Reset()
+    {
+        m_ShaderWasBound = false;
+        m_ShaderStageCreateInfo = vk::PipelineShaderStageCreateInfo();
+        m_PushConstantRanges.clear();
+        m_DescriptorSetLayouts.clear();
     }
 
 } // namespace VkCore

@@ -24,7 +24,7 @@ namespace VkCore
 
         if (isOptimized)
         {
-            compileOptions.SetOptimizationLevel(shaderc_optimization_level_size);
+            compileOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
         }
 
         return LoadClassicShader(path, compiler, compileOptions);
@@ -67,15 +67,9 @@ namespace VkCore
     }
 
     VkCore::ShaderData ShaderLoader::LoadComputeShader(const std::filesystem::path& path,
-                                                                    const bool isOptimized)
+                                                       const shaderc::Compiler& compiler,
+                                                       const shaderc::CompileOptions& compileOptions)
     {
-        shaderc::Compiler compiler;
-        shaderc::CompileOptions compileOptions;
-
-        if (isOptimized)
-        {
-            compileOptions.SetOptimizationLevel(shaderc_optimization_level_size);
-        }
 
         std::vector<char> data = FileUtils::ReadFile(path.string().data());
 
@@ -107,7 +101,19 @@ namespace VkCore
         shaderData.m_StageFlags = ShaderKindToClassicShaderStageFlag(shaderKind);
 
         return shaderData;
+    }
 
+    VkCore::ShaderData ShaderLoader::LoadComputeShader(const std::filesystem::path& path, const bool isOptimized)
+    {
+        shaderc::Compiler compiler;
+        shaderc::CompileOptions compileOptions;
+
+        if (isOptimized)
+        {
+            compileOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
+        }
+
+        return LoadComputeShader(path, compiler, compileOptions);
     }
 
     const char* ShaderLoader::ShadercCompilationStatusToString(shaderc_compilation_status status)
@@ -177,7 +183,7 @@ namespace VkCore
 
         if (isOptimized)
         {
-            compileOptions.SetOptimizationLevel(shaderc_optimization_level_size);
+            compileOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
         }
 
         std::vector<ShaderData> modulesMap;
@@ -250,7 +256,7 @@ namespace VkCore
 
         if (isOptimized)
         {
-            compileOptions.SetOptimizationLevel(shaderc_optimization_level_size);
+            compileOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
         }
 
         std::vector<ShaderData> modulesMap;

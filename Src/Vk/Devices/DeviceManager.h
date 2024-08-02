@@ -17,10 +17,10 @@ namespace VkCore
         DeviceManager operator=(DeviceManager&& other) = delete;
         DeviceManager operator=(const DeviceManager& other) = delete;
 
-        static void Initialize(const vk::Instance& instance, const vk::SurfaceKHR& surface)
+        static void Initialize(const vk::Instance& instance, const vk::SurfaceKHR& surface, const bool isMeshShadingEnabled = true)
         {
             m_PhysicalDevice = VkCore::PhysicalDevice(instance, surface, m_DeviceExtensions);
-            m_Device = VkCore::Device(m_PhysicalDevice, m_DeviceExtensions);
+            m_Device = VkCore::Device(m_PhysicalDevice, m_DeviceExtensions, isMeshShadingEnabled);
         }
 
         static Device& GetDevice()

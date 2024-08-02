@@ -18,7 +18,7 @@ namespace VkCore
         Device();
 
         Device(const PhysicalDevice& physicalDevice,
-               const std::vector<const char*> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME});
+               const std::vector<const char*> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME}, const bool isMeshShadingEnabled = true);
 
         /**
          * @brief Initializes a Swapchain Object. THIS HAS TO BE CALLED AFTER CREATING A LOGICAL DEVICE!

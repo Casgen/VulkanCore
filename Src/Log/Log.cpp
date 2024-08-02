@@ -139,6 +139,9 @@ const char* Logger::EvaluateCategoryString(ECategory category)
     case ECategory::Assimp:
         return "ASSIMP";
         break;
+    case ECategory::Assert:
+        return "ASSERT";
+        break;
 
     // Vulkan Specific
     case ECategory::Validation:

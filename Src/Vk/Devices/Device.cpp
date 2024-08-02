@@ -30,7 +30,7 @@ namespace VkCore
     {
     }
 
-    Device::Device(const PhysicalDevice& physicalDevice, std::vector<const char*> deviceExtensions)
+    Device::Device(const PhysicalDevice& physicalDevice, std::vector<const char*> deviceExtensions, const bool isMeshShadingEnabled)
     {
 
         QueueFamilyIndices indices = physicalDevice.GetQueueFamilyIndices();
@@ -60,15 +60,21 @@ namespace VkCore
             queueCreateInfos.emplace_back(createInfo);
         }
 
+
 #ifndef VK_MESH_EXT
-        vk::PhysicalDeviceMeshShaderFeaturesNV meshShaderFeatures(true, true);
+        vk::PhysicalDeviceMeshShaderFeaturesNV meshShaderFeatures;
 #else
-        vk::PhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures(true, true, false, false, false);
+        vk::PhysicalDeviceMeshShaderFeaturesEXT meshShaderFeatures;
 #endif
 
         vk::PhysicalDeviceVulkan12Features vulkan12Features{};
         vulkan12Features.setBufferDeviceAddress(true);
         vulkan12Features.setPNext(&meshShaderFeatures);
+
+		if (isMeshShadingEnabled) {
+			meshShaderFeatures.meshShader = true;
+			meshShaderFeatures.taskShader = true;
+		}
 
         vk::PhysicalDeviceExtendedDynamicState3FeaturesEXT dynamicStateFeatures;
         dynamicStateFeatures.setPNext(&vulkan12Features);

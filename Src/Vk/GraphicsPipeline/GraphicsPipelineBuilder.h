@@ -328,7 +328,10 @@ namespace VkCore
 
         vk::Pipeline Build(vk::PipelineLayout& pipelineLayout);
 
+		void Reset();
+
       private:
+		bool m_ShaderWasBound = false;
         vk::PipelineShaderStageCreateInfo m_ShaderStageCreateInfo{};
         std::vector<vk::DescriptorSetLayout> m_DescriptorSetLayouts{};
         std::vector<vk::PushConstantRange> m_PushConstantRanges{};

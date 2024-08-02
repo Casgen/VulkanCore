@@ -2,7 +2,6 @@
 #pragma once
 
 #include "Mesh/MeshVertex.h"
-#include "Model/Structures/AABB.h"
 #include "Vk/Buffers/Buffer.h"
 #include "vulkan/vulkan_handles.hpp"
 #include <cstdint>
@@ -22,7 +21,9 @@ struct ClassicLODMeshInfo
         0, 0, 0, 0, 0, 0, 0, 0,
     };
 
-     uint32_t LodCount = 0;
+	alignas(16) glm::vec3 sphereCenter;
+	float sphereRadius;
+    uint32_t LodCount = 0;
 };
 
 struct LODData;
@@ -46,17 +47,16 @@ class ClassicLODMesh
         return m_IndexBuffer;
     }
 
-	void BindVertexBuffer(const vk::CommandBuffer& cmdBuffer) {
-		cmdBuffer.bindVertexBuffers(0, m_VertexBuffer.GetVkBuffer(), {0});
-	}
+    void BindVertexBuffer(const vk::CommandBuffer& cmdBuffer)
+    {
+        cmdBuffer.bindVertexBuffers(0, m_VertexBuffer.GetVkBuffer(), {0});
+    }
 
     void Destroy()
     {
         m_VertexBuffer.Destroy();
         m_IndexBuffer.Destroy();
     }
-
-    static AABB CreateBoundingBox(const ClassicLODMesh& mesh);
 
     std::vector<Vertex> vertices;
 
