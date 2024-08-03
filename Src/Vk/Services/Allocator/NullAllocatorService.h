@@ -63,6 +63,8 @@ namespace VkCore
         VkBuffer CreateBufferOnGpu(const void* data, const size_t size, const vk::BufferUsageFlags usageFlags,
                                    VmaAllocation& allocation, VmaAllocationInfo* allocationInfo) override;
 
+        void UpdateBufferOnGpu(const Buffer& buffer, const void* data, size_t size) override;
+
         /**
          * @brief Maps the buffer memory and returns back a pointer to the VkBuffer memory. It can be used for updating
          * the data

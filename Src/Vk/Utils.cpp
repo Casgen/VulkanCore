@@ -149,12 +149,7 @@ namespace VkCore
             vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose | vk::DebugUtilsMessageSeverityFlagBitsEXT::eInfo |
             vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
 
-        vk::DebugUtilsMessageTypeFlagsEXT messageTypes = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
-                                                         vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
-                                                         vk::DebugUtilsMessageTypeFlagBitsEXT::eDeviceAddressBinding |
-                                                         vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
-
-        messageTypes =
+        vk::DebugUtilsMessageTypeFlagsEXT messageTypes =
             vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
 
         vk::DebugUtilsMessengerCreateInfoEXT createInfo;

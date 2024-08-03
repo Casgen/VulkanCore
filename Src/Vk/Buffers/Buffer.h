@@ -90,6 +90,10 @@ namespace VkCore
         vk::Buffer GetVkBuffer() const;
         VmaAllocation GetVmaAllocation() const;
         VmaAllocationInfo GetVmaAllocationInfo() const;
+        bool IsDeviceLocal() const
+        {
+            return m_IsDeviceLocal;
+        }
 
         void SetVkBuffer(const VkBuffer& buffer);
         void SetVmaAllocation(const VmaAllocation& allocation);
@@ -103,6 +107,7 @@ namespace VkCore
 
       private:
         size_t m_Size;
+        bool m_IsDeviceLocal;
         vk::BufferUsageFlags m_UsageFlags;
         bool m_IsHostVisible, m_IsMapped, m_WasDestroyed;
         VkBuffer m_Buffer;

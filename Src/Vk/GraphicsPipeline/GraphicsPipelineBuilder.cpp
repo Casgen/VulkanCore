@@ -417,9 +417,7 @@ namespace VkCore
 
         TRY_CATCH_BEGIN()
 
-        LOG(Application, Verbose, "Drawing...")
         auto layout = m_Device.CreateGraphicsPipelines({m_PipelineCreateInfo});
-        LOG(Application, Verbose, "Created Graphics Pipeline...")
 
         VkCore::Utils::CheckVkResult(layout.result);
 

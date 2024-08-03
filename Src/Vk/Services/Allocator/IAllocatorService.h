@@ -22,6 +22,8 @@ namespace VkCore
         virtual VkBuffer CreateBufferOnGpu(const void* data, const size_t size, const vk::BufferUsageFlags usageFlags,
                                            VmaAllocation& allocation, VmaAllocationInfo* allocationInfo) = 0;
 
+        virtual void UpdateBufferOnGpu(const Buffer& buffer, const void* data, size_t size) = 0;
+
         /**
          * @brief Allocates and creates a new buffer. Note that no data is being transferred!
          * @param bufferInfo - Struct containg information for creating a buffer

@@ -28,16 +28,16 @@ namespace VkCore
          * @return vector of ShaderData objects
          */
         static std::vector<VkCore::ShaderData> LoadClassicShaders(const std::filesystem::path& path,
-                                                                  const bool isOptimized = true);
+                                                                  const bool isOptimized = true, const bool generateDebugInfo = false);
 
         static std::vector<VkCore::ShaderData> LoadMeshShaders(const std::filesystem::path& path,
-                                                               const bool isOptimized = true);
+                                                               const bool isOptimized = true, const bool generateDebugInfo = false);
 
         static VkCore::ShaderData LoadComputeShader(const std::filesystem::path& path,
                                                     const shaderc::Compiler& compiler,
                                                     const shaderc::CompileOptions& compileOptions);
 
-        static VkCore::ShaderData LoadComputeShader(const std::filesystem::path& path, const bool isOptimized = true);
+        static VkCore::ShaderData LoadComputeShader(const std::filesystem::path& path, const bool isOptimized = true, const bool generateDebugInfo = false);
 
         static const char* ShadercCompilationStatusToString(shaderc_compilation_status status);
 
@@ -50,9 +50,9 @@ namespace VkCore
          * debugability)
          * @return a pointer to the compiled shader module.
          */
-        static VkCore::ShaderData LoadClassicShader(const std::filesystem::path& path, const bool isOptimized = true);
+        static VkCore::ShaderData LoadClassicShader(const std::filesystem::path& path, const bool isOptimized = true, const bool generateDebugInfo = false);
 
-        static VkCore::ShaderData LoadMeshShader(const std::filesystem::path& path, const bool isOptimized = true);
+        static VkCore::ShaderData LoadMeshShader(const std::filesystem::path& path, const bool isOptimized = true, const bool generateDebugInfo = false);
 
         /**
          * @brief reads the given filename, obtains its file extension and deteremines the shader kind (vertex,

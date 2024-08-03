@@ -108,8 +108,9 @@ namespace VkCore
                                                const VmaAllocationCreateFlags allocFlags, VmaAllocation& outAllocation,
                                                VmaAllocationInfo* outAllocationInfo)
     {
-		
-		ASSERTF(size > 0, "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d", size)
+
+        ASSERTF(size > 0, "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d",
+                size)
 
         VkBufferCreateInfo bufferCreateInfo{};
         bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -173,17 +174,15 @@ namespace VkCore
 
         VkImage image = VK_NULL_HANDLE;
 
+        Utils::CheckVkResult(vmaCreateImage(m_VmaAllocator, reinterpret_cast<const VkImageCreateInfo*>(&createInfo),
+                                            &allocCreateInfo, &image, &outAllocation, outAllocationInfo));
 
-        Utils::CheckVkResult(vmaCreateImage(m_VmaAllocator, reinterpret_cast<const VkImageCreateInfo*>(&createInfo), &allocCreateInfo,
-                       &image, &outAllocation, outAllocationInfo));
-
-		LOG(Vulkan, Error, "The creation of a VkImage with the data is not yet implemented!")
+        LOG(Vulkan, Error, "The creation of a VkImage with the data is not yet implemented!")
 
         return image;
     }
 
-    VkImage VmaAllocatorService::CreateImage(const VkDeviceSize size,
-                                             const vk::ImageCreateInfo& createInfo,
+    VkImage VmaAllocatorService::CreateImage(const VkDeviceSize size, const vk::ImageCreateInfo& createInfo,
                                              const VmaAllocationCreateInfo& allocCreateInfo,
                                              VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo)
     {
@@ -196,10 +195,10 @@ namespace VkCore
 
         VkImage image = VK_NULL_HANDLE;
 
-		VkImageCreateInfo vkCreateInfo = static_cast<VkImageCreateInfo>(createInfo);
+        VkImageCreateInfo vkCreateInfo = static_cast<VkImageCreateInfo>(createInfo);
 
-        Utils::CheckVkResult(vmaCreateImage(m_VmaAllocator, &vkCreateInfo, &allocCreateInfo,
-                       &image, &outAllocation, outAllocationInfo));
+        Utils::CheckVkResult(
+            vmaCreateImage(m_VmaAllocator, &vkCreateInfo, &allocCreateInfo, &image, &outAllocation, outAllocationInfo));
 
         return image;
     }
@@ -243,15 +242,14 @@ namespace VkCore
         return image;
     }
 
-
-
     VkBuffer VmaAllocatorService::CreateBufferOnGpu(const void* data, const size_t size,
                                                     const vk::BufferUsageFlags usageFlags, VmaAllocation& allocation,
                                                     VmaAllocationInfo* allocationInfo)
     {
 
-		ASSERT(data != nullptr, "Allocating an empty buffer on the GPU! Pointer to the data is nullptr!")
-		ASSERTF(size > 0, "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d", size)
+        ASSERT(data != nullptr, "Allocating an empty buffer on the GPU! Pointer to the data is nullptr!")
+        ASSERTF(size > 0, "Couldn't allocate buffer on the GPU! Buffer size is invalid! (size <= 0)! Given size was %d",
+                size)
 
         // First create a staging Buffer to act as a CPU visible buffer.
         VmaAllocation stagingAllocation;
@@ -264,38 +262,53 @@ namespace VkCore
             stagingAllocation, &stagingAllocationInfo);
 
         // Copy the data from the memory to the staging buffer.
-		std::memcpy(stagingAllocationInfo.pMappedData, data, size);
+        std::memcpy(stagingAllocationInfo.pMappedData, data, size);
 
         // Create the GPU Buffer.
         VkBuffer gpuBuffer = CreateBuffer(size, {}, usageFlags | vk::BufferUsageFlagBits::eTransferDst, {},
                                           VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, {}, allocation, allocationInfo);
 
-        if (!gpuBuffer)
-        {
-            const char* errorMsg = "Failed to create a Destination buffer!";
-            LOG(Vulkan, Fatal, errorMsg);
-            throw std::runtime_error(errorMsg);
-        }
+        ASSERT(gpuBuffer != VK_NULL_HANDLE, "Failed to create a Destination buffer!")
 
         VkMemoryPropertyFlags memPropFlags;
         vmaGetAllocationMemoryProperties(m_VmaAllocator, allocation, &memPropFlags);
 
-        if (!(memPropFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT))
-        {
-            const char* errorMsg = "Failed to create a Destination Buffer! Buffer is not Device local!";
-            LOG(Vulkan, Fatal, errorMsg);
-            throw std::runtime_error(errorMsg);
-        }
+        ASSERT(memPropFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+               "Failed to create a Destination Buffer! Buffer is not Device local!")
 
         // Copy the contents of the staging buffer to the gpu buffer.
         CopyBuffer(stagingBuffer, gpuBuffer, size);
-
         vmaDestroyBuffer(m_VmaAllocator, stagingBuffer, stagingAllocation);
 
         LOGF(Allocation, Verbose,
              "Buffer has been succesfully allocated and data has been transferred onto the GPU. Size: %d", size)
 
         return gpuBuffer;
+    }
+
+    void VmaAllocatorService::UpdateBufferOnGpu(const Buffer& buffer, const void* data, size_t size)
+    {
+        ASSERT(data != nullptr, "Allocating an empty buffer on the GPU! Pointer to the data is nullptr!")
+        ASSERT(buffer.IsDeviceLocal(), "The Destination buffer is not device local!")
+
+        // First create a staging Buffer to act as a CPU visible buffer.
+        VmaAllocation stagingAllocation;
+        VmaAllocationInfo stagingAllocationInfo;
+
+        VkBuffer stagingBuffer = CreateBuffer(size, {}, buffer.GetUsageFlags() | vk::BufferUsageFlagBits::eTransferSrc,
+                                              {}, VMA_MEMORY_USAGE_AUTO_PREFER_HOST,
+                                              VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                                                  VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+                                                  VMA_ALLOCATION_CREATE_MAPPED_BIT,
+                                              stagingAllocation, &stagingAllocationInfo);
+
+        ASSERT(stagingBuffer != VK_NULL_HANDLE, "Failed to create a staging buffer!")
+
+        // Copy the data from the memory to the staging buffer.
+        std::memcpy(stagingAllocationInfo.pMappedData, data, size);
+
+        CopyBuffer(stagingBuffer, buffer.GetVkBuffer(), size);
+        vmaDestroyBuffer(m_VmaAllocator, stagingBuffer, stagingAllocation);
     }
 
     void VmaAllocatorService::MapMemory(const VmaAllocation& allocation, void* mappedPtr)

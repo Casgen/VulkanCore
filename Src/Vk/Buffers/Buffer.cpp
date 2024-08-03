@@ -17,6 +17,7 @@ namespace VkCore
         if (this != &other)
         {
             m_Size = other.m_Size;
+            m_IsDeviceLocal = other.m_IsDeviceLocal;
             other.m_Size = 0;
 
             m_UsageFlags = other.m_UsageFlags;
@@ -41,6 +42,7 @@ namespace VkCore
         if (this != &other)
         {
             m_Size = other.m_Size;
+            m_IsDeviceLocal = other.m_IsDeviceLocal;
             other.m_Size = 0;
 
             m_UsageFlags = other.m_UsageFlags;
@@ -63,6 +65,7 @@ namespace VkCore
         m_Buffer = ServiceLocator::GetAllocatorService().CreateBufferOnGpu(data, size, m_UsageFlags, m_Allocation,
                                                                            &m_AllocationInfo);
         m_Size = size;
+        m_IsDeviceLocal = true;
     }
 
     void Buffer::InitializeOnGpu(const size_t size)
@@ -71,6 +74,7 @@ namespace VkCore
             size, {}, m_UsageFlags, {}, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, 0, m_Allocation, &m_AllocationInfo);
 
         m_Size = size;
+        m_IsDeviceLocal = true;
     }
 
     void Buffer::InitializeOnCpu(const void* data, const size_t size, const bool isMapped)
@@ -111,11 +115,10 @@ namespace VkCore
     void Buffer::UpdateData(const void* data, const size_t size)
     {
 
-        if (size == 0 || data == nullptr)
-        {
-            LOG(Vulkan, Warning, "Data wasn't updated! It is either NULL or the size of the data is 0!")
-            return;
-        }
+        if (m_IsDeviceLocal)
+			return ServiceLocator::GetAllocatorService().UpdateBufferOnGpu(*this, data, size);
+
+		ASSERT(data != nullptr, "Data wasn't updated! The pointer to data is NULL!")
 
         if (m_IsMapped)
         {

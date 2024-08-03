@@ -17,7 +17,7 @@
 
 namespace VkCore
 {
-    ShaderData ShaderLoader::LoadClassicShader(const std::filesystem::path& path, const bool isOptimized)
+    ShaderData ShaderLoader::LoadClassicShader(const std::filesystem::path& path, const bool isOptimized, const bool generateDebugInfo)
     {
         shaderc::Compiler compiler;
         shaderc::CompileOptions compileOptions;
@@ -25,6 +25,11 @@ namespace VkCore
         if (isOptimized)
         {
             compileOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
+        }
+
+        if (generateDebugInfo)
+        {
+            compileOptions.SetGenerateDebugInfo();
         }
 
         return LoadClassicShader(path, compiler, compileOptions);
@@ -39,7 +44,7 @@ namespace VkCore
         shaderc_shader_kind shaderKind = DetermineShaderType(path.string());
 
         shaderc::SpvCompilationResult result =
-            compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data());
+            compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data(), compileOptions);
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success)
         {
@@ -76,7 +81,7 @@ namespace VkCore
         shaderc_shader_kind shaderKind = DetermineShaderType(path.string());
 
         shaderc::SpvCompilationResult result =
-            compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data());
+            compiler.CompileGlslToSpv(data.data(), shaderKind, path.stem().string().data(), compileOptions);
 
         if (result.GetCompilationStatus() != shaderc_compilation_status_success)
         {
@@ -103,7 +108,8 @@ namespace VkCore
         return shaderData;
     }
 
-    VkCore::ShaderData ShaderLoader::LoadComputeShader(const std::filesystem::path& path, const bool isOptimized)
+    VkCore::ShaderData ShaderLoader::LoadComputeShader(const std::filesystem::path& path, const bool isOptimized,
+                                                       const bool generateDebugInfo)
     {
         shaderc::Compiler compiler;
         shaderc::CompileOptions compileOptions;
@@ -111,6 +117,11 @@ namespace VkCore
         if (isOptimized)
         {
             compileOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
+        }
+
+        if (generateDebugInfo)
+        {
+            compileOptions.SetGenerateDebugInfo();
         }
 
         return LoadComputeShader(path, compiler, compileOptions);
@@ -153,7 +164,7 @@ namespace VkCore
     }
 
     std::vector<VkCore::ShaderData> ShaderLoader::LoadClassicShaders(const std::filesystem::path& path,
-                                                                     const bool isOptimized)
+                                                                     const bool isOptimized, const bool generateDebugInfo)
     {
 
         std::filesystem::path relativePath = std::filesystem::current_path() / path;
@@ -184,6 +195,11 @@ namespace VkCore
         if (isOptimized)
         {
             compileOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
+        }
+
+        if (generateDebugInfo)
+        {
+            compileOptions.SetGenerateDebugInfo();
         }
 
         std::vector<ShaderData> modulesMap;
@@ -227,7 +243,7 @@ namespace VkCore
     }
 
     std::vector<VkCore::ShaderData> ShaderLoader::LoadMeshShaders(const std::filesystem::path& path,
-                                                                  const bool isOptimized)
+                                                                  const bool isOptimized, const bool generateDebugInfo)
     {
         std::filesystem::path relativePath = std::filesystem::current_path() / path;
 
@@ -257,6 +273,11 @@ namespace VkCore
         if (isOptimized)
         {
             compileOptions.SetOptimizationLevel(shaderc_optimization_level_performance);
+        }
+
+        if (generateDebugInfo)
+        {
+            compileOptions.SetGenerateDebugInfo();
         }
 
         std::vector<ShaderData> modulesMap;

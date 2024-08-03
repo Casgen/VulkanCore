@@ -29,8 +29,7 @@ namespace VkCore
         return VK_NULL_HANDLE;
     }
 
-    VkImage NullAllocatorService::CreateImage(const VkDeviceSize size,
-                                              const vk::ImageCreateInfo& createInfo,
+    VkImage NullAllocatorService::CreateImage(const VkDeviceSize size, const vk::ImageCreateInfo& createInfo,
                                               const VmaAllocationCreateInfo& allocCreateInfo,
                                               VmaAllocation& outAllocation, VmaAllocationInfo* outAllocationInfo)
     {
@@ -84,6 +83,13 @@ namespace VkCore
 
         return VK_NULL_HANDLE;
     }
+    void NullAllocatorService::UpdateBufferOnGpu(const Buffer& buffer, const void* data, size_t size)
+    {
+
+        LOG(Allocation, Fatal,
+            "Allocation service couldn't be located! Please make sure you have provided an allocation service!")
+    }
+
     /**
      * @brief Maps the buffer memory and returns back a pointer to the VkBuffer memory. It can be used for updating the
      * data
